@@ -169,8 +169,8 @@ app.use((req, res, next) => {
          await initializeDatabaseTables(); // 2. Garante que as tabelas existam
          console.log("Tabelas do banco de dados verificadas/inicializadas.");
  
-         app.listen(PORT, () => {
-             console.log(`Aplicação ATIVA em http://localhost:${PORT}`);
+         app.listen(PORT, '0.0.0.0', () => {
+             console.log(`Aplicação ATIVA em http://0.0.0.0:${PORT}`);
          });
  
      } catch (error) {

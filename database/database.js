@@ -2,27 +2,18 @@ const { Client, Pool } = require('pg');
 const DB_NAME = process.env.DB_DATABASE || 'espelho';
 
 
-// // Configuração para o pool de conexões local
-// const poolConfig = {
-//   user: process.env.DB_USER || 'postgres',
-//   host: process.env.DB_HOST || 'localhost',
-//   database: DB_NAME,
-//   password: process.env.DB_PASSWORD || 'wander',
-//   port: parseInt(process.env.DB_PORT || '5432', 10),
-//   max: 20, // Número máximo de clientes no pool
-//   idleTimeoutMillis: 30000, // Tempo que um cliente pode ficar ocioso
-// };
-
-// Configuração para o pool de conexões onrender.com
+// Configuração para o pool de conexões local
 const poolConfig = {
-  user: process.env.DB_USER || 'root',
-  host: process.env.DB_HOST || 'dpg-d1tfdsbipnbc73c9bap0-a',
+  user: process.env.DB_USER || 'postgres',
+  host: process.env.DB_HOST || 'localhost',
   database: DB_NAME,
-  password: process.env.DB_PASSWORD || 'jb5nEOQuR3sOlTpCImT8CPzD4qbgMpN6',
+  password: process.env.DB_PASSWORD || 'wander',
   port: parseInt(process.env.DB_PORT || '5432', 10),
-  max: 50, // Número máximo de clientes no pool
+  max: 20, // Número máximo de clientes no pool
   idleTimeoutMillis: 30000, // Tempo que um cliente pode ficar ocioso
 };
+
+
 
 // Cria o pool. Ele se conectará sob demanda.
 const pool = new Pool(poolConfig);
