@@ -606,6 +606,82 @@ footer {
    margin-right: 0;
  }
  
+ /* --- Voluntarios Section (Sobre Page) --- */
+ .voluntarios-carousel-container {
+   position: relative;
+ }
+ 
+ .voluntarios-scroll-container {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 1rem;
+    scroll-behavior: smooth; /* Habilita a rolagem suave via JS */
+    padding-bottom: 1rem; /* Espaço para a barra de rolagem, se visível */
+    /* Esconde a barra de rolagem para um visual mais limpo, mas mantém a funcionalidade */
+    -ms-overflow-style: none;  /* IE e Edge */
+    scrollbar-width: none;  /* Firefox */
+ }
+ 
+ .voluntarios-scroll-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari e Opera */
+ }
+ 
+ .voluntario-card {
+    flex: 0 0 280px; /* Não cresce, não encolhe, base de 280px */
+    width: 280px;
+    box-shadow: 0 2px 5px var(--container-shadow);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--container-bg);
+ }
+ 
+ .voluntario-card .card-body {
+    padding: 1rem; /* Preenchimento um pouco menor */
+ }
+ .voluntario-card .card-title { font-size: 1.1rem; }
+ .voluntario-card .card-subtitle { font-size: 0.9rem; }
+ .voluntario-card .card-text { font-size: 0.9rem; margin-top: 0.5rem; }
+ .voluntario-card .blockquote { font-size: 0.9rem; padding-left: 1rem; border-left: 3px solid var(--border-color); }
+ 
+ .voluntarios-carousel-control {
+   position: absolute;
+   top: 50%;
+   transform: translateY(-50%);
+   background-color: rgba(255, 255, 255, 0.9);
+   color: var(--text-color);
+   border: 1px solid var(--border-color);
+   padding: 0;
+   font-size: 1.5rem;
+   font-weight: bold;
+   cursor: pointer;
+   z-index: 10;
+   border-radius: 50%;
+   width: 40px;
+   height: 40px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   line-height: 1;
+   box-shadow: 0 2px 5px var(--container-shadow);
+   transition: background-color 0.2s, box-shadow 0.2s;
+ }
+ 
+ .voluntarios-carousel-control:hover,
+ .voluntarios-carousel-control:focus {
+   background-color: #fff;
+   box-shadow: 0 4px 8px var(--container-shadow);
+   outline: none;
+ }
+ 
+ .voluntarios-carousel-control.prev {
+   left: -20px;
+ }
+ 
+ .voluntarios-carousel-control.next {
+   right: -20px;
+ }
+ 
  /* --- Login Container --- */
  .login-container {
    background-color: var(--container-bg); /* Use variable */
@@ -1192,4 +1268,3 @@ body.high-contrast .news-carousel-dots .dot {
 body.high-contrast .news-carousel-dots .dot.active {
   background-color: var(--hc-link-color, #000); /* Ou uma cor de destaque */
 }
-

@@ -21,6 +21,39 @@
         </div>
     </section>
 
+    <section id="voluntarios" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-4">Familia Amor Animal Marilia</h2>
+            <div class="voluntarios-carousel-container">
+                <div class="voluntarios-scroll-container">
+                    <% if (model && model.length > 0) { %>
+                        <% model.forEach(voluntario => { %>
+                            <div class="card voluntario-card">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title"><i class="fas fa-user-circle me-2"></i><%= voluntario.nome %></h5>
+                                    <h6 class="card-subtitle mb-2 text-muted"><i class="fas fa-map-marker-alt me-2"></i><%= voluntario.localidade %></h6>
+                                    <p class="card-text"><strong>Habilidade:</strong> <%= voluntario.habilidade %></p>
+                                    <blockquote class="blockquote mt-auto mb-0">
+                                        <p class="mb-0 fst-italic">"<%= voluntario.mensagem %>"</p>
+                                    </blockquote>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="text-center w-100">
+                            <p class="text-muted">Nenhum voluntário cadastrado no momento.</p>
+                        </div>
+                    <% } %>
+                </div>
+
+                <% if (model && model.length > 3) { %>
+                    <button class="voluntarios-carousel-control prev" aria-label="Anterior">&#10094;</button>
+                    <button class="voluntarios-carousel-control next" aria-label="Próximo">&#10095;</button>
+                <% } %>
+            </div>
+        </div>
+    </section>
+
     <div class="container mt-4 mb-5">
         <div class="text-center">
             <h1>Quer fazer parte da causa PET?</h1>
@@ -32,7 +65,38 @@
         </div>
     </div>
 
+
     
 </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const carouselContainer = document.querySelector('.voluntarios-carousel-container');
+    if (!carouselContainer) return;
+
+    const container = carouselContainer.querySelector('.voluntarios-scroll-container');
+    const prevBtn = carouselContainer.querySelector('.voluntarios-carousel-control.prev');
+    const nextBtn = carouselContainer.querySelector('.voluntarios-carousel-control.next');
+
+    if (container && prevBtn && nextBtn) {
+        const card = container.querySelector('.voluntario-card');
+        if (!card) return;
+
+        // Calcula a quantidade de rolagem: a largura do card + o gap.
+        const containerStyle = window.getComputedStyle(container);
+        const cardWidth = card.offsetWidth;
+        const gap = parseFloat(containerStyle.gap) || 16; // 1rem = 16px como fallback
+        const scrollAmount = cardWidth + gap;
+
+        prevBtn.addEventListener('click', () => {
+            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        });
+
+        nextBtn.addEventListener('click', () => {
+            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        });
+    }
+});
+</script>
 
     <%- include("_footer")-%>

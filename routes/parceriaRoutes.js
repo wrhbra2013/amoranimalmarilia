@@ -1,6 +1,5 @@
   // /home/wander/amor.animal2/routes/parceriaRoutes.js
   const express = require('express');
-  const { db } = require('../database/database'); // Para operações diretas com o BD
   const { executeAllQueries } = require('../database/queries');
   const { insert_parceria } = require('../database/insert');
   const { isAdmin } = require('../middleware/auth');
@@ -71,17 +70,14 @@
   router.post('/delete/:id', isAdmin, async (req, res) => {
       const { id } = req.params;
   
-      try {
-          const deleteSql = `DELETE FROM parceria WHERE id = ?`;
-
- // Adaptação para SQLite3
- const changes = await new Promise((resolve, reject) => {
- db.run(deleteSql, [id], function(err) {
- if (err) return reject(err);
- resolve(this.changes); // this.changes contém o número de linhas afetadas
- });
- });
- if (changes === 0) {
+      try { 
+          // CORREÇÃO: Usando placeholder ($1) e sintaxe para PostgreSQL.
+          const deleteSql = `DELETE FROM parceria WHERE id = $1`;
+          // CORREÇÃO: Usando a função executeQuery consistente com o projeto.
+          const result = await executeQuery(deleteSql, [id]);
+ 
+          // CORREÇÃO: Verificando 'rowCount' que é o retorno padrão do driver 'pg'.
+          if (result.rowCount === 0) {
               console.warn(`[parceriaRoutes DELETE] Nenhum registro encontrado na tabela 'parceria' com ID: ${id} para deletar.`);
           } else {
               console.log(`[parceriaRoutes DELETE] Registro de 'parceria' com ID: ${id} deletado.`);
@@ -97,20 +93,17 @@
   //Rota generica
    router.get('/:id', async (req, res) => {
    const id = req.params.id;
-   const tabela = 'parceria'
- const { db } = require('../database/database');
+   const tabela = 'parceria';
+ 
    try {
- // Adaptação para SQLite3
- const item = await new Promise((resolve, reject) => {
- db.get("SELECT * FROM parceria WHERE id = ? LIMIT 1", [id], (err, row) => {
- if (err) return reject(err);
- resolve(row);
-            });
- });
-   res.render('edit',{model : item, tabela: tabela, id: id}); // Assuming a detail EJS template named 'adocao_detail'
+       // CORREÇÃO: Usando executeQuery e placeholder ($1) para PostgreSQL.
+       const query = "SELECT * FROM parceria WHERE id = $1 LIMIT 1";
+       const [item] = await executeQuery(query, [id]); // Desestrutura para pegar o primeiro resultado
+ 
+       res.render('edit', { model: item, tabela: tabela, id: id });
    } catch (error) {
-   console.error("Error fetching adoption detail:", error);
-   res.status(500).render('error', { error: 'Não foi possível carregar os detalhes do pet para adoção.' });
+       console.error("Error fetching parceria detail:", error);
+       res.status(500).render('error', { error: 'Não foi possível carregar os detalhes da parceria.' });
    }
   
    })

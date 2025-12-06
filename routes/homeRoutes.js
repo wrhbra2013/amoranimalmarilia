@@ -1,7 +1,7 @@
   // /home/wander/amor.animal2/routes/homeRoutes.js
   const express = require('express');
   const { pool } = require('../database/database'); // Usa o pool de conexões do PostgreSQL
-  const { executeAllQueries } = require('../database/queries'); // Essencial para buscar dados para a home
+  const { executeAllQueries, executeQuery } = require('../database/queries'); // Essencial para buscar dados para a home
   const { insert_home } = require('../database/insert');     // Para o formulário de notícias da home
   const fs = require('fs').promises;
   const path = require('path');
@@ -123,8 +123,34 @@
 //   });
   
   // Rota para renderizar o formulário de "Notícias" da home
+  // Esta rota deve vir ANTES da rota /home/:id para evitar que "form" seja tratado como um ID.
   router.get('/home/form', isAdmin, (req, res) => {
       res.render('form_home'); // Assumes form_home.ejs exists
+  });
+
+  // Rota para exibir uma notícia específica (Leia Mais)
+  router.get('/home/:id', async (req, res) => {
+      const { id } = req.params;
+  
+      try {
+          const query = 'SELECT * FROM home WHERE id = $1';
+          const newsItems = await executeQuery(query, [id]);
+  
+          if (newsItems && newsItems.length > 0) {
+              res.render('view_home', {
+                  item: newsItems[0],
+                  user: req.user,
+                  isAdmin: req.isAdmin || false
+              });
+          } else {
+              req.flash('error_msg', 'Notícia não encontrada.');
+              res.status(404).redirect('/home');
+          }
+      } catch (error) {
+          console.error(`homeRoutes GET /home/${id}: Erro ao buscar notícia:`, error);
+          req.flash('error_msg', 'Erro ao carregar a notícia.');
+          res.status(500).redirect('/home');
+      }
   });
   
   // Rota para processar o formulário de "Notícias" da home
@@ -133,40 +159,34 @@
           return res.status(400).render('form_home', { error: 'Nenhum arquivo foi enviado.' });
       }
   
-      const { destination, filename: tempFilename, originalname } = req.file;
-      
-      // WARNING: Using 'originalname' directly as 'finalFilename' can lead to file collisions.
-      // Consider using 'tempFilename' or a UUID-based filename.
-      const finalFilename = originalname; 
-      const tempFilePath = path.join(destination, tempFilename);
-      const finalFilePath = path.join(destination, finalFilename);
+      // O nome do arquivo já é único, gerado pelo multerConfig.
+      const { filename, destination } = req.file;
+      const finalFilePath = path.join(destination, filename);
   
       try {
-          await fs.rename(tempFilePath, finalFilePath);
-          console.log(`homeRoutes: Arquivo de notícia movido para: ${finalFilePath}`);
+          // CORREÇÃO: Não é mais necessário renomear o arquivo. O multer já o salvou
+          // com um nome único e seguro no caminho correto.
+          console.log(`homeRoutes: Arquivo de notícia salvo como: ${filename}`);
   
           const homeData = {
-              arquivo: finalFilename,
+              // CORREÇÃO: Salva o nome de arquivo único no banco de dados.
+              arquivo: filename,
               titulo: req.body.titulo,
-              mensagem: req.body.mensagem,
+              conteudo: req.body.conteudo,
               link: req.body.link
           };
   
-          await insert_home(homeData.arquivo, homeData.titulo, homeData.mensagem, homeData.link);
+          await insert_home(homeData.arquivo, homeData.titulo, homeData.conteudo, homeData.link);
           console.log('homeRoutes: Dados de notícia da home inseridos:', homeData);
           res.redirect('/home');
   
       } catch (error) {
           console.error("homeRoutes POST /form: Erro ao processar formulário de notícia da home:", error);
+          // Tenta limpar o arquivo que foi salvo pelo multer em caso de erro no banco de dados.
           try {
-              if (await fs.stat(tempFilePath).catch(() => false)) {
-                  await fs.unlink(tempFilePath);
-                  console.log("homeRoutes: Arquivo temporário removido após erro:", tempFilePath);
-              } 
-              else if (await fs.stat(finalFilePath).catch(() => false)) {
-                   await fs.unlink(finalFilePath);
-                   console.log("homeRoutes: Arquivo final (movido) removido após erro:", finalFilePath);
-              }
+              // CORREÇÃO: Tenta remover o arquivo final diretamente.
+              await fs.unlink(finalFilePath);
+              console.log("homeRoutes: Arquivo salvo removido após erro no banco de dados:", finalFilePath);
           } catch (cleanupError) {
               console.error("homeRoutes: Erro ao limpar arquivo após falha no formulário de notícia:", cleanupError);
           }
@@ -182,17 +202,10 @@
       const filePath = path.join(uploadsDir, path.basename(arq)); // path.basename for security
   
       try {
-          const deleteSql = `DELETE FROM home WHERE id = ?`;
-          const [result] = await pool.execute(deleteSql, [id]);
+          const deleteSql = `DELETE FROM home WHERE id = $1`;
+          const result = await pool.query(deleteSql, [id]);
   
-          // Adaptação para SQLite3
- const changes = await new Promise((resolve, reject) => {
- db.run(deleteSql, [id], function(err) {
- if (err) return reject(err);
- resolve(this.changes); // this.changes contém o número de linhas afetadas
- });
-          });
- if (changes === 0) {
+          if (result.rowCount === 0) {
               console.warn(`homeRoutes: Nenhum registro encontrado na tabela 'home' com ID: ${id} para deletar.`);
           } else {
               console.log(`homeRoutes: Registro de notícia da home com ID: ${id} deletado.`);

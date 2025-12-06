@@ -88,16 +88,16 @@
  // Mantido o nome da rota original /delete/adotante/:id
  router.post('/delete/adotante/:id', isAdmin, async (req, res) => {
      const { id } = req.params;
-     // const pool = getPool(); // Não é necessário com executeQuery
  
      try {
+         // CORREÇÃO: A sintaxe do placeholder para PostgreSQL é $1, $2, etc.
          const deleteSql = `DELETE FROM adotante WHERE id = $1`;
-         const [result] = await pool.execute(deleteSql, [id]);
+         // CORREÇÃO: Usando executeQuery para consistência e compatibilidade com PostgreSQL.
+         const result = await executeQuery(deleteSql, [id]);
  
-         if (result.affectedRows === 0) {
+         // CORREÇÃO: O driver 'pg' para PostgreSQL retorna 'rowCount', não 'affectedRows'.
+         if (result.rowCount === 0) {
              console.warn(`[adotanteRoutes DELETE] Nenhum registro encontrado na tabela 'adotante' com ID: ${id} para deletar.`);
-             // Pode ser útil informar ao usuário que o registro não foi encontrado,
-             // mas um redirect para a lista pode ser suficiente.
          } else {
              console.log(`[adotanteRoutes DELETE] Registro de 'adotante' com ID: ${id} deletado.`);
          }

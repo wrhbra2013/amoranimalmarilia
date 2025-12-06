@@ -130,7 +130,7 @@
                                          <a href="/home/<%= news.id %>" class="btn btn-primary mt-auto align-self-start">Leia Mais</a>
                                      <% } %>
                                  <% } else { %>
-                                     <a href="<%= news.linkPath %>" class="btn <%= news.btnClass %> mt-auto align-self-start"><%= news.btnText %></a>
+                                     <a href="<%= news.linkPath %>" class="btn <%= news.btnClass %> mt-auto align-self-start"><%= news.btnText %></a>a
                                  <% } %>
                              </div>
                          </div>
@@ -264,25 +264,25 @@
               
                   <div class="col-lg-3 col-md-6">
                      <div class="card card-impact h-100" style="border: none; background: transparent;">
-                         <div class="card-body">
+                         <div class="card-body d-flex flex-column text-center">
                              <i class="fas fa-syringe fa-3x mb-3" style="color: var(--heading-color);"></i>
-                             <h3 class="card-title display-4 fw-bold"></h3>
-                             <p class="text-muted">Castração</p>
-                             <table class="tabela-tickets-centralizada ">
-                                 <tr>
-                                     <th>Ano</th>
-                                     <th>Realizadas</th>
-                                 </tr>
-                                 <tr>
-                                     <td>2024</td>
-                                     <td>520</td>                 
-                                 </tr>
-                                 <tr>
-                                     <td>2025</td>
-                                     <td><%= model9 %></td>
-                                 </tr>
-                             </table>
-                             <a href="/castracao">Veja Mais</a>
+                             <h3 class="card-title h4 fw-bold">Castrações Anuais</h3>
+                             <p class="text-muted mt-n2 mb-3">Total por ano</p>
+ 
+                             <div class="d-flex justify-content-centealign-items-center gap-3 my-auto">
+                                 <!-- Círculo para 2024 -->
+                                 <div class="d-flex flex-column justify-content-center align-items-center text-center p-2" style="width: 100px; height: 100px; border: 3px solid var(--text-muted); border-radius: 50%; background-color: #f8f9fa;">
+                                     <span class="fw-bold fs-4" style="color: var(--heading-color);">520</span>
+                                     <small class="text-muted">2024</small>
+                                 </div>
+                                 <!-- Círculo para 2025 -->
+                                 <div class="d-flex flex-column justify-content-center align-items-center text-center p-2" style="width: 100px; height: 100px; border: 3px solid var(--hc-button-bg); border-radius: 50%; background-color: #f8f9fa;">
+                                     <span class="fw-bold fs-4" style="color: var(--heading-color);"><%= model9 %></span>
+                                     <small class="text-muted">2025</small>
+                                 </div>
+                                 <!-- Futuramente, um novo círculo para o próximo ano pode ser adicionado aqui. -->
+                             </div>
+                             <a href="/castracao" class="mt-3">Veja Mais</a>
                          </div>
                      </div>
                  </div>
@@ -297,7 +297,6 @@
                                      <thead>
                                          <tr>               
                                              <th >Ticket</th>               
-                                             <th>Agenda na semana</th>
                                              <th>Nome</th>
                                              <th>Espécie</th>
                                              <th>Clínica</th>
@@ -309,7 +308,7 @@
                                              <% model8.slice(0, 5).forEach(castracao => { %>
                                                  <tr>
                                                      <td style="color:brown; font-size: large;"><%= castracao.ticket %></td>                
-                                                     <td><%= castracao.agenda %></td>             
+                                                        
                                                      <td><%= castracao.nome %></td>
                                                      <td><%= castracao.especie %></td>
                                                      <td><%= castracao.clinica %></td>   

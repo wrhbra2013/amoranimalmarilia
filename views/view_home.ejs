@@ -1,0 +1,44 @@
+<%- include("_header") -%>
+
+<main class="main-content">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <% if (item) { %>
+                    <article class="news-article">
+                        <!-- Título da Notícia -->
+                        <h1 class="text-center mb-4"><%= item.titulo %></h1>
+        
+                        <!-- Imagem da Notícia -->
+                        <% if (item.arquivo) { %>
+                            <div class="text-center mb-4">
+                                <img src="/static/uploads/home/<%= item.arquivo %>" alt="Imagem para: <%= item.titulo %>" class="img-fluid rounded shadow-sm" style="max-height: 450px; width: auto; max-width: 100%;">
+                            </div>
+                        <% } %>
+        
+                        <!-- Conteúdo/Comentário da Notícia -->
+                        <div class="news-content fs-5 mt-4" style="text-align: left;">
+                            <%# O uso de <p> com 'white-space: pre-wrap' preserva as quebras de linha do texto original %>
+                            <p style="white-space: pre-wrap;"><%= item.conteudo %></p>
+                        </div>
+        
+                        <!-- Link Externo, se houver -->
+                        <% if (item.link) { %>
+                            <div class="text-center mt-5">
+                                <a href="<%= item.link.startsWith('http') ? item.link : '//' + item.link %>" class="button" target="_blank" rel="noopener noreferrer">Visitar Link Externo</a>
+                            </div>
+                        <% } %>
+                        
+                        <hr class="my-5">
+        
+                        <div class="text-center">
+                            <a href="/home" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Voltar à Página Inicial</a>
+                        </div>
+                    </article>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</main>
+
+<%- include("_footer") -%>
