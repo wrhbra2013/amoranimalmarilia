@@ -12,7 +12,7 @@ router.get('/',async (req, res) => {
                 let voluntarioData = await executeQuery(query);
                 
                 // Garante que voluntarioData seja sempre um array, mesmo que executeQuery retorne null/undefined
-                if (!Array.isArray(voluntarioData)) {
+                 if (!Array.isArray(voluntarioData)) {
                     voluntarioData = [];
                 }
 
