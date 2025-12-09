@@ -4,11 +4,11 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -482,
-    "scrollLeft": -6,
+    "scrollTop": 0,
+    "scrollLeft": 0,
     "zoomLevel": 1,
     "show": 431,
-    "database": 32,
+    "database": 4,
     "databaseName": "espelho.db",
     "canvasType": "ERD",
     "language": 1,
@@ -30,99 +30,17 @@
     "ignoreSaveSettings": 0
   },
   "doc": {
-    "tableIds": [
-      "hQRmUo76MzKVSCXkiWlwN"
-    ],
+    "tableIds": [],
     "relationshipIds": [],
-    "indexIds": [
-      "pqo9XgjrjdThZ2boYLRpS",
-      "2sYxTOKJojyqtqf4HeAD4"
-    ],
+    "indexIds": [],
     "memoIds": []
   },
   "collections": {
-    "tableEntities": {
-      "hQRmUo76MzKVSCXkiWlwN": {
-        "id": "hQRmUo76MzKVSCXkiWlwN",
-        "name": "procura_se",
-        "comment": "",
-        "columnIds": [],
-        "seqColumnIds": [],
-        "ui": {
-          "x": 204,
-          "y": 584,
-          "zIndex": 2,
-          "widthName": 62,
-          "widthComment": 60,
-          "color": ""
-        },
-        "meta": {
-          "updateAt": 1742779770900,
-          "createAt": 1742779721302
-        }
-      }
-    },
+    "tableEntities": {},
     "tableColumnEntities": {},
     "relationshipEntities": {},
-    "indexEntities": {
-      "pqo9XgjrjdThZ2boYLRpS": {
-        "id": "pqo9XgjrjdThZ2boYLRpS",
-        "name": "id",
-        "tableId": "hQRmUo76MzKVSCXkiWlwN",
-        "indexColumnIds": [],
-        "seqIndexColumnIds": [],
-        "unique": false,
-        "meta": {
-          "updateAt": 1742779801874,
-          "createAt": 1742779777395
-        }
-      },
-      "2sYxTOKJojyqtqf4HeAD4": {
-        "id": "2sYxTOKJojyqtqf4HeAD4",
-        "name": "",
-        "tableId": "hQRmUo76MzKVSCXkiWlwN",
-        "indexColumnIds": [],
-        "seqIndexColumnIds": [],
-        "unique": false,
-        "meta": {
-          "updateAt": 1742779795300,
-          "createAt": 1742779795300
-        }
-      }
-    },
+    "indexEntities": {},
     "indexColumnEntities": {},
     "memoEntities": {}
-  },
-  "lww": {
-    "settings.databaseName": [
-      "settings",
-      -1,
-      -1,
-      {
-        "databaseName": 1742779579684
-      }
-    ],
-    "hQRmUo76MzKVSCXkiWlwN": [
-      "tableEntities",
-      1742779721293,
-      -1,
-      {
-        "name": 1742779763665
-      }
-    ],
-    "pqo9XgjrjdThZ2boYLRpS": [
-      "indexEntities",
-      1742779777392,
-      -1,
-      {
-        "name": 1742779801871
-      }
-    ],
-    "2sYxTOKJojyqtqf4HeAD4": [
-      "indexEntities",
-      1742779795296,
-      -1,
-      {}
-    ]
   }
 }

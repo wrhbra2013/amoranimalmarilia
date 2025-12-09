@@ -43,29 +43,34 @@ router.get('/voluntario/form', (req, res) => {
 
 });
 
-router.post('/voluntario/form', (req, res) => {
-        const form ={
-                nome: req.body.nome,
-                localidade: req.body.localidade,
-                telefone: req.body.telefone,
-                whatsapp: req.body.whatsapp,
-                disponibilidade: req.body.disponibilidade,               
-                habilidade:  req.body.habilidade,                
-                mensagem: req.body.mensagem
-        }
-        insert_voluntario(
-                form.nome,
-                form.localidade,
-                form.telefone,
-                form.whatsapp,
-                form.disponibilidade,
-                form.habilidade,
-                form.mensagem
+router.post('/voluntario/form', async (req, res) => { // Tornando a função assíncrona
+    const form = {
+        nome: req.body.nome,
+        localidade: req.body.localidade,
+        telefone: req.body.telefone,
+        whatsapp: req.body.whatsapp,
+        disponibilidade: req.body.disponibilidade,
+        habilidade: req.body.habilidade,
+        mensagem: req.body.mensagem
+    };
+    try {
+        await insert_voluntario( // Aguardando a conclusão da inserção
+            form.nome,
+            form.localidade,
+            form.telefone,
+            form.whatsapp,
+            form.disponibilidade,
+            form.habilidade,
+            form.mensagem
         );
-        req.flash('success', 'Voluntário cadastrado com sucesso!')
+        req.flash('success_msg', 'Voluntário cadastrado com sucesso!'); // Usando success_msg para consistência
         res.redirect('/home');
-        
-})
+    } catch (error) {
+        console.error("Erro ao cadastrar voluntário:", error);
+        req.flash('error_msg', 'Falha ao cadastrar voluntário. Tente novamente.');
+        res.redirect('/doacao/voluntario/form'); // Redireciona de volta para o formulário
+    }
+});
 
 router.get('/coleta/form', (req, res) => {
         res.render('form_coleta');
