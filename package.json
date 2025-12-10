@@ -7,10 +7,6 @@
         "amorAnimal",
         "animal"
     ],
-    "engines": {
-        "npm": "10.8.2",
-        "node": "20.19.2"
-    },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "node index.js",

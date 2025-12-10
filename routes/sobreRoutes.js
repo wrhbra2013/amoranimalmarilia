@@ -11,6 +11,9 @@ router.get('/', async (req, res) => {
         const query = "SELECT * FROM voluntario";
         const voluntarioData = await executeQuery(query);
 
+        // LINHA DE DEPURAÇÃO: Mostra no console o que foi retornado do banco de dados.
+        console.log(`[sobreRoutes] Dados de voluntários buscados do BD:`, JSON.stringify(voluntarioData, null, 2));
+
         res.render('sobre', {
             model: voluntarioData || [], // Garante que 'model' seja sempre um array
             success_msg: req.flash('success_msg'),
