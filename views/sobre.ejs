@@ -23,7 +23,7 @@
 
     <section id="voluntarios" class="py-5 bg-light">
         <div class="container">
-            <h2 class="text-center mb-4">Reconhecimentos.</h2>
+            <h2 class="text-center mb-4">Nossos Voluntários.</h2>
             <div class="voluntarios-carousel-container">
                 <div class="voluntarios-scroll-container">
                     <% if (typeof model !== 'undefined' && model.length > 0) { %>
@@ -36,6 +36,7 @@
                                     <blockquote class="blockquote mt-auto mb-0">
                                         <p class="mb-0 fst-italic">"<%= voluntario.mensagem %>"</p>
                                     </blockquote>
+                                    <p class="text-muted small mt-2"><i class="fas fa-calendar-alt me-2"></i><%= new Date(voluntario.origem).toLocaleDateString('pt-BR').replace(/\//g, '-') %></p>
                                 </div>
                             </div>
                         <% }); %>

@@ -2,8 +2,8 @@
  const path = require("path");
  const express = require('express');
  const session = require('express-session');
-  const flash = require('connect-flash');
-  const cookieParser = require("cookie-parser");
+ const flash = require('connect-flash');
+ const cookieParser = require("cookie-parser");
  
  // Local Modules
  const { initializeDatabase } = require('./database/database.js');
@@ -80,7 +80,7 @@ app.use((req, res, next) => {
  app.use('/uploads', express.static(path.join(__dirname, 'static', 'uploads')));
  
  // Inicializa o connect-flash
-app.use(flash());
+ app.use(flash());
 
 // Middleware para tornar as mensagens flash disponíveis em todas as views/templates
 app.use((req, res, next) => {
