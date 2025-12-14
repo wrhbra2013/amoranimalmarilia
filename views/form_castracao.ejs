@@ -74,13 +74,24 @@
                      </select>
                  </div>
                  <div class="col-md-6">
-                     <label for="clinica" class="form-label fw-bold">Clínica:*</label>
-                     <select name="clinica" id="clinica" class="form-select" required>
-                         <option value="" selected disabled>Selecione...</option>
-                         <option value="Pet Shop É O Bicho - Av. Republica, 644">Pet Shop É O Bicho - Av. Republica, 644</option>
-                         <option value="Pet 15 - Av. Santo Antônio, 1513">Pet 15 - Av. Santo Antônio, 1513</option>
-                     </select>
-                 </div>
+                    <label for="clinica" class="form-label fw-bold">Clínica:*</label>
+                    <select class="form-select" id="clinica" name="clinica" required>
+                        <option value="" selected disabled>Selecione uma clínica ou cadastre uma nova</option>
+                        
+                        <% if (typeof clinicas !== 'undefined' && clinicas.length > 0) { %>
+                            <% clinicas.forEach(function(clinica) { %>
+                                <option value="<%= clinica.nome %>" <%= (typeof formData !== 'undefined' && formData.clinica === clinica.nome) ? 'selected' : '' %>>
+                                    <%= clinica.nome %>
+                                </option>
+                            <% }); %>
+                        <% } %>
+                        
+                        <option value="__nova_clinica__" <%= (typeof formData !== 'undefined' && formData.clinica === '__nova_clinica__') ? 'selected' : '' %>>
+                            Cadastrar nova clínica...
+                        </option>
+                    </select>
+                </div>
+
                  <div class="col-md-6">
                      <label for="agenda" class="form-label fw-bold">Dia Preferencial para Agendamento:*</label>
                      <select name="agenda" id="agenda" class="form-select" required>
@@ -111,6 +122,18 @@
          </a>
      </div>
  </main>
+ 
+ <script>
+     document.addEventListener('DOMContentLoaded', function() {
+         const clinicaSelect = document.getElementById('clinica');
+ 
+         clinicaSelect.addEventListener('change', function() {
+             if (this.value === '__nova_clinica__') {
+                 window.location.href = '/clinicas/form';
+             }
+         });
+     });
+ </script>
  
  <%- include("_footer")-%>
  

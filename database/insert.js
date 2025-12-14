@@ -1,4 +1,4 @@
-﻿const { pool } = require('./database');
+﻿﻿const { pool } = require('./database');
  
  
  async function executeInsert(sql, values, tableName) {
@@ -28,9 +28,9 @@
      const insertSQL = `INSERT INTO adocao (
          arquivo, nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp
      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`;
-     // Assumindo que 'arquivo' é um Buffer ou null. 'idade' deve ser um número.
+     // 'idade' agora é uma string (ex: "2 anos e 3 meses").
      const values = [
-         arquivo, nome, parseInt(idade, 10), especie, porte,
+         arquivo, nome, idade, especie, porte,
          caracteristicas, tutor, contato, whatsapp
      ];
      return executeInsert(insertSQL, values, 'adocao');

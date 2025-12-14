@@ -21,13 +21,13 @@
 </div>
 
 <div class="mb-3">
-<label for="nomePet" class="form-label">Nome do Pet</label>
-<input type="text" class="form-control" id="nomePet" name="nomePet" placeholder="Nome do Pet" required>
-</div>
-
-<div class="mb-3">
-<label for="idadePet" class="form-label">Idade do Pet</label>
-<input type="number" class="form-control" id="idadePet" name="idadePet" placeholder="Idade do Pet">
+    <label class="form-label">Idade do Pet</label>
+    <div class="input-group">
+        <input type="number" class="form-control" name="idadePetAnos" placeholder="Anos" min="0">
+        <span class="input-group-text">anos</span>
+        <input type="number" class="form-control" name="idadePetMeses" placeholder="Meses" min="0" max="11">
+        <span class="input-group-text">meses</span>
+    </div>
 </div>
 
 <div class="mb-3">

@@ -1,0 +1,61 @@
+ <%- include("_header") -%>
+ <main class="container mt-4 mb-5">
+     <div class="card shadow-sm">
+         <div class="card-header bg-info text-white">
+             <h1 class="h4 mb-0"><i class="fas fa-heart me-2"></i>Registrar Interesse em Adoção</h1>
+         </div>
+         <div class="card-body">
+             <p class="card-text">Preencha o formulário abaixo com seus dados e o perfil do pet que você deseja adotar. Entraremos em contato assim que tivermos um animalzinho compatível!</p>
+             
+             <form action="/interessados/form" method="post" class="row g-3 mt-2">
+                 <div class="col-md-12">
+                     <label for="nome" class="form-label fw-bold">Seu Nome Completo:*</label>
+                     <input type="text" class="form-control" id="nome" name="nome" placeholder="Seu nome" required>
+                 </div>
+                 <div class="col-md-6">
+                     <label for="phone" class="form-label fw-bold">Telefone de Contato:*</label>
+                     <input type="tel" class="form-control" name="contato" id="phone" onInput="this.value = phoneFormat(this.value)" placeholder="(00) 00000-0000" required>
+                 </div>
+                 <div class="col-md-6">
+                     <label for="whatsapp" class="form-label fw-bold">Disponível no WhatsApp?</label>
+                     <select name="whatsapp" id="whatsapp" class="form-select">
+                         <option value="" selected disabled>Selecione...</option>
+                         <option value="sim">Sim</option>
+                         <option value="nao">Não</option>
+                     </select>
+                 </div>
+
+                 <hr class="my-4">
+                 <h5 class="mb-3">Perfil do Pet Desejado</h5>
+
+                 <div class="col-md-6">
+                     <label for="especie" class="form-label">Espécie</label>
+                     <select class="form-select" id="especie" name="especie">
+                         <option value="" selected>Qualquer espécie</option>
+                         <option value="canino">Canino</option>
+                         <option value="felino">Felino</option>
+                     </select>
+                 </div>
+                 <div class="col-md-6">
+                     <label for="porte" class="form-label">Porte</label>
+                     <select class="form-select" id="porte" name="porte">
+                         <option value="" selected>Qualquer porte</option>
+                         <option value="pequeno">Pequeno</option>
+                         <option value="medio">Médio</option>
+                         <option value="grande">Grande</option>
+                     </select>
+                 </div>
+                 <div class="col-12">
+                     <label for="caracteristicas" class="form-label">Outras Características</label>
+                     <textarea class="form-control" id="caracteristicas" name="caracteristicas" rows="3" placeholder="Ex: dócil com crianças, aceita outros animais, cor específica, etc."></textarea>
+                 </div>
+
+                 <div class="col-12 d-flex justify-content-end mt-4 pt-3 border-top">
+                     <a href="/adocao" class="btn btn-outline-secondary me-2"><i class="fas fa-times me-1"></i>Cancelar</a>
+                     <button type="submit" class="btn btn-info"><i class="fas fa-paper-plane me-1"></i>Enviar Interesse</button>
+                 </div>
+             </form>
+         </div>
+     </div>
+ </main>
+ <%- include("_footer") -%>

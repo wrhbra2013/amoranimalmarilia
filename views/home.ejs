@@ -168,14 +168,19 @@
                   <% model2.slice(0, 4).forEach(adocao => { %>
                   <div class="home-card card">
                       <a href="/adocao/<%= adocao.id %>">
-                          <img src="/static/uploads/adocao/<%= adocao.arquivo || 'placeholder-pet.jpg' %>" 
-                               alt="Foto de <%= adocao.nome %> para adoção" 
+                          <img src="/static/uploads/adocao/<%= adocao.arquivo || 'placeholder-pet.jpg' %>"
+                               alt="Foto de <%= adocao.nome || 'pet' %> para adoção"
                                class="card-img-top home-card-img">
                       </a>
                       <div class="card-body text-center">
-                          <h5 class="card-title"><%= adocao.nome %></h5>
-                          <p class="text-muted small"><%= adocao.especie %> -  <%= adocao.idade %> meses</p>
-                          <a href="/adocao/<%= adocao.id %>" class="button btn-sm">Conhecer <%= adocao.nome.split(' ')[0] %></a>
+                          <%# Se o nome não existir, exibe a espécie com a primeira letra maiúscula. %>
+                          <h5 class="card-title"><%= adocao.nome || (adocao.especie ? adocao.especie.charAt(0).toUpperCase() + adocao.especie.slice(1) : 'Pet para adoção') %></h5>
+                          
+                          <%# Exibe a idade como vem do banco (ex: "1 ano e 2 meses") ou um texto padrão. %>
+                          <p class="text-muted small"><%= adocao.especie %> - <%= adocao.idade || 'Idade não informada' %></p>
+                          
+                          <%# O link "Conhecer" agora funciona mesmo sem nome e tem um texto alternativo. %>
+                          <a href="/adocao/<%= adocao.id %>" class="button btn-sm">Conhecer <%= adocao.nome ? adocao.nome.split(' ')[0] : 'o pet' %></a>
                       </div>
                   </div>
                   <% }); %>

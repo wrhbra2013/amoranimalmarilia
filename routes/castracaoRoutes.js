@@ -1,11 +1,12 @@
   // /home/wander/amor.animal2/routes/castracaoRoutes.js
   const express = require('express');
-  const { executeAllQueries } = require('../database/queries');
+  const { executeAllQueries, executeQuery } = require('../database/queries');
   const { insert_castracao } = require('../database/insert');
   const fs = require('fs').promises;
   const path = require('path');
   const { isAdmin } = require('../middleware/auth');
   const { uploadCastracao } = require('../utils/multerConfig');
+  const { pool } = require('../database/database');
   
   const router = express.Router();
   
@@ -25,44 +26,63 @@
   });
   
   // GET /castracao/form - Renderiza o formulário para novo registro de castração
-  router.get('/form', (req, res) => {
-      // Considerar adicionar isAdmin se o formulário for apenas para administradores
-      // Ex: router.get('/form', isAdmin, (req, res) => res.render('form_castracao'));
-      res.render('form_castracao');
+  router.get('/form', async (req, res) => {
+      try {
+          // Busca a lista de clínicas do banco de dados para popular o dropdown no formulário.
+          const clinicas = await executeQuery("SELECT nome FROM clinicas ORDER BY nome;");
+          const formData = req.flash('formData')[0] || {};
+
+          // Se uma nova clínica foi recém-criada, seu nome virá na query string.
+          // Vamos pré-selecioná-la no formulário.
+          if (req.query.new_clinic_name) {
+              formData.clinica = req.query.new_clinic_name;
+          }
+          
+          res.render('form_castracao', { 
+              clinicas: clinicas, 
+              error: req.flash('error'),
+              formData: formData
+          });
+      } catch (error) {
+          console.error("[castracaoRoutes GET /form] Erro ao buscar clínicas:", error.message);
+          // Em caso de erro no banco, renderiza a página com uma mensagem de erro e uma lista vazia
+          res.status(500).render('form_castracao', { 
+              error: 'Não foi possível carregar a lista de clínicas. Tente novamente mais tarde.',
+              clinicas: [] 
+          });
+      }
   });
   
   // POST /castracao/form - Processa o formulário de novo registro de castração
   router.post('/form', uploadCastracao.single('arquivo'), async (req, res) => {
       if (!req.file) {
-          return res.status(400).render('form_castracao', { error: 'Nenhum arquivo foi enviado.' });
+          req.flash('error', 'Nenhum arquivo foi enviado.');
+          req.flash('formData', req.body);
+          return res.redirect('/castracao/form');
       }
   
-      const { destination, filename: tempFilename, originalname } = req.file;
-  
-      // Usando 'originalname' para o nome final do arquivo, conforme lógica anterior.
-      // Considerar 'tempFilename' ou um UUID para nomes únicos mais robustos.
-      const finalFilename = originalname;
-      const tempFilePath = path.join(destination, tempFilename);
-      const finalFilePath = path.join(destination, finalFilename);
+      // O arquivo já foi salvo com um nome único pelo multer. Não é necessário renomear.
+      const { filename } = req.file;
+      const finalFilePath = req.file.path;
   
       try {
-          await fs.rename(tempFilePath, finalFilePath);
-          console.log(`[castracaoRoutes POST /form] Arquivo de castração movido para: ${finalFilePath}`);
+          console.log(`[castracaoRoutes POST /form] Arquivo de castração salvo como: ${filename}`);
   
+          const clinicaFinal = req.body.clinica;
+
           // Gera um ticket. A coluna 'ticket' na tabela 'castracao' é UNIQUE.
-          // Uma geração de ID único mais robusta pode ser necessária para alta concorrência.
           const ticket = req.body.ticket || Math.floor(Math.random() * 10000);
 
           const castracaoData = {
               ticket: ticket,
               nome: req.body.nome,
               contato: req.body.contato,
-              whatsapp: req.body.whatsapp, // Corrigido para 'whatsapp' se o campo no form for 'whatsapp'
-              arquivo: finalFilename,
+              whatsapp: req.body.whatsapp,
+              arquivo: filename, // Salva o nome de arquivo único gerado pelo multer
               idade: req.body.idade_pet,
               especie: req.body.especie,
               porte: req.body.porte,
-              clinica: req.body.clinica,
+              clinica: clinicaFinal, // Usa a clínica selecionada ou a nova
               agenda: req.body.agenda,
           };
   
@@ -70,61 +90,50 @@
               castracaoData.ticket,
               castracaoData.nome,
               castracaoData.contato,
-              castracaoData.whatsapp, // Usando o nome corrigido
+              castracaoData.whatsapp,
               castracaoData.arquivo,
               castracaoData.idade,
               castracaoData.especie,
               castracaoData.porte,
-              castracaoData.clinica,
+              castracaoData.clinica, // Usa a clínica selecionada ou a nova
               castracaoData.agenda
           );
           console.log('[castracaoRoutes POST /form] Dados de castração inseridos:', castracaoData);
-          req.flash('success', 'Dados de castração inseridos com sucesso.')
+          req.flash('success', 'Agendamento de castração solicitado com sucesso.');
           res.redirect('/home');
   
       } catch (error) {
           console.error("[castracaoRoutes POST /form] Erro ao processar formulário de castração:", error);
-          // Tenta limpar os arquivos enviados se ocorrer um erro
+          // Tenta limpar o arquivo que foi salvo pelo multer em caso de erro no banco de dados.
           try {
-              if (await fs.stat(tempFilePath).catch(() => false)) {
-                  await fs.unlink(tempFilePath);
-                  console.log("[castracaoRoutes POST /form] Arquivo temporário removido após erro:", tempFilePath);
-              } else if (await fs.stat(finalFilePath).catch(() => false)) {
-                  await fs.unlink(finalFilePath);
-                  console.log("[castracaoRoutes POST /form] Arquivo final (movido) removido após erro:", finalFilePath);
-              }
+              await fs.unlink(finalFilePath);
+              console.log("[castracaoRoutes POST /form] Arquivo salvo removido após erro no banco de dados:", finalFilePath);
           } catch (cleanupError) {
               console.error("[castracaoRoutes POST /form] Erro ao limpar arquivo após falha no formulário:", cleanupError);
           }
   
           let errorMessage = 'Erro ao salvar os dados de castração. Tente novamente.';
-          // Verifica se o erro é de entrada duplicada para o ticket (ER_DUP_ENTRY é específico do MySQL/MariaDB)
- if (error.message.includes('SQLITE_CONSTRAINT: UNIQUE constraint failed: castracao.ticket')) {
- errorMessage = 'Erro: O número do ticket já existe. Tente enviar o formulário novamente ou gere um novo ticket.';
+          // Verifica se o erro é de violação de constraint UNIQUE (código para PostgreSQL)
+          if (error.code === '23505') {
+              errorMessage = 'Erro: O número do ticket já existe. Tente enviar o formulário novamente.';
           }
-          res.status(500).render('form_castracao', { error: errorMessage });
+          req.flash('error', errorMessage);
+          req.flash('formData', req.body);
+          res.redirect('/castracao/form');
       }
   });
   
   // POST /castracao/delete/:id/:arq - Deleta um registro de castração
   router.post('/delete/:id/:arq', isAdmin, async (req, res) => {
       const { id, arq } = req.params;
- const { db } = require('../database/database');
       const uploadsDir = path.join(__dirname, '..', 'static', 'uploads', 'castracao');
       const filePath = path.join(uploadsDir, path.basename(arq)); // path.basename para segurança
   
       try {
-          const deleteSql = `DELETE FROM castracao WHERE id = ?`;
-          const [result] = await pool.execute(deleteSql, [id]);
+          const deleteSql = `DELETE FROM castracao WHERE id = $1`;
+          const result = await pool.query(deleteSql, [id]);
   
- // Adaptação para SQLite3
- const changes = await new Promise((resolve, reject) => {
- db.run(deleteSql, [id], function(err) {
- if (err) return reject(err);
- resolve(this.changes); // this.changes contém o número de linhas afetadas
- });
-          });
- if (changes === 0) {
+          if (result.rowCount === 0) {
               console.warn(`[castracaoRoutes DELETE] Nenhum registro encontrado na tabela 'castracao' com ID: ${id} para deletar.`);
           } else {
               console.log(`[castracaoRoutes DELETE] Registro de castração com ID: ${id} deletado.`);
@@ -132,17 +141,16 @@
   
           // Tenta deletar o arquivo associado
           try {
-              await fs.access(filePath); // Verifica se o arquivo existe
               await fs.unlink(filePath);
               console.log(`[castracaoRoutes DELETE] Arquivo de castração ${filePath} deletado.`);
           } catch (fileError) {
-              if (fileError.code === 'ENOENT') { // ENOENT = Error NO ENTry (arquivo não encontrado)
+              if (fileError.code === 'ENOENT') {
                   console.log(`[castracaoRoutes DELETE] Arquivo ${filePath} não encontrado para deleção, pode já ter sido removido.`);
               } else {
                   console.error(`[castracaoRoutes DELETE] Erro ao deletar arquivo de castração ${filePath} (não é ENOENT):`, fileError);
               }
           }
-          req.flash('success', 'Removido com sucesso.');
+          req.flash('success', 'Registro de castração removido com sucesso.');
           res.redirect('/castracao');
   
       } catch (error) {
@@ -154,25 +162,22 @@
   //Rota generica
    router.get('/:id', async (req, res) => {
    const id = req.params.id;
-   const tabela = 'castracao'
- const { db } = require('../database/database');
+   const tabela = 'castracao';
    try {
- // Adaptação para SQLite3
- const item = await new Promise((resolve, reject) => {
- db.get("SELECT * FROM castracao WHERE id = ? LIMIT 1", [id], (err, row) => {
- if (err) return reject(err);
- resolve(row);
-            });
- });
-   res.render('edit',{model : item, tabela: tabela, id: id}); // Assuming a detail EJS template named 'adocao_detail'
+        const query = "SELECT * FROM castracao WHERE id = $1 LIMIT 1";
+        const [item] = await executeQuery(query, [id]);
+
+        if (!item) {
+            req.flash('error', 'Registro de castração não encontrado.');
+            return res.redirect('/castracao');
+        }
+
+        res.render('edit', { model: item, tabela: tabela, id: id });
    } catch (error) {
-   console.error("Error fetching adoption detail:", error);
-   res.status(500).render('error', { error: 'Não foi possível carregar os detalhes do pet para adoção.' });
+        console.error(`[castracaoRoutes GET /:id] Error fetching castracao detail for id ${id}:`, error);
+        res.status(500).render('error', { error: 'Não foi possível carregar os detalhes do registro de castração.' });
    }
-  
    })
-   
-   
   
   module.exports = router;
  

@@ -1,0 +1,42 @@
+<%- include("_header") -%>
+
+<main class="container mt-4 mb-5">
+    <section class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h1 class="h4 mb-0"><i class="fas fa-clinic-medical me-2"></i>Cadastrar Nova Clínica</h1>
+        </div>
+        <div class="card-body">
+            <% if (typeof error !== 'undefined' && error.length > 0) { %>
+                <div class="alert alert-danger" role="alert">
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <form action="/clinicas/form" method="post" class="row g-3">
+                <div class="col-12">
+                    <label for="nome" class="form-label fw-bold">Nome da Clínica:*</label>
+                    <input type="text" class="form-control" id="nome" name="nome" value="<%= formData.nome || '' %>" placeholder="Nome completo da clínica" required>
+                </div>
+                <div class="col-12">
+                    <label for="endereco" class="form-label fw-bold">Endereço:</label>
+                    <input type="text" class="form-control" id="endereco" name="endereco" value="<%= formData.endereco || '' %>" placeholder="Endereço da clínica">
+                </div>
+                <div class="col-12">
+                    <label for="telefone" class="form-label fw-bold">Telefone:</label>
+                    <input type="tel" class="form-control" id="telefone" name="telefone" value="<%= formData.telefone || '' %>" placeholder="(00) 0000-0000">
+                </div>
+
+                <div class="col-12 d-flex justify-content-end mt-4 pt-3 border-top">
+                    <a href="/castracao/form" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar Clínica
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</main>
+
+<%- include("_footer") -%>

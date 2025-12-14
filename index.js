@@ -74,10 +74,10 @@ app.use((req, res, next) => {
  app.set('views', path.join(__dirname, 'views')); // Corrigido: app.set('views', ...)
  
  // --- Static Files ---
- // Servir arquivos estáticos da pasta 'static'
+ // Servir arquivos estáticos da aplicação (CSS, JS, imagens do tema)
  app.use('/static', express.static(path.join(__dirname, 'static')));
- // Servir arquivos da pasta 'uploads' (que está dentro de 'static')
- app.use('/uploads', express.static(path.join(__dirname, 'static', 'uploads')));
+ // Servir arquivos da pasta de uploads, que agora está fora da pasta da aplicação.
+ app.use('/uploads', express.static(path.join(__dirname, '..', 'amoranimal_uploads')));
  
  // Inicializa o connect-flash
  app.use(flash());
@@ -97,6 +97,7 @@ app.use((req, res, next) => {
  const adocaoRoutes = require('./routes/adocaoRoutes');
  const adotanteRoutes = require('./routes/adotanteRoutes');
  const adotadoRoutes = require('./routes/adotadoRoutes');
+ const clinicasRoutes = require('./routes/clinicasRoutes');
  const castracaoRoutes = require('./routes/castracaoRoutes');
  const procuraRoutes = require('./routes/procuraRoutes');
  const parceriaRoutes = require('./routes/parceriaRoutes');
@@ -119,6 +120,7 @@ app.use((req, res, next) => {
  app.use('/adotante', adotanteRoutes);
  app.use('/adotado', adotadoRoutes);
  app.use('/castracao', castracaoRoutes);
+ app.use('/clinicas', clinicasRoutes);
  app.use('/procura_se', procuraRoutes);
  app.use('/parceria', parceriaRoutes);
  app.use('/doacao', doacaoRoutes);

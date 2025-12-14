@@ -28,8 +28,11 @@
  }
  
  // Configuração para App Engine: usar /tmp para uploads
-  const uploadBaseDir = path.join(__dirname, '../static/uploads'); // Configuração local original
-//  const uploadBaseDir = path.join('/tmp', 'uploads'); // Modificado para App Engine
+  // A constante __dirname aponta para o diretório do arquivo atual (utils).
+  // '..' sobe um nível (para a raiz da aplicação, 'amoranimalmarilia').
+  // '..' sobe mais um nível (para a pasta 'Public').
+  // 'amoranimal_uploads' é a nova pasta que será criada ao lado da pasta da aplicação.
+ const uploadBaseDir = path.join(__dirname, '..', '..', 'amoranimal_uploads');
  
  try {
    ensureDirExists(uploadBaseDir);

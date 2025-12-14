@@ -1,18 +1,14 @@
 const { pool } = require('./database');
  
  async function executeDDL(ddlQuery, tableName) {
-  return new Promise((resolve, reject) => {    
-       pool.query(ddlQuery, (err) => {
-       
-       if (err) {
-         console.error(`Erro ao criar/verificar tabela ${tableName} (PostgreSQL):`, err.message);
-         reject(err);
-       } else {
-        //  console.log(`Tabela: ${tableName} (PostgreSQL) verificada/criada com sucesso.`);
-         resolve();
-       }
-     });
-   });
+  try {
+    await pool.query(ddlQuery);
+    // console.log(`Tabela: ${tableName} (PostgreSQL) verificada/criada com sucesso.`);
+  } catch (err) {
+    console.error(`Erro ao criar/verificar tabela ${tableName} (PostgreSQL):`, err.message);
+    // Lança o erro para que a função chamadora (ex: initializeDatabaseTables) possa tratá-lo.
+    throw err;
+  }
  }
  
  // --- Table Creation Functions ---
@@ -22,7 +18,7 @@ const { pool } = require('./database');
     id SERIAL PRIMARY KEY,
     arquivo VARCHAR(255),
     nome VARCHAR(255),
-    idade INT,
+    idade VARCHAR(50),
     especie VARCHAR(100),
     porte VARCHAR(50),
     caracteristicas TEXT,
@@ -121,6 +117,17 @@ const { pool } = require('./database');
   await executeDDL(ddl, 'parceria');
  }
  
+async function create_clinicas() {
+    const ddl = `CREATE TABLE IF NOT EXISTS clinicas (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(255) NOT NULL UNIQUE,
+        endereco VARCHAR(255),
+        telefone VARCHAR(20),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );`;
+    await executeDDL(ddl, 'clinicas');
+}
+ 
 async function create_voluntario() {
     const ddl = `CREATE TABLE IF NOT EXISTS voluntario (
         id SERIAL PRIMARY KEY,
@@ -207,6 +214,33 @@ async function create_voluntario() {
   }
  }
  
+/**
+ * Migra a coluna 'idade' da tabela 'adocao' de INT para VARCHAR se necessário.
+ * Isso é para corrigir uma alteração de schema em uma base de dados existente.
+ */
+async function migrateAdocaoIdadeColumn() {
+    const checkColumnSql = `
+        SELECT data_type 
+        FROM information_schema.columns
+        WHERE table_name = 'adocao' AND column_name = 'idade';
+    `;
+    const alterColumnSql = `ALTER TABLE adocao ALTER COLUMN idade TYPE VARCHAR(50);`;
+
+    try {
+        const result = await pool.query(checkColumnSql);
+        // Se a coluna existe e o tipo é 'integer'
+        if (result.rows.length > 0 && result.rows[0].data_type === 'integer') {
+            console.log("MIGRATION: Alterando a coluna 'idade' da tabela 'adocao' de INTEGER para VARCHAR(50).");
+            await pool.query(alterColumnSql);
+            console.log("MIGRATION: Coluna 'idade' da tabela 'adocao' alterada com sucesso.");
+        }
+    } catch (error) {
+        // Não lançar erro fatal, apenas registrar.
+        // A aplicação pode falhar em outro lugar se a migração for necessária e falhar.
+        console.error("MIGRATION-ERROR: Falha ao tentar migrar a coluna 'idade' da tabela 'adocao':", error);
+    }
+}
+
  /**
    * Função para inicializar todas as tabelas do banco de dados.
    * Chame esta função durante a inicialização da sua aplicação.
@@ -214,10 +248,12 @@ async function create_voluntario() {
  async function initializeDatabaseTables() {
      try {
       await create_adocao();
+      await migrateAdocaoIdadeColumn(); // Executa a migração após garantir que a tabela existe
       await create_adotante();
       await create_adotado();
       await create_castracao();
       await create_procura_se();
+     await create_clinicas();
       await create_parceria();
       await create_voluntario();
       await create_coleta();
@@ -236,10 +272,10 @@ async function create_voluntario() {
      create_adotante,
      create_adotado,
      create_castracao,
+     create_clinicas,
      create_procura_se,
      create_parceria,
      create_login,
-     // create_admin_user, // Geralmente não é exportado, mas chamado por initializeDatabaseTables
      initializeDatabaseTables
  };
  

@@ -1,0 +1,10 @@
+{
+    "debug.javascript.autoAttachFilter": "smart",
+    "debug.javascript.terminalOptions": {
+        "skipFiles": [
+            "<node_internals>/**"
+        ]
+    },
+    "debug.javascript.unmapMissingSources": true,
+    "debug.javascript.use  Stepping": true
+}

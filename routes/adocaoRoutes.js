@@ -101,11 +101,23 @@
          await fs.rename(tempFilePath, finalFilePath);
          console.log(`Arquivo movido para: ${finalFilePath}`);
  
+         const anos = req.body.idadePetAnos;
+         const meses = req.body.idadePetMeses;
+         let idadeString = '';
+         if (anos && parseInt(anos, 10) > 0) {
+             idadeString += `${anos} ${parseInt(anos, 10) > 1 ? 'anos' : 'ano'}`;
+         }
+         if (meses && parseInt(meses, 10) > 0) {
+             if (idadeString) {
+                 idadeString += ' e ';
+             }
+             idadeString += `${meses} ${parseInt(meses, 10) > 1 ? 'meses' : 'mês'}`;
+         }
 
          const adocaoData = {
              arquivo: finalFilename,
-             nome: req.body.nomePet,
-             idade: req.body.idadePet,
+             nome: req.body.nomePet, // O campo foi removido do form, então será undefined
+             idade: idadeString,
              especie: req.body.especie,
              porte: req.body.porte,
              caracteristicas: req.body.caracteristicas,
