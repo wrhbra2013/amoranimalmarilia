@@ -1,0 +1,92 @@
+<%- include('partials/header') %>
+
+<div class="container mt-5">
+    <div class="row">
+        <!-- Pet Details Sidebar -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px; z-index: 1;">
+                <img src="/uploads/adocao/<%= pet.arquivo %>" class="card-img-top" alt="<%= pet.nome %>" style="height: 300px; object-fit: cover;">
+                <div class="card-body">
+                    <h3 class="card-title"><%= pet.nome %></h3>
+                    <hr>
+                    <p class="card-text">
+                        <strong><i class="fas fa-paw"></i> Espécie:</strong> <%= pet.especie %><br>
+                        <strong><i class="fas fa-ruler-vertical"></i> Porte:</strong> <%= pet.porte %><br>
+                        <strong><i class="fas fa-birthday-cake"></i> Idade:</strong> <%= pet.idade %><br>
+                    </p>
+                    <p class="card-text">
+                        <strong>Características:</strong><br>
+                        <span class="text-muted"><%= pet.caracteristicas %></span>
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="/adocao" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Voltar ao Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matches List -->
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3><i class="fas fa-heart text-danger"></i> Análise de Compatibilidade</h3>
+                <span class="badge bg-primary"><%= matches.length %> Candidatos Encontrados</span>
+            </div>
+            
+            <% if (matches.length === 0) { %>
+                <div class="alert alert-warning shadow-sm" role="alert">
+                    <h4 class="alert-heading"><i class="fas fa-exclamation-circle"></i> Sem matches no momento</h4>
+                    <p>Não encontramos interessados que correspondam aos critérios deste pet (Espécie/Porte) ou palavras-chave.</p>
+                    <hr>
+                    <p class="mb-0">Tente divulgar o pet nas redes sociais ou aguarde novos cadastros de interessados.</p>
+                </div>
+            <% } else { %>
+                <div class="list-group shadow-sm">
+                    <% matches.forEach(match => { %>
+                        <div class="list-group-item list-group-item-action flex-column align-items-start p-4 border-start-0 border-end-0 border-top-0 border-bottom">
+                            <div class="d-flex w-100 justify-content-between align-items-center mb-2">
+                                <h5 class="mb-1 text-primary"><%= match.candidato.nome %></h5>
+                                <% if (match.score >= 50) { %>
+                                    <span class="badge bg-success p-2"><i class="fas fa-star"></i> Alta Compatibilidade (<%= match.score %>)</span>
+                                <% } else if (match.score >= 30) { %>
+                                    <span class="badge bg-info p-2 text-dark">Média Compatibilidade (<%= match.score %>)</span>
+                                <% } else { %>
+                                    <span class="badge bg-secondary p-2">Baixa Compatibilidade (<%= match.score %>)</span>
+                                <% } %>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong class="text-muted">Motivos do Match:</strong>
+                                <ul class="mt-1 mb-0 text-success">
+                                    <% match.motivos.forEach(motivo => { %>
+                                        <li><small><%= motivo %></small></li>
+                                    <% }) %>
+                                </ul>
+                            </div>
+
+                            <div class="bg-light p-3 rounded">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">CONTATO</small>
+                                        <span><i class="fas fa-phone"></i> <%= match.candidato.contato %></span>
+                                        <% if (match.candidato.whatsapp) { %>
+                                            <br><span><i class="fab fa-whatsapp text-success"></i> <%= match.candidato.whatsapp %></span>
+                                        <% } %>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">PREFERÊNCIAS DO CANDIDATO</small>
+                                        <span>Espécie: <strong><%= match.candidato.especie %></strong></span><br>
+                                        <span>Porte: <strong><%= match.candidato.porte %></strong></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

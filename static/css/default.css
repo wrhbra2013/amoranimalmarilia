@@ -2,16 +2,23 @@
     1. Base Styles & Variables
     ========================================================================== */
  :root {  
+   /* --- Paleta de Cores Base (Refatorado) --- */
+   --brand-red: #d66d6d;
+   --brand-green: #A3D2A1;
+   --brand-green-dark: #8FBC8F;
+   --brand-blue: #3294cc;
+   --brand-blue-dark: #256db9;
+   
    --bg-color: whitesmoke;
    --text-color: black;
    --container-bg: #FCF6F5;
    --container-shadow: rgba(0, 0, 0, 0.08);
    --container-border: transparent;
    
-   --heading-color: #d66d6d;
+   --heading-color: var(--brand-red);
    --paragraph-color: #050505;
    
-   --link-color: #3294cc;
+   --link-color: var(--brand-blue);
    --link-hover-decoration: underline;
    
    --border-color: #E0E0E0;
@@ -27,9 +34,9 @@
    --input-text: #495057;
    --input-border: #ced4da;
    
-   --button-bg: #A3D2A1;
+   --button-bg: var(--brand-green);
    --button-text: #2F4F4F;
-   --button-hover-bg: #8FBC8F;
+   --button-hover-bg: var(--brand-green-dark);
  
    /* Variáveis de Alto Contraste */
    --hc-bg-color: black;
@@ -725,8 +732,8 @@ footer {
  .cookie-consent-banner button { /* Style for the accept button */
    padding: 8px 15px;
    cursor: pointer;
-   background-color: #4CAF50; /* Green, consider a variable */
-   color: white;
+   background-color: var(--button-bg); /* Green, consider a variable */
+   color: var(--button-text);
    border: none;
    border-radius: 4px;
  }
@@ -817,7 +824,7 @@ footer {
  
  .mobile-menu {
    display: none;
-   background-color: #256db9; /* Specific color, consider a variable */
+   background-color: var(--brand-blue-dark); /* Specific color, consider a variable */
    color: var(--nav-text); 
    /* border: 1px solid var(--nav-text); /* Might be too much with bg color */
    padding: 8px 12px; /* This padding is for the button itself if it were visible */
@@ -840,7 +847,7 @@ footer {
    height: 100vh; /* Full viewport height */
    overflow-y: scroll;
    padding-top: 3px; /* Space for a fixed header or close button area */
-   background-color: #256db9; /* Ensure background covers content */
+   background-color: var(--brand-blue-dark); /* Ensure background covers content */
  }
  
  .mobile-menu ul {
@@ -1189,7 +1196,7 @@ footer {
   top: 50%;
   transform: translateY(-50%);
   background-color: transparent;
-  color: rgba(192, 66, 192, 0.6);
+  color: var(--heading-color);
   border: none;
   padding: 8px 12px;
   font-size: 1.5rem;
@@ -1213,14 +1220,14 @@ footer {
 .news-carousel-control.prev {
   left: -15px;
   cursor: pointer;
-  color: rgb(226, 72, 16);
+  color: var(--heading-color);
   font-weight: bolder;
 }
 
 .news-carousel-control.next {
   right: -15px;
   cursor: pointer;
-  color: rgb(226, 72, 16);
+  color: var(--heading-color);
   font-weight: bolder;
 }
 
@@ -1238,13 +1245,15 @@ footer {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background-color: rgba(24, 186, 226, 0.6);
+  background-color: var(--link-color);
+  opacity: 0.6;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .news-carousel-dots .dot.active {
-  background-color: rgb(23, 114, 175);
+  background-color: var(--brand-blue-dark);
+  opacity: 1;
 }
 
 /* Para garantir que a imagem dentro do card se ajuste bem */

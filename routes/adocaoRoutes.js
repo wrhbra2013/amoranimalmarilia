@@ -1,219 +1,246 @@
- // routes/adocaoRoutes.js
- const express = require('express');
- const { executeQuery } = require('../database/queries'); // Importa executeQuery
- const { insert_adocao } = require('../database/insert'); // Importa insert_adocao
- const fs = require('fs').promises; // Use promises API for fs
- const path = require('path');
- const { isAdmin } = require('../middleware/auth');
- const { uploadAdocao } = require('../utils/multerConfig'); // Specific multer instance
- 
+const express = require('express');
+const router = express.Router();
+const { executeQuery } = require('../database/queries');
+const { insert_adocao } = require('../database/insert');
+const { uploadAdocao } = require('../utils/multerConfig');
+const fs = require('fs').promises;
+const path = require('path');
+const { isAdmin } = require('../middleware/auth'); // Re-adicionando para segurança do dashboard
 
- const router = express.Router();
- 
+// ==============================================================================
+// Inicialização da Tabela de Interessados
+// ==============================================================================
+async function ensureInteressadosTable() {
+    const sql = `
+        CREATE TABLE IF NOT EXISTS interessados_adocao (
+            id SERIAL PRIMARY KEY,
+            nome VARCHAR(255) NOT NULL,
+            contato VARCHAR(255),
+            whatsapp VARCHAR(255),
+            especie VARCHAR(50),
+            porte VARCHAR(50),
+            caracteristicas TEXT
+        );
+    `;
+    try {
+        await executeQuery(sql);
+    } catch (error) {
+        console.error("Erro ao verificar/criar tabela interessados_adocao:", error);
+    }
+}
 
- // GET route to display adoption listings
- router.get('/', async (req, res) => {
-     try {
-         const query = "SELECT * FROM adocao";
-         const adocaoData = await executeQuery(query);
-         res.render('adote', {
-             model: adocaoData,
-             success_msg: req.flash('success_msg'),
-             error_msg: req.flash('error_msg')
-         });
-     } catch (error) {
-         console.error("Error fetching adoption data:", error);
-         req.flash('error_msg', 'Não foi possível carregar os dados de adoção.');
-         res.status(500).render('error', { error: 'Não foi possível carregar os dados de adoção.' });
-     }
- });
- 
+// Chama a verificação ao carregar o módulo
+ensureInteressadosTable();
 
- // GET route to render the adoption form
- router.get('/form', (req, res) => {
-     res.render('form_adocao', {
-         error: req.flash('error'), // Para erros de validação do formulário
-         success_msg: req.flash('success_msg'),
-         error_msg: req.flash('error_msg'),
-         // Passar dados do formulário anterior em caso de erro, se necessário
-         formData: req.flash('formData')[0] || {}
-     });
- });
- 
+// ==============================================================================
+// Helper de Matching
+// ==============================================================================
+/**
+ * Calcula a pontuação de compatibilidade entre um pet e um candidato interessado.
+ * @param {object} pet - O objeto do pet para adoção.
+ * @param {object} candidato - O objeto do candidato interessado.
+ * @returns {{score: number, motivos: string[]}} - Um objeto com a pontuação e os motivos.
+ */
+function calculateMatchScore(pet, candidato) {
+    let score = 0;
+    let motivos = [];
 
- //Rota generica para edição (ou visualização detalhada)
- router.get('/:id', async (req, res) => {
-     const id = req.params.id;
-     const tabela = 'adocao';
-     try {
-         const query = "SELECT * FROM adocao WHERE id = $1 LIMIT 1";
-         const params = [id];
-         const [item] = await executeQuery(query, params); // Desestrutura o primeiro elemento do array
-         if (!item) {
-             req.flash('error_msg', 'Item de adoção não encontrado.');
-             return res.redirect('/adocao');
-         }
-         res.render('edit', {
-             model: item,
-             tabela: tabela,
-             id: id,
-             success_msg: req.flash('success_msg'),
-             error_msg: req.flash('error_msg')
-         });
-     } catch (error) {
-         console.error("Error fetching adoption detail:", error);
-         req.flash('error_msg', 'Não foi possível carregar os detalhes do pet para adoção.');
-         res.status(500).render('error', { error: 'Não foi possível carregar os detalhes do pet para adoção.' });
-     }
- });
- 
+    // Normalização de strings para comparação
+    const petEspecie = (pet.especie || '').toLowerCase().trim();
+    const candEspecie = (candidato.especie || '').toLowerCase().trim();
+    const petPorte = (pet.porte || '').toLowerCase().trim();
+    const candPorte = (candidato.porte || '').toLowerCase().trim();
 
- // POST route to handle form submission for new adoption entries
- router.post('/form', uploadAdocao.single('arquivo'), async (req, res) => {
-     if (!req.file) {
-         req.flash('error', 'Nenhum arquivo foi enviado.');
-         req.flash('formData', req.body); // Salva os dados do formulário para repreencher
-         return res.redirect('/adocao/form');
-     }
- 
+    // CRITÉRIO 1: Espécie (Peso Alto - 50 pontos)
+    if (candEspecie === 'qualquer' || candEspecie === petEspecie) {
+        score += 50;
+        motivos.push('Espécie compatível');
+    } else {
+        return { score: 0, motivos: ['Espécie incompatível'] }; // Incompatível, retorna score 0
+    }
 
-     const { destination, filename: tempFilename, originalname } = req.file;
- 
+    // CRITÉRIO 2: Porte (Peso Médio - 30 pontos)
+    if (candPorte === 'qualquer' || candPorte === petPorte) {
+        score += 30;
+        motivos.push('Porte compatível');
+    }
 
-     let finalFilename;
-     try {
-         // Tenta criar um nome de arquivo único baseado na contagem de arquivos ou timestamp
-         const filesInDir = await fs.readdir(destination).catch(() => []); // Evita erro se diretório não existir ainda
-         const count = filesInDir.length;
-         finalFilename = `${Date.now()}_${count}${path.extname(originalname)}`;
-     } catch (readDirError) {
-         console.error("Error reading directory for file count:", readDirError);
-         // Fallback para um nome baseado em timestamp se a contagem falhar
-         finalFilename = `${Date.now()}${path.extname(originalname)}`;
-     }
- 
+    // CRITÉRIO 3: Palavras-chave nas características (Peso Variável - 5 pontos por termo)
+    if (candidato.caracteristicas && pet.caracteristicas) {
+        const keywords = candidato.caracteristicas.toLowerCase().split(/[\s,;.]+/);
+        const petDesc = pet.caracteristicas.toLowerCase();
+        const ignoredWords = ['muito', 'pouco', 'gosta', 'quer', 'animal', 'tenho'];
 
-     const tempFilePath = path.join(destination, tempFilename);
-     const finalFilePath = path.join(destination, finalFilename);
- 
+        let matchesCount = 0;
+        keywords.forEach(word => {
+            if (word.length > 3 && !ignoredWords.includes(word) && petDesc.includes(word)) {
+                matchesCount++;
+            }
+        });
 
-     try {
-         await fs.rename(tempFilePath, finalFilePath);
-         console.log(`Arquivo movido para: ${finalFilePath}`);
- 
-         const anos = req.body.idadePetAnos;
-         const meses = req.body.idadePetMeses;
-         let idadeString = '';
-         if (anos && parseInt(anos, 10) > 0) {
-             idadeString += `${anos} ${parseInt(anos, 10) > 1 ? 'anos' : 'ano'}`;
-         }
-         if (meses && parseInt(meses, 10) > 0) {
-             if (idadeString) {
-                 idadeString += ' e ';
-             }
-             idadeString += `${meses} ${parseInt(meses, 10) > 1 ? 'meses' : 'mês'}`;
-         }
+        if (matchesCount > 0) {
+            score += (matchesCount * 5);
+            motivos.push(`Características em comum (${matchesCount} termos)`);
+        }
+    }
 
-         const adocaoData = {
-             arquivo: finalFilename,
-             nome: req.body.nomePet, // O campo foi removido do form, então será undefined
-             idade: idadeString,
-             especie: req.body.especie,
-             porte: req.body.porte,
-             caracteristicas: req.body.caracteristicas,
-             tutor: req.body.tutor,
-             contato: req.body.contato,
-             whatsapp: req.body.whatsapp
-         };
- 
+    return { score, motivos };
+}
 
-         await insert_adocao(
-             adocaoData.arquivo,
-             adocaoData.nome,
-             adocaoData.idade,
-             adocaoData.especie,
-             adocaoData.porte,
-             adocaoData.caracteristicas,
-             adocaoData.tutor,
-             adocaoData.contato,
-             adocaoData.whatsapp
-         );
-         
-         req.flash('success', 'Dados de adoção inseridos com sucesso.');
-         res.redirect('/home'); // Ou para /adocao para ver a lista atualizada
- 
+// ==============================================================================
+// SISTEMA DE MATCHING (Detalhes para um pet)
+// ==============================================================================
+router.get('/match/:id', async (req, res) => {
+    const petId = req.params.id;
 
-     } catch (error) {
-         console.error("Erro ao processar formulário de adoção:", error);
-         // Tenta limpar o arquivo enviado em caso de erro no banco de dados
-         try {
-             if (await fs.stat(tempFilePath).catch(() => false)) {
-                 await fs.unlink(tempFilePath);
-                 console.log("Arquivo temporário removido após erro:", tempFilePath);
-             } else if (await fs.stat(finalFilePath).catch(() => false)) { // Se já foi movido
-                 await fs.unlink(finalFilePath);
-                 console.log("Arquivo final (movido) removido após erro:", finalFilePath);
-             }
-         } catch (cleanupError) {
-             console.error("Erro ao limpar arquivo após falha no formulário de adoção:", cleanupError);
-         }
-         req.flash('error', 'Erro ao salvar os dados de adoção. Tente novamente.');
-         req.flash('formData', req.body); // Salva os dados do formulário para repreencher
-         res.redirect('/adocao/form');
-     }
- });
- 
+    try {
+        const [pet] = await executeQuery('SELECT * FROM adocao WHERE id = $1', [petId]);
+        if (!pet) {
+            return res.status(404).render('error', { error: 'Pet não encontrado para análise de compatibilidade.' });
+        }
 
- // POST route to delete an adoption entry
- router.post('/delete/adocao/:id/:arq', isAdmin, async (req, res) => {
-     const { id, arq } = req.params;
-     const uploadsDir = path.join(__dirname, '..', 'static', 'uploads', 'adocao');
-     // É importante sanitizar 'arq' para evitar Path Traversal.
-     // path.basename garante que estamos apenas pegando o nome do arquivo.
-     const filePath = path.join(uploadsDir, path.basename(arq));
- 
+        const interessados = await executeQuery('SELECT * FROM interessados_adocao');
 
-     try {
-         const deleteSql = `DELETE FROM adocao WHERE id = $1`;
-         const params = [id];
-         const result = await executeQuery(deleteSql, params);
- 
+        const matches = interessados.map(candidato => {
+            const { score, motivos } = calculateMatchScore(pet, candidato);
+            return { candidato, score, motivos };
+        })
+        .filter(m => m.score > 0) // Mostra qualquer um com pontuação, mesmo que baixa
+        .sort((a, b) => b.score - a.score);
 
-         // Em SQLite, executeQuery para DELETE não retorna affectedRows diretamente como no MySQL com node-mysql2.
-         // Você precisaria adaptar executeQuery ou verificar de outra forma se a deleção ocorreu.
-         // Por simplicidade, vamos assumir que se não houver erro, a operação foi tentada.
-         // Para SQLite, `this.changes` dentro do callback de `db.run` daria o número de linhas afetadas.
-         // Se executeQuery for adaptado para retornar `this.changes` para SQLite, você pode usar:
-         // if (result.changes === 0) {
-         //    req.flash('error_msg', 'Nenhum item de adoção encontrado com este ID para deletar.');
-         // } else {
-         //    req.flash('success_msg', 'Item de adoção deletado com sucesso.');
-         // }
- 
+        res.render('adocao_match_result', {
+            pet,
+            matches
+        });
+    } catch (error) {
+        console.error("[adocaoRoutes GET /match] Erro:", error);
+        res.status(500).render('error', { error: 'Erro ao processar compatibilidade de adoção.' });
+    }
+});
 
-         // Tentativa de deletar o arquivo associado
-         try {
-             await fs.access(filePath); // Verifica se o arquivo existe
-             await fs.unlink(filePath);
-             console.log(`Arquivo ${filePath} deletado com sucesso.`);
-         } catch (fileError) {
-             if (fileError.code !== 'ENOENT') { // ENOENT = Error NO ENTry (arquivo não encontrado)
-                 console.error(`Erro ao deletar o arquivo ${filePath} (não é ENOENT):`, fileError);
-                 // Considerar se deve ou não enviar um flash de erro para o usuário sobre o arquivo
-             } else {
-                 console.log(`Arquivo ${filePath} não encontrado para deleção (ENOENT), pode já ter sido removido.`);
-             }
-         }
-         req.flash('success', 'Removido com sucesso.'); // Mensagem mais genérica
-         res.redirect('/adocao');
- 
+// ==============================================================================
+// ROTAS PADRÃO (Listagem pública e Gerenciamento)
+// ==============================================================================
 
-     } catch (error) {
-         console.error(`Erro ao deletar registro de adoção com ID: ${id}:`, error);
-         req.flash('error_msg', 'Erro ao deletar o item de adoção. Tente novamente.');
-         res.redirect('/adocao'); // Redireciona de volta para a lista com a mensagem de erro
-     }
- });
- 
+// GET /adocao - Dashboard Público de Adoção
+router.get('/', async (req, res) => {
+    try {
+        // Garante que a tabela existe antes de consultar
+        await ensureInteressadosTable();
 
- module.exports = router;
+        // 1. Buscar dados brutos
+        const [petsCount] = await executeQuery('SELECT COUNT(*) as total FROM adocao');
+        const [interessadosCount] = await executeQuery('SELECT COUNT(*) as total FROM interessados_adocao');
+        const pets = await executeQuery('SELECT * FROM adocao ORDER BY id DESC');
+        const interessados = await executeQuery('SELECT * FROM interessados_adocao');
+
+        // 2. Processar matches para cada pet
+        const petsComMatches = pets.map(pet => {
+            const matches = interessados.filter(candidato => calculateMatchScore(pet, candidato).score >= 50);
+            return { ...pet, matchCount: matches.length };
+        });
+
+        // 3. Renderizar o dashboard
+        res.render('adocao_dashboard', {
+            stats: {
+                totalPets: petsCount ? petsCount.total : 0,
+                totalInteressados: interessadosCount ? interessadosCount.total : 0
+            },
+            pets: petsComMatches,
+            actions: [
+                { label: 'Cadastrar Novo Pet', url: '/adocao/form', icon: 'fa-paw' },
+                { label: 'Cadastrar Interessado', url: '/adocao/interessados/form', icon: 'fa-user-plus' }
+            ]
+        });
+    } catch (error) {
+        console.error("[adocaoRoutes GET /] Erro:", error);
+        res.status(500).render('error', { error: 'Erro ao carregar o dashboard de adoção.' });
+    }
+});
+
+// GET /adocao/form - Formulário de cadastro (Admin)
+router.get('/form', (req, res) => {
+    res.render('form_adocao');
+});
+
+// POST /adocao/form - Processa o formulário de cadastro de pet
+router.post('/form', uploadAdocao.single('arquivo'), async (req, res) => {
+    if (!req.file) {
+        req.flash('error', 'É necessário enviar uma foto do pet.');
+        return res.redirect('/adocao/form');
+    }
+
+    const { filename } = req.file;
+    const { nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp } = req.body;
+
+    try {
+        await insert_adocao(filename, nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp);
+        req.flash('success', 'Pet cadastrado para adoção com sucesso!');
+        res.redirect('/adocao'); // Redireciona para o dashboard após o cadastro
+    } catch (error) {
+        console.error("[adocaoRoutes POST /form] Erro:", error);
+        // Remove o arquivo enviado em caso de erro no banco
+        if (req.file && req.file.path) {
+            await fs.unlink(req.file.path).catch(err => console.error("Erro ao remover arquivo após falha:", err));
+        }
+        req.flash('error', 'Erro ao cadastrar pet. Tente novamente.');
+        res.redirect('/adocao/form');
+    }
+});
+
+// POST /adocao/delete/:id/:arq - Deleta um registro de pet
+router.post('/delete/:id/:arq', isAdmin, async (req, res) => {
+    const { id, arq } = req.params;
+    try {
+        // Deleta do banco de dados
+        await executeQuery('DELETE FROM adocao WHERE id = $1', [id]);
+
+        // Deleta o arquivo físico
+        const uploadsDir = path.join(__dirname, '..', '..', 'amoranimal_uploads', 'adocao');
+        const filePath = path.join(uploadsDir, path.basename(arq));
+        await fs.unlink(filePath).catch(err => {
+            if (err.code !== 'ENOENT') console.error(`[adocaoRoutes] Erro ao deletar arquivo ${filePath}:`, err.message);
+        });
+
+        req.flash('success', 'Pet removido com sucesso.');
+        res.redirect('/adocao'); // Redireciona para o dashboard após deletar
+    } catch (error) {
+        console.error("[adocaoRoutes POST /delete] Erro:", error);
+        req.flash('error', 'Erro ao remover pet.');
+        res.redirect('/adocao');
+    }
+});
+
+// ==============================================================================
+// ROTAS DE INTERESSADOS (Candidatos à Adoção)
+// ==============================================================================
+
+// GET /adocao/interessados/form - Formulário para interessados
+router.get('/interessados/form', (req, res) => {
+    // Renderiza um formulário simples (pode reutilizar form_adocao com adaptações ou criar um novo)
+    // Como não temos o arquivo 'form_interesse_adocao.ejs' no contexto, vou sugerir renderizar 'form_adotante' ou similar,
+    // mas o ideal é ter uma view específica. Vou assumir que você criará 'form_interesse_adocao'.
+    res.render('form_interesse_adocao', { error: req.flash('error'), success: req.flash('success') });
+});
+
+// POST /adocao/interessados/form - Salva o interessado
+router.post('/interessados/form', async (req, res) => {
+    const { nome, contato, whatsapp, especie, porte, caracteristicas } = req.body;
+
+    try {
+        await executeQuery(
+            `INSERT INTO interessados_adocao (nome, contato, whatsapp, especie, porte, caracteristicas) 
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [nome, contato, whatsapp, especie, porte, caracteristicas]
+        );
+        
+        req.flash('success', 'Seu interesse foi registrado! Entraremos em contato se houver um match.');
+        res.redirect('/adocao');
+    } catch (error) {
+        console.error("[adocaoRoutes POST /interessados/form] Erro:", error);
+        req.flash('error', 'Erro ao registrar interesse.');
+        res.redirect('/adocao/interessados/form');
+    }
+});
+
+module.exports = router;

@@ -1,0 +1,113 @@
+<%- include('partials/header') %>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-tachometer-alt"></i> Dashboard de Adoção</h2>
+        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+            <span class="badge bg-danger">Modo Administrador</span>
+        <% } else { %>
+            <span class="badge bg-info">Visualização Pública</span>
+        <% } %>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card text-white bg-primary mb-3 shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Total de Pets</h5>
+                        <p class="card-text display-4 mb-0"><%= stats.totalPets %></p>
+                    </div>
+                    <i class="fas fa-paw fa-4x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card text-white bg-success mb-3 shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Interessados Cadastrados</h5>
+                        <p class="card-text display-4 mb-0"><%= stats.totalInteressados %></p>
+                    </div>
+                    <i class="fas fa-users fa-4x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mb-4 d-flex flex-wrap gap-2">
+        <% actions.forEach(action => { %>
+            <a href="<%= action.url %>" class="btn btn-outline-dark">
+                <i class="fas <%= action.icon %>"></i> <%= action.label %>
+            </a>
+        <% }) %>
+    </div>
+
+    <!-- Pets List -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Pets Cadastrados e Análise de Compatibilidade</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Pet</th>
+                            <th>Detalhes</th>
+                            <th>Potenciais Adotantes</th>
+                            <th class="text-end pe-4">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (pets.length === 0) { %>
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">Nenhum pet cadastrado no momento.</td>
+                            </tr>
+                        <% } %>
+                        <% pets.forEach(pet => { %>
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <img src="/uploads/adocao/<%= pet.arquivo %>" alt="<%= pet.nome %>" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                        <strong><%= pet.nome %></strong>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="d-block text-muted small">Espécie: <%= pet.especie %></span>
+                                    <span class="d-block text-muted small">Porte: <%= pet.porte %></span>
+                                </td>
+                                <td>
+                                    <% if (pet.matchCount > 0) { %>
+                                        <span class="badge bg-success rounded-pill">
+                                            <i class="fas fa-check-circle"></i> <%= pet.matchCount %> Match(es)
+                                        </span>
+                                    <% } else { %>
+                                        <span class="badge bg-secondary rounded-pill">Sem matches</span>
+                                    <% } %>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="/adocao/match/<%= pet.id %>" class="btn btn-sm btn-info text-white me-1" title="Ver Análise de Compatibilidade">
+                                        <i class="fas fa-search"></i> Analisar
+                                    </a>
+                                    
+                                    <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                                        <form action="/adocao/delete/<%= pet.id %>/<%= pet.arquivo %>" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir o pet <%= pet.nome %>?');">
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Excluir Pet">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>
