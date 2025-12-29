@@ -46,8 +46,22 @@ function calculateMatchScore(pet, candidato) {
     let motivos = [];
 
     // Normalização de strings para comparação
-    const petEspecie = (pet.especie || '').toLowerCase().trim();
-    const candEspecie = (candidato.especie || '').toLowerCase().trim();
+    // Normaliza e padroniza espécies (ex: 'gato' -> 'felino')
+    function normalizeSpecies(val) {
+        if (!val) return '';
+        let s = String(val).toLowerCase().trim();
+        // Remove acentos
+        s = s.normalize ? s.normalize('NFD').replace(/\p{Diacritic}/gu, '') : s.replace(/[\u0300-\u036f]/g, '');
+        // Mapear sinônimos comuns
+        const gatos = ['gato', 'gatos', 'gatinho', 'gatinhos', 'felino', 'felinos'];
+        const caes = ['cao', 'caes', 'cachorro', 'cachorros', 'canino', 'caninos', 'cachorinho'];
+        if (gatos.includes(s)) return 'felino';
+        if (caes.includes(s)) return 'canino';
+        return s;
+    }
+
+    const petEspecie = normalizeSpecies(pet.especie);
+    const candEspecie = normalizeSpecies(candidato.especie);
     const petPorte = (pet.porte || '').toLowerCase().trim();
     const candPorte = (candidato.porte || '').toLowerCase().trim();
 
@@ -135,9 +149,27 @@ router.get('/', async (req, res) => {
         const interessados = await executeQuery('SELECT * FROM interessados_adocao');
 
         // 2. Processar matches para cada pet
+        // Agora consideramos quaisquer candidatos com pontuação > 0 como potenciais matches
+        // (anteriormente havia um corte >= 50 que podia esconder muitos candidatos relevantes)
         const petsComMatches = pets.map(pet => {
-            const matches = interessados.filter(candidato => calculateMatchScore(pet, candidato).score >= 50);
-            return { ...pet, matchCount: matches.length };
+            const matchesDetail = interessados
+                .map(candidato => {
+                    const { score, motivos } = calculateMatchScore(pet, candidato);
+                    return { candidato, score, motivos };
+                })
+                .filter(m => m.score > 0)
+                .sort((a, b) => b.score - a.score);
+
+            // Debug: se não houver matches, logar detalhes para investigar possíveis incompatibilidades
+            if (matchesDetail.length === 0) {
+                console.info(`[adocaoRoutes] Sem matches para pet id=${pet.id} nome="${pet.nome}" especie="${pet.especie}" porte="${pet.porte}". Verificando candidatos (${interessados.length}):`);
+                interessados.forEach(c => {
+                    const { score, motivos } = calculateMatchScore(pet, c);
+                    console.info(`  candidato id=${c.id || 'N/A'} nome="${c.nome || 'N/D'}" especie="${c.especie}" porte="${c.porte}" -> score=${score} motivos=${JSON.stringify(motivos)}`);
+                });
+            }
+
+            return { ...pet, matchCount: matchesDetail.length, matchesDetail };
         });
 
         // 3. Renderizar o dashboard

@@ -84,6 +84,21 @@
                                         <span class="badge bg-success rounded-pill">
                                             <i class="fas fa-check-circle"></i> <%= pet.matchCount %> Match(es)
                                         </span>
+                                        <div class="small mt-2">
+                                            <% if (pet.matchesDetail && pet.matchesDetail.length > 0) { %>
+                                                <ul class="list-unstyled mb-0">
+                                                    <% pet.matchesDetail.slice(0,2).forEach(match => { %>
+                                                        <li>
+                                                            <strong><%= match.candidato.nome %></strong>
+                                                            <span class="text-muted small"> — <%= match.score %> pts</span>
+                                                            <% if (match.motivos && match.motivos.length > 0) { %>
+                                                                <div class="text-muted small"><%= match.motivos.slice(0,2).join(', ') %></div>
+                                                            <% } %>
+                                                        </li>
+                                                    <% }) %>
+                                                </ul>
+                                            <% } %>
+                                        </div>
                                     <% } else { %>
                                         <span class="badge bg-secondary rounded-pill">Sem matches</span>
                                     <% } %>
