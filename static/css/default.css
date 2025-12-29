@@ -1,67 +1,68 @@
  /* ==========================================================================
     1. Base Styles & Variables
     ========================================================================== */
- :root {  
-   /* --- Paleta de Cores Base (Refatorado) --- */
-   --brand-red: #d66d6d;
-   --brand-green: #A3D2A1;
-   --brand-green-dark: #8FBC8F;
-   --brand-blue: #3294cc;
-   --brand-blue-dark: #256db9;
-   
-   --bg-color: whitesmoke;
-   --text-color: black;
-   --container-bg: #FCF6F5;
-   --container-shadow: rgba(0, 0, 0, 0.08);
-   --container-border: transparent;
-   
-   --heading-color: var(--brand-red);
-   --paragraph-color: #050505;
-   
-   --link-color: var(--brand-blue);
-   --link-hover-decoration: underline;
-   
-   --border-color: #E0E0E0;
-   --table-header-bg: #f7f7f7;
-   
-   --nav-bg: #343a40;
-   --nav-text: #fff;
-   
-   --footer-bg: #f9f9f9;
-   --footer-text: #555;
-   
-   --input-bg: #fff;
-   --input-text: #495057;
-   --input-border: #ced4da;
-   
-   --button-bg: var(--brand-green);
-   --button-text: #2F4F4F;
-   --button-hover-bg: var(--brand-green-dark);
- 
-   /* Variáveis de Alto Contraste */
-   --hc-bg-color: black;
-   --hc-text-color: white;
-   --hc-container-bg: #1a1a1a;
-   --hc-container-shadow: rgba(255, 255, 255, 0.2);
-   --hc-container-border: #f7f4f4;
-   --hc-heading-color: white;
-   --hc-paragraph-color: #ddd;
-   --hc-link-color: rgb(69, 216, 216);
-   --hc-link-hover-decoration: underline;
-   --hc-border-color: #555;
-   --hc-table-header-bg: #222;
-   --hc-nav-bg: #000;
-   --hc-nav-text: white;
-   --hc-footer-bg: black;
-   --hc-footer-text: #bbb;
-   --hc-input-bg: #333;
-   --hc-input-text: white;
-   --hc-input-border: #888;
-   --hc-input-placeholder: rgb(194, 190, 190);
-   --hc-button-bg: #0056b3;
-   --hc-button-text: rgb(69, 216, 216);
-   --hc-button-hover-bg: #004085;
- }
+:root {  
+  /* --- Paleta de Cores Moderna e Acessível --- */
+  --brand-teal: #0b6e58;       /* cor primária (botões, CTAs) */
+  --brand-teal-dark: #085a46;  /* hover */
+  --brand-coral: #ff6b6b;      /* destaque / headings */
+  --brand-coral-2: #ff7a59;    /* alternativa */
+  --brand-blue: #3178c6;       /* links e micro-accentos */
+  
+  --bg-color: #FAFBFC;         /* page background */
+  --text-color: #213547;       /* texto principal (escuro, suave) */
+  --muted-color: #6b7280;      /* textos secundários */
+  --container-bg: #FFFFFF;     /* cards e containers */
+  --container-shadow: rgba(33, 53, 71, 0.06);
+  --container-border: rgba(33, 53, 71, 0.06);
+  
+  --heading-color: var(--brand-coral);
+  --paragraph-color: var(--text-color);
+  
+  --link-color: var(--brand-blue);
+  --link-hover-decoration: underline;
+  
+  --border-color: rgba(33, 53, 71, 0.08);
+  --table-header-bg: #f6f8fa;
+  
+  --nav-bg: #0f4b3a; /* escuro teal */
+  --nav-text: #ffffff;
+  
+  --footer-bg: #f4f6f8;
+  --footer-text: #556370;
+  
+  --input-bg: #ffffff;
+  --input-text: #213547;
+  --input-border: #dfe6ea;
+  
+  --button-bg: var(--brand-teal);
+  --button-text: #ffffff;
+  --button-hover-bg: var(--brand-teal-dark);
+  
+  /* Variáveis de Alto Contraste (mantidas, com pequenos ajustes) */
+  --hc-bg-color: #000000;
+  --hc-text-color: #ffffff;
+  --hc-container-bg: #121212;
+  --hc-container-shadow: rgba(255,255,255,0.12);
+  --hc-container-border: #ffffff22;
+  --hc-heading-color: #ffffff;
+  --hc-paragraph-color: #e6e6e6;
+  --hc-link-color: #22d3ee;
+  --hc-link-hover-decoration: underline;
+  --hc-border-color: #444444;
+  --hc-table-header-bg: #222222;
+  --hc-nav-bg: #000000;
+  --hc-nav-text: #ffffff;
+  --hc-footer-bg: #000000;
+  --hc-footer-text: #bbbbbb;
+  --hc-input-bg: #1e1e1e;
+  --hc-input-text: #ffffff;
+  --hc-input-border: #555555;
+  --hc-input-placeholder: #9a9a9a;
+  --hc-button-bg: #0056b3;
+  --hc-button-text: #ffffff;
+  --hc-button-hover-bg: #004085;
+}
  
  body {
    font-family: sans-serif;
@@ -404,8 +405,8 @@ footer {
    border-radius: 4px;
  }
  
- /* Image Preview Area */
- #image-preview-container {
+/* Image Preview Area */
+#image-preview-container {
    border: 2px dashed var(--border-color);
    padding: 1rem;
    text-align: center;
@@ -414,7 +415,7 @@ footer {
    display: flex;
    justify-content: center;
    align-items: center;
-   background-color: #f8f9fa; /* Light background, consider a variable */
+   background-color: var(--container-bg);
  }
  #preview-placeholder {
      color: var(--paragraph-color);
@@ -534,9 +535,9 @@ footer {
    padding-left: 1.5em;
    margin-bottom: 5px;
  }
- ul.list-checked li::before {
+ul.list-checked li::before {
    content: "✓";
-   color: green; /* Consider a variable */
+   color: var(--brand-teal-dark);
    position: absolute;
    left: 0;
  }
@@ -545,9 +546,9 @@ footer {
  .adotante-details-row td {
    padding: 0 !important; /* Remove padding for full-width inner div */
  }
- .adotante-details-row .p-3 { /* Content inside expanded row */
-   background-color: #f8f9fa; /* Consider a variable */
-   border-top: 1px solid #dee2e6; /* Consider var(--border-color) */
+.adotante-details-row .p-3 { /* Content inside expanded row */
+  background-color: var(--container-bg);
+  border-top: 1px solid var(--border-color);
  }
  .action-buttons button, .action-buttons a {
    min-width: 80px; 
@@ -713,7 +714,7 @@ footer {
    bottom: 0;
    left: 0;
    width: 100%;
-   background-color: rgba(0, 0, 0, 0.8); /* Dark, semi-transparent */
+  background-color: rgba(15, 75, 58, 0.92); /* darkened nav teal, legível */
    color: white;
    padding: 15px;
    text-align: center;
@@ -775,10 +776,10 @@ footer {
  .text-left   { text-align: left; }
  .text-right  { text-align: right; }
  
- .text-muted {
-     color: #6c757d; /* Bootstrap's default */
-     opacity: 1;
- }
+.text-muted {
+  color: var(--muted-color);
+  opacity: 1;
+}
  
  /* Spacing Utilities - Add !important only if strictly necessary to override other styles */
  .mt-2 { margin-top: 10px; }
@@ -824,7 +825,7 @@ footer {
  
  .mobile-menu {
    display: none;
-   background-color: var(--brand-blue-dark); /* Specific color, consider a variable */
+   background-color: var(--nav-bg); /* opaque mobile menu background */
    color: var(--nav-text); 
    /* border: 1px solid var(--nav-text); /* Might be too much with bg color */
    padding: 8px 12px; /* This padding is for the button itself if it were visible */
@@ -847,7 +848,8 @@ footer {
    height: 100vh; /* Full viewport height */
    overflow-y: scroll;
    padding-top: 3px; /* Space for a fixed header or close button area */
-   background-color: var(--brand-blue-dark); /* Ensure background covers content */
+   background-color: var(--nav-bg);  /*Ensure background covers content (opaque) */
+   /* background-color: #000; */
  }
  
  .mobile-menu ul {
@@ -1149,10 +1151,8 @@ footer {
 }
 
 .img-thumbnail:hover{
-  transform: scale(5.1); /* Aumenta o tamanho da imagem em 10% */
-  transition: transform 0.3s ease-in-out; /* Adiciona uma transição suave */
-  position: absolute;
-  
+  transform: scale(1.05); /* pequeno zoom no hover */
+  transition: transform 0.3s ease-in-out; /* transição suave */
 }
 
 @keyframes scale {
