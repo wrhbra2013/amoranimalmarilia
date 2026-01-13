@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= titulo %> - Transparência</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .lista-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .year-group { margin-bottom: 30px; }
+        .year-title { border-bottom: 2px solid #e67e22; padding-bottom: 5px; margin-bottom: 15px; color: #333; }
+        .doc-item { 
+            background: #fff; border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 5px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .doc-info h4 { margin: 0 0 5px 0; }
+        .doc-info p { margin: 0; color: #666; font-size: 0.9em; }
+        .doc-actions a { text-decoration: none; color: #e67e22; margin-right: 10px; }
+        .btn-delete { background: none; border: none; color: #dc3545; cursor: pointer; }
+        .btn-voltar { text-decoration: none; color: #333; }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <div class="lista-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1><%= titulo %></h1>
+            <a href="/transparencia" class="btn-voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
+        </div>
+
+        <% if (docs.length === 0) { %>
+            <p>Nenhum documento encontrado nesta categoria.</p>
+        <% } %>
+
+        <% 
+        let currentYear = null;
+        docs.forEach(doc => {
+            if (doc.ano !== currentYear) {
+                currentYear = doc.ano;
+        %>
+            <div class="year-group">
+                <h2 class="year-title"><%= currentYear %></h2>
+        <% } %>
+            
+            <div class="doc-item">
+                <div class="doc-info">
+                    <h4><%= doc.titulo %></h4>
+                    <% if (doc.descricao) { %><p><%= doc.descricao %></p><% } %>
+                </div>
+                <div class="doc-actions">
+                    <a href="/uploads/transparencia/<%= doc.arquivo %>" target="_blank" title="Visualizar">
+                        <i class="fas fa-file-pdf fa-lg"></i> Visualizar
+                    </a>
+                    <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                        <form action="/transparencia/delete/<%= doc.id %>/<%= doc.arquivo %>" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este documento?');">
+                            <button type="submit" class="btn-delete" title="Excluir"><i class="fas fa-trash"></i></button>
+                        </form>
+                    <% } %>
+                </div>
+            </div>
+            <% if (docs[docs.indexOf(doc) + 1] && docs[docs.indexOf(doc) + 1].ano !== currentYear) { %> </div> <% } %>
+        <% }); %>
+        <% if (docs.length > 0) { %> </div> <% } %>
+    </div>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

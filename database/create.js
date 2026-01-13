@@ -180,6 +180,19 @@ async function create_voluntario() {
   await executeDDL(ddl, 'home');
  }
  
+ async function create_transparencia() {
+    const ddl = `CREATE TABLE IF NOT EXISTS transparencia (
+        id SERIAL PRIMARY KEY,
+        origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        titulo VARCHAR(255),
+        tipo VARCHAR(50),
+        ano INT,
+        arquivo VARCHAR(255),
+        descricao TEXT
+    );`;
+    await executeDDL(ddl, 'transparencia');
+ }
+ 
  async function create_login() {
   const ddl = `CREATE TABLE IF NOT EXISTS login (
     id SERIAL PRIMARY KEY,
@@ -258,6 +271,7 @@ async function migrateAdocaoIdadeColumn() {
       await create_voluntario();
       await create_coleta();
       await create_home();
+      await create_transparencia();
       await create_login();
       await create_admin_user(); // Deve ser chamado após create_login
     } catch (error) {
@@ -276,6 +290,7 @@ async function migrateAdocaoIdadeColumn() {
      create_procura_se,
      create_parceria,
      create_login,
+     create_transparencia,
      initializeDatabaseTables
  };
  

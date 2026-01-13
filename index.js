@@ -107,10 +107,10 @@ app.use((req, res, next) => {
  const cepRoutes = require('./routes/cepRoutes');
  const authRoutes = require('./routes/authRoutes'); // Para login/logout
  const adminRoutes = require('./routes/adminRoutes');
+ const transparenciaRoutes = require('./routes/transparenciaRoutes');
  const relatorioRoutes = require('./routes/relatorioRoutes');
  const errorRoutes = require('./routes/errorRoutes'); // Se for uma página de erro específica
-//   const loginRoutes = require('./routes/loginRoutes'); // GET /login agora é tratado por authRoutes
- 
+
  
  // Montagem das Rotas
  app.use('/', homeRoutes); // homeRoutes já lida com '/' e '/home' internamente
@@ -129,6 +129,7 @@ app.use((req, res, next) => {
  app.use('/cep', cepRoutes);
  app.use('/auth', authRoutes); // Monta authRoutes na raiz para ter /login, /logout
  app.use('/admin', adminRoutes);
+ app.use('/transparencia', transparenciaRoutes);
  app.use('/relatorio', relatorioRoutes);
  
  

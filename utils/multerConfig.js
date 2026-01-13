@@ -100,7 +100,8 @@
              } else {
                  cb(new Error('Erro: Tipo de arquivo não suportado para parceria!'), false);
              }
-         }, defaultLimits)
+         }, defaultLimits),
+         uploadTransparencia: createMulterInstance('transparencia/', imageFileFilter, defaultLimits)
      };
     //  console.log('[multerConfig] ATIVO.');
  } catch (error) {
