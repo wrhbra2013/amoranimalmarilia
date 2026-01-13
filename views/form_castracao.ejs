@@ -85,10 +85,11 @@
                                 </option>
                             <% }); %>
                         <% } %>
-                        
+                        <% if(user && user.role === 'admin') { %>
                         <option value="__nova_clinica__" <%= (typeof formData !== 'undefined' && formData.clinica === '__nova_clinica__') ? 'selected' : '' %>>
                             Cadastrar nova clínica...
                         </option>
+                        <% } %>
                     </select>
                 </div>
 
