@@ -1,0 +1,87 @@
+<%- include('partials/header') %>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-chart-line"></i> Análise de Compatibilidade</h2>
+        <a href="/adocao" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</a>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Esta página exibe todos os pets cadastrados e seus potenciais adotantes baseados no algoritmo de compatibilidade (Espécie, Porte e Características).
+    </div>
+
+    <!-- Pets List & Matches -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Relatório de Matches</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-4">Pet</th>
+                            <th>Características do Pet</th>
+                            <th>Compatibilidade (Matches)</th>
+                            <th class="text-end pe-4">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (pets.length === 0) { %>
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">Nenhum pet cadastrado no momento.</td>
+                            </tr>
+                        <% } %>
+                        <% pets.forEach(pet => { %>
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <% if (pet.arquivo) { %>
+                                            <img src="/uploads/adocao/<%= pet.arquivo %>" alt="<%= pet.nome %>" class="rounded-circle me-3 border" style="width: 60px; height: 60px; object-fit: cover;">
+                                        <% } else { %>
+                                            <div class="rounded-circle me-3 bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 60px; height: 60px;"><i class="fas fa-paw"></i></div>
+                                        <% } %>
+                                        <div>
+                                            <h5 class="mb-0"><%= pet.nome %></h5>
+                                            <small class="text-muted">ID: <%= pet.id %></small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info text-dark"><%= pet.especie %></span>
+                                    <span class="badge bg-secondary"><%= pet.porte %></span>
+                                </td>
+                                <td>
+                                    <% if (pet.matchCount > 0) { %>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge bg-success me-2"><%= pet.matchCount %> Match(es)</span>
+                                        </div>
+                                        <div class="list-group list-group-flush small">
+                                            <% pet.matchesDetail.forEach(match => { %>
+                                                <div class="list-group-item bg-transparent px-0 py-1">
+                                                    <strong><%= match.candidato.nome %></strong>
+                                                    <span class="text-success fw-bold"><%= match.score %> pts</span>
+                                                    <br>
+                                                    <span class="text-muted fst-italic"><%= match.motivos.join(', ') %></span>
+                                                    <br>
+                                                    <span class="text-muted"><i class="fab fa-whatsapp"></i> <%= match.candidato.whatsapp || match.candidato.contato %></span>
+                                                </div>
+                                            <% }) %>
+                                        </div>
+                                    <% } else { %>
+                                        <span class="text-muted">Nenhum candidato compatível encontrado.</span>
+                                    <% } %>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="/adocao/match/<%= pet.id %>" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Detalhes</a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

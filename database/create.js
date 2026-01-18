@@ -25,6 +25,7 @@ const { pool } = require('./database');
     tutor VARCHAR(255),
     contato VARCHAR(100),
     whatsapp VARCHAR(20),
+    termo_arquivo VARCHAR(255),
     origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );`;
   await executeDDL(ddl, 'adocao');
@@ -180,6 +181,17 @@ async function create_voluntario() {
   await executeDDL(ddl, 'home');
  }
  
+ async function create_campanha_fotos() {
+    const ddl = `CREATE TABLE IF NOT EXISTS campanha_fotos (
+        id SERIAL PRIMARY KEY,
+        campanha_id INT NOT NULL,
+        arquivo VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (campanha_id) REFERENCES home(id) ON DELETE CASCADE
+    );`;
+    await executeDDL(ddl, 'campanha_fotos');
+ }
+ 
  async function create_transparencia() {
     const ddl = `CREATE TABLE IF NOT EXISTS transparencia (
         id SERIAL PRIMARY KEY,
@@ -191,6 +203,21 @@ async function create_voluntario() {
         descricao TEXT
     );`;
     await executeDDL(ddl, 'transparencia');
+ }
+ 
+ async function create_solicitacao_acesso() {
+    const ddl = `CREATE TABLE IF NOT EXISTS solicitacao_acesso (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(255) NOT NULL,
+        organizacao VARCHAR(255) NOT NULL,
+        telefone VARCHAR(20) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        status VARCHAR(20) DEFAULT 'PENDENTE', -- PENDENTE, APROVADO, REJEITADO
+        token VARCHAR(255),
+        cpf VARCHAR(20),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );`;
+    await executeDDL(ddl, 'solicitacao_acesso');
  }
  
  async function create_login() {
@@ -254,6 +281,52 @@ async function migrateAdocaoIdadeColumn() {
     }
 }
 
+/**
+ * Migra a tabela 'adocao' adicionando a coluna 'termo_arquivo' se não existir.
+ */
+async function migrateAdocaoTermoColumn() {
+    const checkColumnSql = `
+        SELECT column_name 
+        FROM information_schema.columns
+        WHERE table_name = 'adocao' AND column_name = 'termo_arquivo';
+    `;
+    const alterTableSql = `ALTER TABLE adocao ADD COLUMN termo_arquivo VARCHAR(255);`;
+
+    try {
+        const result = await pool.query(checkColumnSql);
+        if (result.rows.length === 0) {
+            console.log("MIGRATION: Adicionando coluna 'termo_arquivo' na tabela 'adocao'.");
+            await pool.query(alterTableSql);
+            console.log("MIGRATION: Coluna 'termo_arquivo' adicionada com sucesso.");
+        }
+    } catch (error) {
+        console.error("MIGRATION-ERROR: Falha ao migrar tabela 'adocao' (termo_arquivo):", error);
+    }
+}
+
+/**
+ * Migra a tabela 'solicitacao_acesso' adicionando a coluna 'cpf' se não existir.
+ */
+async function migrateSolicitacaoAcessoCpfColumn() {
+    const checkColumnSql = `
+        SELECT column_name 
+        FROM information_schema.columns
+        WHERE table_name = 'solicitacao_acesso' AND column_name = 'cpf';
+    `;
+    const alterTableSql = `ALTER TABLE solicitacao_acesso ADD COLUMN cpf VARCHAR(20);`;
+
+    try {
+        const result = await pool.query(checkColumnSql);
+        if (result.rows.length === 0) {
+            console.log("MIGRATION: Adicionando coluna 'cpf' na tabela 'solicitacao_acesso'.");
+            await pool.query(alterTableSql);
+            console.log("MIGRATION: Coluna 'cpf' adicionada com sucesso.");
+        }
+    } catch (error) {
+        console.error("MIGRATION-ERROR: Falha ao migrar tabela 'solicitacao_acesso':", error);
+    }
+}
+
  /**
    * Função para inicializar todas as tabelas do banco de dados.
    * Chame esta função durante a inicialização da sua aplicação.
@@ -262,6 +335,7 @@ async function migrateAdocaoIdadeColumn() {
      try {
       await create_adocao();
       await migrateAdocaoIdadeColumn(); // Executa a migração após garantir que a tabela existe
+      await migrateAdocaoTermoColumn(); // Garante que a coluna termo_arquivo exista
       await create_adotante();
       await create_adotado();
       await create_castracao();
@@ -271,7 +345,10 @@ async function migrateAdocaoIdadeColumn() {
       await create_voluntario();
       await create_coleta();
       await create_home();
+      await create_campanha_fotos();
       await create_transparencia();
+      await create_solicitacao_acesso();
+      await migrateSolicitacaoAcessoCpfColumn(); // Garante que a coluna CPF exista
       await create_login();
       await create_admin_user(); // Deve ser chamado após create_login
     } catch (error) {
@@ -291,6 +368,7 @@ async function migrateAdocaoIdadeColumn() {
      create_parceria,
      create_login,
      create_transparencia,
+     create_solicitacao_acesso,
      initializeDatabaseTables
  };
  

@@ -72,6 +72,16 @@ router.post('/login', async (req, res) => {
             isAdmin: Boolean(foundUser.isadmin) // Converte 0/1 do SQLite para true/false
         };
         console.log('LOGIN - req.session.user definido:', JSON.stringify(req.session.user)); // LOG ADICIONAD0
+        
+        // Verifica solicitações de acesso pendentes (apenas para admins)
+        if (req.session.user.isAdmin) {
+            const pendingResult = await pool.query("SELECT COUNT(*) as count FROM solicitacao_acesso WHERE status = 'PENDENTE'");
+            const pendingCount = parseInt(pendingResult.rows[0].count, 10);
+            if (pendingCount > 0) {
+                req.flash('warning', `Atenção: Existem ${pendingCount} solicitações de acesso a documentos pendentes.`);
+            }
+        }
+
         // Redireciona para a página inicial após o login bem-sucedido
         req.flash('success', 'Login bem-sucedido!')
         return res.redirect('/home');

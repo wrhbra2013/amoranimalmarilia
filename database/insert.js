@@ -1,4 +1,4 @@
-﻿﻿const { pool } = require('./database');
+﻿﻿﻿﻿﻿﻿﻿﻿const { pool } = require('./database');
  
  
  async function executeInsert(sql, values, tableName) {
@@ -24,14 +24,14 @@
  
 
  
- async function insert_adocao(arquivo, nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp) {
+ async function insert_adocao(arquivo, nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp, termo_arquivo) {
      const insertSQL = `INSERT INTO adocao (
-         arquivo, nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`;
+         arquivo, nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp, termo_arquivo
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`;
      // 'idade' agora é uma string (ex: "2 anos e 3 meses").
      const values = [
          arquivo, nome, idade, especie, porte,
-         caracteristicas, tutor, contato, whatsapp
+         caracteristicas, tutor, contato, whatsapp, termo_arquivo
      ];
      return executeInsert(insertSQL, values, 'adocao');
  }
@@ -126,6 +126,28 @@ async function insert_voluntario(nome, localidade, telefone, whatsapp, disponibi
      return executeInsert(insertSQL, values, 'home');
  }
  
+ async function insert_campanha_foto(campanha_id, arquivo) {
+     const insertSQL = `INSERT INTO campanha_fotos (campanha_id, arquivo) VALUES ($1, $2);`;
+     const values = [campanha_id, arquivo];
+     return executeInsert(insertSQL, values, 'campanha_fotos');
+ }
+ 
+ async function insert_solicitacao_acesso(nome, organizacao, telefone, email, token) {
+    const insertSQL = `INSERT INTO solicitacao_acesso (
+        nome, organizacao, telefone, email, token
+    ) VALUES ($1, $2, $3, $4, $5);`;
+    const values = [nome, organizacao, telefone, email, token];
+    return executeInsert(insertSQL, values, 'solicitacao_acesso');
+ }
+ 
+ async function insert_transparencia(titulo, tipo, ano, arquivo, descricao) {
+    const insertSQL = `INSERT INTO transparencia (
+        titulo, tipo, ano, arquivo, descricao
+    ) VALUES ($1, $2, $3, $4, $5);`;
+    const values = [titulo, tipo, ano, arquivo, descricao];
+    return executeInsert(insertSQL, values, 'transparencia');
+ }
+ 
  async function insert_login(usuario, senha, isAdmin = true) {
      // IMPORTANTE: A senha DEVE ser HASHED antes de ser inserida no banco de dados.
      // Use uma biblioteca como bcrypt: const hashedPassword = await bcrypt.hash(senha, saltRounds);
@@ -148,6 +170,9 @@ async function insert_voluntario(nome, localidade, telefone, whatsapp, disponibi
      insert_voluntario,
      insert_coleta,
      insert_home,
+     insert_campanha_foto,
+     insert_solicitacao_acesso,
+     insert_transparencia,
      insert_login
  };
  

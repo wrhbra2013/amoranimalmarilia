@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transparência - Amor Animal</title>
     <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/imagem/bootstrap-icons.min.css">
     <style>
         .transparencia-container {
             max-width: 1200px;
@@ -19,48 +19,67 @@
             margin-top: 30px;
         }
         .dashboard-card {
-            background: #f8f9fa;
-            border: 1px solid #ddd;
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 30px;
             text-align: center;
             text-decoration: none;
-            color: #333;
+            color: var(--text-color);
             transition: transform 0.2s, box-shadow 0.2s;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 150px;
+            box-shadow: 0 2px 5px var(--container-shadow);
         }
         .dashboard-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            background: #fff;
+            box-shadow: 0 5px 15px var(--container-shadow);
+            border-color: var(--brand-teal);
         }
         .dashboard-card i {
             font-size: 2.5em;
             margin-bottom: 15px;
-            color: #e67e22;
+            color: var(--brand-teal);
         }
         .dashboard-card h3 {
             margin: 0;
             font-size: 1.2em;
+            color: var(--heading-color);
         }
         .admin-bar {
-            background: #333;
-            color: #fff;
+            background: var(--nav-bg);
+            color: var(--nav-text);
             padding: 10px;
             text-align: right;
             margin-bottom: 20px;
             border-radius: 5px;
         }
         .admin-bar a {
-            color: #fff;
+            color: var(--button-text);
             text-decoration: none;
-            background: #e67e22;
+            background: var(--brand-coral);
             padding: 5px 15px;
             border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+        .admin-bar a:hover {
+            background: var(--brand-coral-2);
+        }
+        .btn-voltar {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        .btn-voltar:hover {
+            background-color: var(--button-hover-bg);
+            color: var(--button-text);
         }
     </style>
 </head>
@@ -74,32 +93,33 @@
         <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
             <div class="admin-bar">
                 <span>Área Administrativa: </span>
-                <a href="/transparencia/form"><i class="fas fa-upload"></i> Novo Documento</a>
+                <a href="/transparencia/form"><i class="bi bi-upload"></i> Novo Documento</a>
+                <a href="/transparencia/admin/solicitacoes" class="ms-2" style="background: var(--brand-blue);"><i class="bi bi-shield-lock"></i> Controle de Acesso</a>
             </div>
         <% } %>
 
         <div class="dashboard-grid">
             <% 
             const icons = {
-                'estatuto': 'fa-book',
-                'diretoria': 'fa-users',
-                'balanco': 'fa-scale-balanced',
-                'financeiro': 'fa-file-invoice-dollar',
-                'atividades': 'fa-list-check',
-                'colaboracao': 'fa-handshake',
-                'plano': 'fa-clipboard-list'
+                'estatuto': 'bi-book',
+                'diretoria': 'bi-people',
+                'balanco': 'bi-bank',
+                'financeiro': 'bi-file-earmark-text',
+                'atividades': 'bi-list-check',
+                'colaboracao': 'bi-briefcase',
+                'plano': 'bi-clipboard-check'
             };
             %>
             <% Object.keys(types).forEach(key => { %>
                 <a href="/transparencia/lista/<%= key %>" class="dashboard-card">
-                    <i class="fas <%= icons[key] || 'fa-file-alt' %>"></i>
+                    <i class="bi <%= icons[key] || 'bi-file-text' %>"></i>
                     <h3><%= types[key] %></h3>
                 </a>
             <% }); %>
         </div>
         
         <div style="margin-top: 30px;">
-            <a href="/home" class="btn-voltar"><i class="fas fa-arrow-left"></i> Voltar para Home</a>
+            <a href="/home" class="btn-voltar"><i class="bi bi-arrow-left"></i> Voltar para Home</a>
         </div>
     </div>
 

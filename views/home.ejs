@@ -57,108 +57,7 @@
       </section>
   
       <!-- ==========================================================================
-          3. Notícias (Carrossel)
-          ========================================================================== -->
-     <section id="noticias" class="section-noticias py-5 bg-light">
-         <div class="container">
-         <div class="d-flex justify-content-between align-items-center mb-4">
-         <h2>Fique por dentro</h2>
-         <% if (user) { %>
-         <a href="/home/form" class="btn btn-outline-primary">Nova Noticia</a>
-         <% } %>
-         </div>
-         
-         <%
-         let allNewsItems = [];
-         
-         if (typeof model1 !== 'undefined' && model1.length > 0) {
-             model1.forEach(home => {
-                 allNewsItems.push({
-                     type: 'dynamic',
-                     id: home.id,
-                     titulo: home.titulo,
-                     conteudo: home.conteudo,
-                     arquivo: home.arquivo,
-                     link: home.link,
-                     isExternalLink: !!home.link
-                 });
-             });
-         }
-         
-         allNewsItems.push({
-             type: 'static',
-             titulo: 'Campanha de Doação',
-             icon: 'fas fa-donate me-2 text-success',
-             conteudo: 'Estamos arrecadando fundos para ajudar nos custos de tratamento e abrigo dos animais. Sua doação faz a diferença!',
-             linkPath: '/doacao',
-             btnClass: 'btn-success',
-             btnText: 'Doe Agora'
-         });
-         allNewsItems.push({
-             type: 'static',
-             titulo: 'Evento de Adoção',
-             icon: 'fas fa-calendar-alt me-2 text-info',
-             conteudo: 'Participe do nosso próximo evento de adoção! Teremos muitos pets esperando por um lar. Venha conhecer e se apaixonar!',
-             linkPath: '/sobre',
-             btnClass: 'btn-info',
-             btnText: 'Saiba Mais'
-         });
-         %>
-         
-         <% if (allNewsItems.length > 0) { %>
-         <div class="news-carousel-container mb-4" id="news-carousel"> 
-             <div class="news-carousel-slides"> 
-                 <% allNewsItems.forEach((news, index) => { %>
-                     <div class="news-carousel-slide <%= index === 0 ? 'active' : '' %>"> 
-                         <div class="card h-100 shadow-sm noticia-item w-100">
-                             <% if (news.type === 'dynamic' && news.arquivo) { %>
-                                 <img src="/static/uploads/home/<%= news.arquivo %>" alt="Notícia: <%= news.titulo %>" class="card-img-top noticia-img-fixed-height">
-                             <% } else if (news.type === 'dynamic' && !news.arquivo) { %>
-                                 <img src="/static/images/placeholder-news.jpg" alt="Imagem placeholder para notícia: <%= news.titulo %>" class="card-img-top noticia-img-fixed-height">
-                             <% } %>
-                             
-                             <div class="card-body d-flex flex-column">
-                                 <h5 class="card-title">
-                                     <% if (news.icon) { %><i class="<%= news.icon %>"></i><% } %>
-                                     <%= news.titulo %>
-                                 </h5>
-                                 <p class="card-text flex-grow-1"><%= news.conteudo %></p>
-                                 <% if (news.type === 'dynamic') { %>
-                                     <% if (news.isExternalLink) { %>
-                                         <a href="<%= news.link %>" target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-auto align-self-start">Leia Mais</a>
-                                     <% } else { %>
-                                         <a href="/home/<%= news.id %>" class="btn btn-primary mt-auto align-self-start">Leia Mais</a>
-                                     <% } %>
-                                 <% } else { %>
-                                     <a href="<%= news.linkPath %>" class="btn <%= news.btnClass %> mt-auto align-self-start"><%= news.btnText %></a>a
-                                 <% } %>
-                             </div>
-                         </div>
-                     </div>
-                 <% }); %>
-             </div>
-             <% if (allNewsItems.length > 1) { %>
-                 <button class="news-carousel-control prev" aria-label="Anterior">&lt;</button>
-                 <button class="news-carousel-control next" aria-label="Próximo">&gt;</button>
-                 <div class="news-carousel-dots">
-                     <% allNewsItems.forEach((news, index) => { %>
-                         <span class="dot <%= index === 0 ? 'active' : '' %>" data-slide="<%= index %>" aria-label="Notícia <%= index + 1 %>"></span>
-                     <% }); %>
-                 </div>
-             <% } %>
-         </div>
-         <% } else { %>
-             <div class="row mt-4">
-                 <div class="col-12">
-                     <p class="text-center text-muted">Nenhuma notícia para exibir no momento.</p>
-                 </div>
-             </div>
-         <% } %>
-         </div>
-     </section>
-  
-      <!-- ==========================================================================
-          4. Adoção em Destaque
+          3. Adoção em Destaque
           ========================================================================== -->
       <section id="adocao-destaque" class="py-5">
           <div class="container">
@@ -168,7 +67,7 @@
                   <% model2.slice(0, 4).forEach(adocao => { %>
                   <div class="home-card card">
                       <a href="/adocao/<%= adocao.id %>">
-                          <img src="/static/uploads/adocao/<%= adocao.arquivo || 'placeholder-pet.jpg' %>"
+                          <img src="/uploads/adocao/<%= adocao.arquivo || 'placeholder-pet.jpg' %>"
                                alt="Foto de <%= adocao.nome || 'pet' %> para adoção"
                                class="card-img-top home-card-img">
                       </a>
@@ -377,7 +276,7 @@
               <div class="adotados-cards-container">
                   <% model6.slice(0, 3).forEach(adotado => { %>
                   <div class="adotado-card card">
-                      <img src="/static/uploads/adotado/<%= adotado.arquivo || 'placeholder-pet-story.jpg' %>" 
+                      <img src="/uploads/adotado/<%= adotado.arquivo || 'placeholder-pet-story.jpg' %>" 
                            alt="Foto de <%= adotado.pet %>, adotado por <%= adotado.tutor %>" 
                            class="card-img-top adotado-card-img">
                       <div class="card-body">
@@ -415,7 +314,7 @@
                   <div class="procura-se-cards-container">
                       <% model10.slice(0, 3).forEach(procura_se => { %> 
                       <div class="procura-se-card card">
-                          <img src="/static/uploads/procura_se/<%= procura_se.arquivo || 'placeholder-procura-se.jpg' %>" 
+                          <img src="/uploads/procura_se/<%= procura_se.arquivo || 'placeholder-procura-se.jpg' %>" 
                                alt="Foto de <%= procura_se.nomePet %>, animal desaparecido" 
                                class="card-img-top procura-se-card-img">
                           <div class="card-body text-center">
@@ -454,7 +353,7 @@
                      <% model12.forEach(parceria => { %>
                          <div class="card parceria-item d-inline-block me-3 shadow-sm" style="width: 250px; vertical-align: top;">
                              <!-- Se houver imagem da parceria, poderia ser adicionada aqui -->
-                             <!-- <img src="/static/uploads/parceria/<%= parceria.arquivo %>" class="card-img-top" alt="Logo <%= parceria.empresa %>"> -->
+                             <!-- <img src="/uploads/parceria/<%= parceria.arquivo %>" class="card-img-top" alt="Logo <%= parceria.empresa %>"> -->
                              <div class="card-body text-center">
                                  <h5 class="card-title"><%= parceria.empresa %></h5>
                                  <p class="card-text text-muted small"><%= parceria.proposta %></p>

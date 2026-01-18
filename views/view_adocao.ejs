@@ -1,0 +1,66 @@
+<%- include('partials/header') %>
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/home">Início</a></li>
+                    <li class="breadcrumb-item"><a href="/adocao">Adoção</a></li>
+                    <li class="breadcrumb-item active" aria-current="page"><%= pet.nome %></li>
+                </ol>
+            </nav>
+
+            <div class="card shadow-lg border-0 overflow-hidden">
+                <div class="row g-0">
+                    <div class="col-md-6 bg-light d-flex align-items-center justify-content-center" style="min-height: 400px;">
+                        <% if (pet.arquivo) { %>
+                            <img src="/uploads/adocao/<%= pet.arquivo %>" class="img-fluid" style="max-height: 500px; width: 100%; object-fit: cover;" alt="<%= pet.nome %>">
+                        <% } else { %>
+                            <div class="text-muted text-center p-5">
+                                <i class="bi bi-camera" style="font-size: 4rem;"></i>
+                                <p>Sem foto disponível</p>
+                            </div>
+                        <% } %>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card-body p-4 p-lg-5 d-flex flex-column h-100">
+                            <h1 class="card-title display-5 fw-bold mb-2"><%= pet.nome %></h1>
+                            <div class="mb-4">
+                                <span class="badge bg-primary me-2"><%= pet.especie %></span>
+                                <span class="badge bg-info text-dark me-2"><%= pet.porte %></span>
+                                <span class="badge bg-secondary"><%= pet.idade %></span>
+                            </div>
+
+                            <h5 class="text-muted mb-3">Sobre mim</h5>
+                            <p class="card-text fs-5 mb-4"><%= pet.caracteristicas || 'Nenhuma descrição informada.' %></p>
+
+                            <div class="mt-auto">
+                                <div class="d-grid gap-2">
+                                    <a href="/adocao/interessados/form" class="btn btn-success btn-lg">
+                                        <i class="bi bi-heart-fill me-2"></i> Tenho Interesse
+                                    </a>
+                                    <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                                        <div class="d-flex gap-2 mt-3">
+                                            <a href="/adocao/match/<%= pet.id %>" class="btn btn-outline-primary flex-grow-1">
+                                                <i class="bi bi-people"></i> Ver Matches
+                                            </a>
+                                            <form action="/adocao/delete/<%= pet.id %>/<%= pet.arquivo %>" method="POST" class="flex-grow-1" onsubmit="return confirm('Tem certeza que deseja excluir este pet?');">
+                                                <button type="submit" class="btn btn-outline-danger w-100">
+                                                    <i class="bi bi-trash"></i> Excluir
+                                                </button>
+                                            </form>
+                                        </div>
+                                    <% } %>
+                                    <a href="/adocao" class="btn btn-link text-muted mt-2">Voltar para a lista</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

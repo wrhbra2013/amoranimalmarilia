@@ -2,11 +2,11 @@
   const express = require('express');
   const { pool } = require('../database/database'); // Usa o pool de conexões do PostgreSQL
   const { executeAllQueries, executeQuery } = require('../database/queries'); // Essencial para buscar dados para a home
-  const { insert_home } = require('../database/insert');     // Para o formulário de notícias da home
+  const { insert_home, insert_campanha_foto } = require('../database/insert');     // Para o formulário de notícias da home
   const fs = require('fs').promises;
   const path = require('path');
   const { isAdmin } = require('../middleware/auth');
-  const { uploadHome } = require('../utils/multerConfig');   // Multer para upload de notícias da home
+  const { uploadHome, uploadCampanha } = require('../utils/multerConfig');   // Multer para upload de notícias da home
   
   const router = express.Router();
   
@@ -77,7 +77,7 @@
      }
  }
  
- // Rota principal para '/' e '/home'
+ // Rota principal para '/' e '/home' (Dashboard Completo)
  router.get(['/', '/home'], checkCookieConsent, async (req, res) => {
      try {
          const homePageData = await getHomePageData();
@@ -123,38 +123,42 @@
 //   });
   
   // Rota para renderizar o formulário de "Notícias" da home
-  // Esta rota deve vir ANTES da rota /home/:id para evitar que "form" seja tratado como um ID.
-  router.get('/home/form', isAdmin, (req, res) => {
+  // Esta rota deve vir ANTES da rota /campanha/:id
+  router.get(['/campanha/form', '/home/form'], isAdmin, (req, res) => {
       res.render('form_home'); // Assumes form_home.ejs exists
   });
 
-  // Rota para exibir uma notícia específica (Leia Mais)
-  router.get('/home/:id', async (req, res) => {
+  // Rota para exibir uma campanha específica (Detalhes / Página Filho)
+  router.get('/campanha/:id', async (req, res) => {
       const { id } = req.params;
   
       try {
           const query = 'SELECT * FROM home WHERE id = $1';
           const newsItems = await executeQuery(query, [id]);
+          
+          // Busca fotos adicionais da campanha
+          const fotos = await executeQuery('SELECT * FROM campanha_fotos WHERE campanha_id = $1 ORDER BY id DESC', [id]);
   
           if (newsItems && newsItems.length > 0) {
-              res.render('view_home', {
+              res.render('view_campanha', {
                   item: newsItems[0],
+                  fotos: fotos,
                   user: req.user,
                   isAdmin: req.isAdmin || false
               });
           } else {
               req.flash('error_msg', 'Notícia não encontrada.');
-              res.status(404).redirect('/home');
+              res.status(404).redirect('/');
           }
       } catch (error) {
-          console.error(`homeRoutes GET /home/${id}: Erro ao buscar notícia:`, error);
+          console.error(`homeRoutes GET /campanha/${id}: Erro ao buscar campanha:`, error);
           req.flash('error_msg', 'Erro ao carregar a notícia.');
-          res.status(500).redirect('/home');
+          res.status(500).redirect('/');
       }
   });
   
   // Rota para processar o formulário de "Notícias" da home
-  router.post('/home/form', isAdmin, uploadHome.single('arquivo'), async (req, res) => {
+  router.post(['/campanha/form', '/home/form'], isAdmin, uploadHome.single('arquivo'), async (req, res) => {
       if (!req.file) {
           return res.status(400).render('form_home', { error: 'Nenhum arquivo foi enviado.' });
       }
@@ -178,7 +182,7 @@
   
           await insert_home(homeData.arquivo, homeData.titulo, homeData.conteudo, homeData.link);
           console.log('homeRoutes: Dados de notícia da home inseridos:', homeData);
-          res.redirect('/home');
+          res.redirect('/'); // Redireciona para a lista de campanhas
   
       } catch (error) {
           console.error("homeRoutes POST /form: Erro ao processar formulário de notícia da home:", error);
@@ -194,11 +198,85 @@
       }
   });
   
+  // Rota para upload de fotos adicionais na página da campanha (Cria subpasta nome_data)
+  router.post('/campanha/:id/foto', isAdmin, uploadCampanha.single('foto'), async (req, res) => {
+      const { id } = req.params;
+      
+      if (!req.file) {
+          req.flash('error_msg', 'Nenhuma foto selecionada.');
+          return res.redirect(`/campanha/${id}`);
+      }
+
+      try {
+          // 1. Buscar informações da campanha para criar o nome da pasta
+          const [campanha] = await executeQuery('SELECT titulo, origem FROM home WHERE id = $1', [id]);
+          
+          if (!campanha) {
+              await fs.unlink(req.file.path); // Remove o arquivo temporário
+              req.flash('error_msg', 'Campanha não encontrada.');
+              return res.redirect('/');
+          }
+
+          // 2. Criar nome da subpasta: nome_campanha_data
+          const sanitize = (str) => str.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+          const dataStr = new Date(campanha.origem).toISOString().split('T')[0];
+          const folderName = `${sanitize(campanha.titulo)}_${dataStr}`;
+          
+          // Caminho base de uploads de campanha (definido no multerConfig como ../../amoranimal_uploads/campanha)
+          const baseUploadDir = path.join(__dirname, '..', '..', 'amoranimal_uploads', 'campanha');
+          const targetDir = path.join(baseUploadDir, folderName);
+
+          // 3. Criar a subpasta se não existir
+          await fs.mkdir(targetDir, { recursive: true });
+
+          // 4. Mover o arquivo da raiz de /campanha/ para a subpasta
+          const oldPath = req.file.path;
+          const newFilename = req.file.filename;
+          const newPath = path.join(targetDir, newFilename);
+          
+          await fs.rename(oldPath, newPath);
+
+          // 5. Salvar no banco (caminho relativo para acesso via URL /uploads/campanha/...)
+          const dbPath = `${folderName}/${newFilename}`;
+          await insert_campanha_foto(id, dbPath);
+
+          req.flash('success_msg', 'Foto adicionada com sucesso!');
+          res.redirect(`/campanha/${id}`);
+
+      } catch (error) {
+          console.error("homeRoutes POST /campanha/:id/foto: Erro:", error);
+          req.flash('error_msg', 'Erro ao salvar a foto.');
+          res.redirect(`/campanha/${id}`);
+      }
+  });
+
+  // Rota para deletar foto adicional da campanha
+  router.post('/campanha/foto/delete/:id', isAdmin, async (req, res) => {
+      const { id } = req.params;
+      try {
+          const [foto] = await executeQuery('SELECT * FROM campanha_fotos WHERE id = $1', [id]);
+          if (foto) {
+              await executeQuery('DELETE FROM campanha_fotos WHERE id = $1', [id]);
+              
+              const filePath = path.join(__dirname, '..', '..', 'amoranimal_uploads', 'campanha', foto.arquivo);
+              await fs.unlink(filePath).catch(err => console.error("Erro ao deletar arquivo físico:", err.message));
+              
+              req.flash('success_msg', 'Foto removida.');
+              res.redirect(`/campanha/${foto.campanha_id}`);
+          } else {
+              res.redirect('/');
+          }
+      } catch (error) {
+          console.error("Erro ao deletar foto:", error);
+          res.redirect('/');
+      }
+  });
+
   // Rota para deletar "Notícias" da home
-  router.post('/delete/home/:id/:arq', isAdmin, async (req, res) => {
+  router.post('/delete/campanha/:id/:arq', isAdmin, async (req, res) => {
       const { id, arq } = req.params;
      
-      const uploadsDir = path.join(__dirname, '..', 'static', 'uploads', 'home');
+      const uploadsDir = path.join(__dirname, '..', '..', 'amoranimal_uploads', 'home');
       const filePath = path.join(uploadsDir, path.basename(arq)); // path.basename for security
   
       try {
@@ -222,7 +300,7 @@
                   console.error(`homeRoutes: Erro ao deletar arquivo de notícia ${filePath} (não é ENOENT):`, fileError);
               }
           }
-          res.redirect('/home');
+          res.redirect('/');
       } catch (error) {
           console.error(`homeRoutes DELETE /delete/home: Erro ao deletar notícia da home com ID: ${id}:`, error);
           res.status(500).render('error', { error: 'Erro ao deletar a notícia. Tente novamente.' });

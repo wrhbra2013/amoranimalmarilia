@@ -1,0 +1,88 @@
+<%- include('partials/header') %>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="bi bi-shop"></i> Adoção Física / Presencial</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Utilize esta etapa para registrar uma adoção que está ocorrendo presencialmente. 
+                        Se o pet ainda não estiver no sistema, faça o cadastro simplificado abaixo. 
+                        Caso contrário, selecione-o na lista.
+                    </p>
+
+                    <!-- Opção 1: Selecionar Pet Existente -->
+                    <div class="card bg-light border-0 mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="bi bi-search"></i> Pet já cadastrado?</h5>
+                            <form action="/adocao/fisica/selecionar" method="POST" class="row g-3 align-items-end">
+                                <div class="col-md-9">
+                                    <label for="petExistente" class="form-label">Selecione o Pet</label>
+                                    <select class="form-select" id="petExistente" name="petId" required>
+                                        <option value="" selected disabled>Escolha na lista...</option>
+                                        <% if (pets && pets.length > 0) { %>
+                                            <% pets.forEach(pet => { %>
+                                                <option value="<%= pet.id %>" data-nome="<%= pet.nome %>"><%= pet.nome %> (<%= pet.especie %>)</option>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <option disabled>Nenhum pet disponível</option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="submit" class="btn btn-primary w-100">Ir para Termo</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Opção 2: Cadastro Simplificado -->
+                    <h5 class="mb-3"><i class="bi bi-plus-circle"></i> Cadastro Simplificado de Novo Pet</h5>
+                    <form action="/adocao/fisica" method="POST" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="arquivo" class="form-label">Foto do Pet</label>
+                                <input type="file" class="form-control" id="arquivo" name="arquivo" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="nome" class="form-label">Nome do Pet</label>
+                                <input type="text" class="form-control" id="nome" name="nome" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="especie" class="form-label">Espécie</label>
+                                <select class="form-select" id="especie" name="especie">
+                                    <option value="Cão">Cão</option>
+                                    <option value="Gato">Gato</option>
+                                    <option value="Outro">Outro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="idade" class="form-label">Idade Aproximada</label>
+                                <input type="text" class="form-control" id="idade" name="idade" placeholder="Ex: 2 meses">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="porte" class="form-label">Porte</label>
+                                <select class="form-select" id="porte" name="porte">
+                                    <option value="Pequeno">Pequeno</option>
+                                    <option value="Médio">Médio</option>
+                                    <option value="Grande">Grande</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="caracteristicas" class="form-label">Características (Opcional)</label>
+                                <textarea class="form-control" id="caracteristicas" name="caracteristicas" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Cadastrar e Assinar Termo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<%- include('partials/footer') %>

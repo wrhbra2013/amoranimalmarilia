@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novo Documento - Transparência</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-light">
+    <%- include('partials/header') %>
+
+    <div class="container mt-5 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="h5 mb-0"><i class="fas fa-file-upload me-2"></i>Publicar Documento</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <% if (error && error.length > 0) { %>
+                            <div class="alert alert-danger"><%= error %></div>
+                        <% } %>
+
+                        <form action="/transparencia/form" method="POST" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="titulo" class="form-label fw-bold">Título do Documento:*</label>
+                                <input type="text" class="form-control" id="titulo" name="titulo" required value="<%= formData.titulo || '' %>">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="tipo" class="form-label fw-bold">Categoria:*</label>
+                                    <select class="form-select" id="tipo" name="tipo" required>
+                                        <option value="" disabled selected>Selecione...</option>
+                                        <% Object.keys(types).forEach(key => { %>
+                                            <option value="<%= key %>" <%= formData.tipo === key ? 'selected' : '' %>><%= types[key] %></option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="ano" class="form-label fw-bold">Ano de Referência:*</label>
+                                    <input type="number" class="form-control" id="ano" name="ano" required value="<%= formData.ano || new Date().getFullYear() %>">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="arquivo" class="form-label fw-bold">Arquivo (PDF/Imagem):*</label>
+                                <input type="file" class="form-control" id="arquivo" name="arquivo" accept=".pdf,.jpg,.jpeg,.png" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="descricao" class="form-label">Descrição (Opcional):</label>
+                                <textarea class="form-control" id="descricao" name="descricao" rows="3"><%= formData.descricao || '' %></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <a href="/transparencia" class="btn btn-secondary me-2">Cancelar</a>
+                                <button type="submit" class="btn btn-success"><i class="fas fa-save me-2"></i>Publicar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

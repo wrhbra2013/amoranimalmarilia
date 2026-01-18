@@ -1,0 +1,138 @@
+<%- include('partials/header') %>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+
+                    <!-- <fielset>
+                        <legend> Referencia Pet</legend>
+                        <label for=aruivo_pet class="form-label">Foto</label>
+                            <input type="file" class="form-control" id="arquivo_pet" name="arquivo_pet" required>
+
+                    </fielset> -->
+                    
+                    <h4 class="mb-0"><i class="bi bi-file-earmark-text"></i> Termo de Responsabilidade</h4>
+                </div>
+                <div class="card-body">
+                    <% if (error && error.length > 0) { %>
+                        <div class="alert alert-danger"><%= error %></div>
+                    <% } %>
+                    <% if (success && success.length > 0) { %>
+                        <div class="alert alert-success"><%= success %></div>
+                    <% } %>
+
+                    <form action="/adocao/termo/form" method="POST" enctype="multipart/form-data">
+                        <!-- Campo oculto para vincular ao ID do pet se vier da Adoção Física -->
+                        <% if (typeof petId !== 'undefined' && petId) { %>
+                            <input type="hidden" name="petId" value="<%= petId %>">
+                        <% } %>
+                        
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">Nome Completo</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                                <label for="contato" class="form-label">Telefone</label>
+                                <input type="text" class="form-control" id="contato" name="contato">
+                            </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="cep" class="form-label">Busca CEP</label><div class="input-group">
+                                    <input type="text" class="form-control" id="cep" name="cep" placeholder="00000-000">
+                                    <button class="btn btn-outline-secondary" type="button" id="buscarCep">Buscar</button>
+                                </div>
+                                  <div class="mb-3">
+                            <label for="endereco" class="form-label">Endereço Completo</label>
+                            <input type="text" class="form-control" id="endereco" name="endereco">
+                        </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="numero" class="form-label">Número</label>
+                                <input type="text" class="form-control" id="numero" name="numero">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="bairro" class="form-label">Bairro</label>
+                                <input type="text" class="form-control" id="bairro" name="bairro">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="" class="form-label">Cidade</label>
+                                <input type="text" class="form-control" id="cidade" name="cidade">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="estado" class="form-label">Estado</label>
+                                <input type="text" class="form-control" id="estado" name="estado">
+                            </div>
+                        </div>                   
+                           
+                           
+                            <fieldset class="mt-3">
+                                <legend>Questionário de Adoção.</legend>
+                                Possui animais em casa?<br>
+                                  <input type="text" class="form-control" id="animais_casa" name="animais_casa" placeholder="Sim ou Não">
+                                   <br><br>
+                                Se sim, quantos?<br>
+                                      <input type="number" class="form-control" id="quantos_animais" name="quantos_animais" placeholder="Número de animais">
+                                      <br><br>
+                                Especie?<br>
+                                   <input type="text" class="form-control" id="especie_animais" name="especie_animais" placeholder="Cão, Gato, Outros...">
+                                   <br><br>
+                                São castrados?<br>
+                                   <input type="text" class="form-control" id="castrados" name="castrados" placeholder="Sim ou Não">
+                                   <br><br>
+                                Sua casa tem telas ou é bem fechada para a segurança do pet?<br>
+                                   <input type="text" class="form-control" id="casa_tela" name="casa_tela" placeholder="Sim ou Não">
+                                   <br><br>
+                                Tem rotas de fuga?  <br>
+                                   <input type="text" class="form-control" id="rotas_fuga" name="rotas_fuga" placeholder="Sim ou Não">
+                                   <br><br>
+                                Há crianças na casa?<br>
+                                   <input type="text" class="form-control" id="criancas_casa" name="criancas_casa" placeholder="Sim ou Não">
+                                   <br><br>
+                                Se sim, quantos?<br>
+                                   <input type="number" class="form-control" id="quantas_criancas" name="quantas_criancas" placeholder="Número de crianças">
+                                   <br><br>
+                                Caso haja crianças, qual a faixa etária delas?<br>
+                                   <input type="text" class="form-control" id="faixa_etaria" name="faixa_etaria" placeholder="Ex: 0-2 anos, 3-5 anos...">
+                                   <br><br>
+                            </fieldset>
+                                   <fieldset>
+                                    <legend>Importante</legend>
+                                    <p style="text-align: justify;">
+
+                                    1. Estas perguntas servem para conhecer melhor o adotante e poder fazer a indicação do animal que mais se adeque a realidade da sua casa. <br>
+                                    2. Nossos animais são castrados, vacinados e vermifugados e vão com repelente contra pulgas e carrapatos. Todos são retirados da rua e não 
+                                    sabemos a procedência, se acaso o animal tiver alguma doença pré-existente, sendo que voce tem 10 dias para devolver o animal parra a ong,
+                                    no caso de não adaptação. <br>
+                                    3. Depois de doado fazemos umacompanhamento até a adaptação.
+                                    </p>
+                                   </fieldset>
+
+                        <div class="mb-3">
+                            <label for="pet_interesse" class="form-label">Nome do Pet / Interesse</label>
+                            <input type="text" class="form-control" id="pet_interesse" name="pet_interesse" 
+                                value="<%= (typeof petNome !== 'undefined' && petNome) ? petNome : '' %>" 
+                                <%= (typeof petNome !== 'undefined' && petNome) ? 'readonly' : '' %> 
+                                required>
+                        </div>
+                           
+                            <div class="mb-3">
+                            <p class="form-label"> Assinatura Tutor:</p>
+                            <label for="arquivo" class="form-label">Imagem de Documento de Identificação Civil (CPF/RG/CNH com Foto)</label>
+                            <input type="file" class="form-control" id="arquivo_id" name="arquivo_id" required>
+                        </div>        
+
+                          
+
+                        <button type="submit" class="btn btn-success w-100"><i class="bi bi-upload"></i> Enviar Termo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

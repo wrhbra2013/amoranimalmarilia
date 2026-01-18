@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { executeQuery } = require('../database/queries');
 const { insert_adocao } = require('../database/insert');
-const { uploadAdocao } = require('../utils/multerConfig');
+const { uploadAdocao, uploadTermo } = require('../utils/multerConfig');
 const fs = require('fs').promises;
 const path = require('path');
 const { isAdmin } = require('../middleware/auth'); // Re-adicionando para segurança do dashboard
@@ -17,6 +17,7 @@ async function ensureInteressadosTable() {
             nome VARCHAR(255) NOT NULL,
             contato VARCHAR(255),
             whatsapp VARCHAR(255),
+            cidade VARCHAR(100),
             especie VARCHAR(50),
             porte VARCHAR(50),
             caracteristicas TEXT
@@ -29,8 +30,49 @@ async function ensureInteressadosTable() {
     }
 }
 
+// Migração para adicionar colunas novas na tabela de interessados
+async function migrateInteressadosTable() {
+    const columns = [
+        { name: 'cidade', type: 'VARCHAR(100)' }
+    ];
+
+    for (const col of columns) {
+        try {
+            await executeQuery(`ALTER TABLE interessados_adocao ADD COLUMN IF NOT EXISTS ${col.name} ${col.type}`);
+        } catch (error) {
+            // Ignora erro se coluna já existir ou tabela não estiver pronta
+        }
+    }
+}
+
+// Inicialização da Tabela de Termo de Responsabilidade
+async function ensureTermoTable() {
+    const sql = `
+        CREATE TABLE IF NOT EXISTS termo_responsabilidade (
+            id SERIAL PRIMARY KEY,
+            nome VARCHAR(255) NOT NULL,
+            cpf VARCHAR(20),
+            rg VARCHAR(20),
+            endereco VARCHAR(255),
+            contato VARCHAR(100),
+            whatsapp VARCHAR(20),
+            email VARCHAR(255),
+            pet_interesse VARCHAR(255),
+            arquivo VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    `;
+    try {
+        await executeQuery(sql);
+    } catch (error) {
+        console.error("Erro ao verificar/criar tabela termo_responsabilidade:", error);
+    }
+}
+
 // Chama a verificação ao carregar o módulo
 ensureInteressadosTable();
+migrateInteressadosTable();
+ensureTermoTable();
 
 // ==============================================================================
 // Helper de Matching
@@ -143,10 +185,8 @@ router.get('/', async (req, res) => {
         await ensureInteressadosTable();
 
         // 1. Buscar dados brutos
-        const [petsCount] = await executeQuery('SELECT COUNT(*) as total FROM adocao');
-        const [interessadosCount] = await executeQuery('SELECT COUNT(*) as total FROM interessados_adocao');
         const pets = await executeQuery('SELECT * FROM adocao ORDER BY id DESC');
-        const interessados = await executeQuery('SELECT * FROM interessados_adocao');
+        const interessados = await executeQuery('SELECT * FROM interessados_adocao ORDER BY id DESC');
 
         // 2. Processar matches para cada pet
         // Agora consideramos quaisquer candidatos com pontuação > 0 como potenciais matches
@@ -174,15 +214,7 @@ router.get('/', async (req, res) => {
 
         // 3. Renderizar o dashboard
         res.render('adocao_dashboard', {
-            stats: {
-                totalPets: petsCount ? petsCount.total : 0,
-                totalInteressados: interessadosCount ? interessadosCount.total : 0
-            },
             pets: petsComMatches,
-            actions: [
-                { label: 'Cadastrar Novo Pet', url: '/adocao/form', icon: 'fa-paw' },
-                { label: 'Cadastrar Interessado', url: '/adocao/interessados/form', icon: 'fa-user-plus' }
-            ]
         });
     } catch (error) {
         console.error("[adocaoRoutes GET /] Erro:", error);
@@ -196,24 +228,28 @@ router.get('/form', (req, res) => {
 });
 
 // POST /adocao/form - Processa o formulário de cadastro de pet
-router.post('/form', uploadAdocao.single('arquivo'), async (req, res) => {
-    if (!req.file) {
+router.post('/form', uploadAdocao.fields([{ name: 'arquivo', maxCount: 1 }, { name: 'termo', maxCount: 1 }]), async (req, res) => {
+    if (!req.files || !req.files['arquivo']) {
         req.flash('error', 'É necessário enviar uma foto do pet.');
         return res.redirect('/adocao/form');
     }
 
-    const { filename } = req.file;
+    const filename = req.files['arquivo'][0].filename;
+    const termoFilename = req.files['termo'] ? req.files['termo'][0].filename : null;
     const { nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp } = req.body;
 
     try {
-        await insert_adocao(filename, nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp);
+        await insert_adocao(filename, nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp, termoFilename);
         req.flash('success', 'Pet cadastrado para adoção com sucesso!');
         res.redirect('/adocao'); // Redireciona para o dashboard após o cadastro
     } catch (error) {
         console.error("[adocaoRoutes POST /form] Erro:", error);
         // Remove o arquivo enviado em caso de erro no banco
-        if (req.file && req.file.path) {
-            await fs.unlink(req.file.path).catch(err => console.error("Erro ao remover arquivo após falha:", err));
+        if (req.files['arquivo']) {
+            await fs.unlink(req.files['arquivo'][0].path).catch(err => console.error("Erro ao remover arquivo de foto após falha:", err));
+        }
+        if (req.files['termo']) {
+            await fs.unlink(req.files['termo'][0].path).catch(err => console.error("Erro ao remover arquivo de termo após falha:", err));
         }
         req.flash('error', 'Erro ao cadastrar pet. Tente novamente.');
         res.redirect('/adocao/form');
@@ -224,6 +260,9 @@ router.post('/form', uploadAdocao.single('arquivo'), async (req, res) => {
 router.post('/delete/:id/:arq', isAdmin, async (req, res) => {
     const { id, arq } = req.params;
     try {
+        // Busca o pet para verificar se existe um termo associado antes de deletar
+        const [pet] = await executeQuery('SELECT termo_arquivo FROM adocao WHERE id = $1', [id]);
+
         // Deleta do banco de dados
         await executeQuery('DELETE FROM adocao WHERE id = $1', [id]);
 
@@ -233,6 +272,14 @@ router.post('/delete/:id/:arq', isAdmin, async (req, res) => {
         await fs.unlink(filePath).catch(err => {
             if (err.code !== 'ENOENT') console.error(`[adocaoRoutes] Erro ao deletar arquivo ${filePath}:`, err.message);
         });
+
+        // Deleta o arquivo do termo se existir
+        if (pet && pet.termo_arquivo) {
+            const termoPath = path.join(uploadsDir, path.basename(pet.termo_arquivo));
+            await fs.unlink(termoPath).catch(err => {
+                if (err.code !== 'ENOENT') console.error(`[adocaoRoutes] Erro ao deletar termo ${termoPath}:`, err.message);
+            });
+        }
 
         req.flash('success', 'Pet removido com sucesso.');
         res.redirect('/adocao'); // Redireciona para o dashboard após deletar
@@ -257,13 +304,18 @@ router.get('/interessados/form', (req, res) => {
 
 // POST /adocao/interessados/form - Salva o interessado
 router.post('/interessados/form', async (req, res) => {
-    const { nome, contato, whatsapp, especie, porte, caracteristicas } = req.body;
+    const { 
+        nome, telefone, cidade, especie, porte, caracteristicas
+    } = req.body;
 
     try {
         await executeQuery(
-            `INSERT INTO interessados_adocao (nome, contato, whatsapp, especie, porte, caracteristicas) 
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-            [nome, contato, whatsapp, especie, porte, caracteristicas]
+            `INSERT INTO interessados_adocao (
+                nome, contato, cidade, especie, porte, caracteristicas
+            ) VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+                nome, telefone, cidade, especie, porte, caracteristicas
+            ]
         );
         
         req.flash('success', 'Seu interesse foi registrado! Entraremos em contato se houver um match.');
@@ -272,6 +324,169 @@ router.post('/interessados/form', async (req, res) => {
         console.error("[adocaoRoutes POST /interessados/form] Erro:", error);
         req.flash('error', 'Erro ao registrar interesse.');
         res.redirect('/adocao/interessados/form');
+    }
+});
+
+// ==============================================================================
+// ROTAS DE TERMO DE RESPONSABILIDADE
+// ==============================================================================
+
+// GET /adocao/fisica - Página intermediária para Adoção Física (Cadastro Simplificado ou Seleção)
+router.get('/fisica', async (req, res) => {
+    try {
+        // Busca apenas pets disponíveis (opcionalmente poderia filtrar por status se houvesse)
+        const pets = await executeQuery('SELECT id, nome, especie FROM adocao ORDER BY nome ASC');
+        res.render('adocao_fisica', { pets });
+    } catch (error) {
+        console.error("[adocaoRoutes GET /fisica] Erro:", error);
+        res.redirect('/adocao');
+    }
+});
+
+// POST /adocao/fisica/selecionar - Redireciona pet existente para o termo
+router.post('/fisica/selecionar', (req, res) => {
+    const { petId } = req.body;
+    if (petId) {
+        res.redirect(`/adocao/termo/form?petId=${petId}`);
+    } else {
+        res.redirect('/adocao/fisica');
+    }
+});
+
+// POST /adocao/fisica - Processa o cadastro simplificado e redireciona para o termo
+router.post('/fisica', uploadAdocao.single('arquivo'), async (req, res) => {
+    if (!req.file) {
+        req.flash('error', 'Foto do pet é obrigatória.');
+        return res.redirect('/adocao/fisica');
+    }
+
+    const filename = req.file.filename;
+    const { nome, especie, idade, porte, caracteristicas } = req.body;
+    
+    // Valores padrão para campos não preenchidos no form simplificado
+    const tutor = "Adoção Física";
+    const contato = "Presencial";
+    const whatsapp = "";
+    const termo_arquivo = null;
+
+    try {
+        const result = await insert_adocao(filename, nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp, termo_arquivo);
+        const newPetId = result.insertId;
+        
+        req.flash('success', 'Pet cadastrado! Prossiga com a assinatura do termo.');
+        res.redirect(`/adocao/termo/form?petId=${newPetId}`);
+    } catch (error) {
+        console.error("[adocaoRoutes POST /fisica] Erro:", error);
+        req.flash('error', 'Erro ao cadastrar pet simplificado.');
+        res.redirect('/adocao/fisica');
+    }
+});
+
+// GET /adocao/termo/form - Formulário para termo de responsabilidade
+router.get('/termo/form', async (req, res) => {
+    const { petId } = req.query;
+    let pet = null;
+    
+    if (petId) {
+        const result = await executeQuery('SELECT * FROM adocao WHERE id = $1', [petId]);
+        if (result.length > 0) pet = result[0];
+    }
+
+    res.render('form_termo_responsabilidade', { 
+        error: req.flash('error'), 
+        success: req.flash('success'),
+        petId: petId || '',
+        petNome: pet ? pet.nome : ''
+    });
+});
+
+// POST /adocao/termo/form - Salva o termo assinado
+router.post('/termo/form', uploadTermo.single('arquivo_id'), async (req, res) => {
+    const { nome, cpf, rg, endereco, contato, whatsapp, email, pet_interesse, petId } = req.body;
+    const arquivo = req.file ? req.file.filename : null;
+
+    try {
+        await executeQuery(
+            `INSERT INTO termo_responsabilidade (nome, cpf, rg, endereco, contato, whatsapp, email, pet_interesse, arquivo) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            [nome, cpf, rg, endereco, contato, whatsapp, email, pet_interesse, arquivo]
+        );
+
+        // Se houver um ID de pet vinculado, atualiza a tabela adocao referenciando este termo (arquivo)
+        if (petId && arquivo) {
+            await executeQuery(
+                `UPDATE adocao SET termo_arquivo = $1 WHERE id = $2`,
+                [arquivo, petId]
+            );
+            console.log(`[adocaoRoutes] Termo ${arquivo} vinculado ao Pet ID ${petId}`);
+        }
+
+        req.flash('success', 'Termo de responsabilidade registrado com sucesso!');
+        res.redirect('/adocao');
+    } catch (error) {
+        console.error("[adocaoRoutes POST /termo/form] Erro:", error);
+        req.flash('error', 'Erro ao registrar termo.');
+        res.redirect('/adocao/termo/form');
+    }
+});
+
+// ==============================================================================
+// ROTA DE COMPATIBILIDADE (NOVA)
+// ==============================================================================
+
+// GET /adocao/compatibilidade - Lista de pets e análise de compatibilidade
+router.get('/compatibilidade', async (req, res) => {
+    try {
+        // Reutiliza a lógica de busca e matching
+        const pets = await executeQuery('SELECT * FROM adocao ORDER BY id DESC');
+        const interessados = await executeQuery('SELECT * FROM interessados_adocao');
+
+        const petsComMatches = pets.map(pet => {
+            const matchesDetail = interessados
+                .map(candidato => {
+                    const { score, motivos } = calculateMatchScore(pet, candidato);
+                    return { candidato, score, motivos };
+                })
+                .filter(m => m.score > 0)
+                .sort((a, b) => b.score - a.score);
+
+            return { ...pet, matchCount: matchesDetail.length, matchesDetail };
+        });
+
+        res.render('adocao_compatibilidade', {
+            pets: petsComMatches,
+            stats: {
+                totalPets: pets.length,
+                totalInteressados: interessados.length
+            }
+        });
+    } catch (error) {
+        console.error("[adocaoRoutes GET /compatibilidade] Erro:", error);
+        res.status(500).render('error', { error: 'Erro ao carregar análise de compatibilidade.' });
+    }
+});
+
+// GET /adocao/:id - Visualizar detalhes de um pet específico
+router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+
+    // Verifica se o ID é numérico para evitar conflitos com outras rotas
+    if (isNaN(id)) {
+        return res.status(404).render('error', { error: 'Página não encontrada.' });
+    }
+
+    try {
+        const [pet] = await executeQuery('SELECT * FROM adocao WHERE id = $1', [id]);
+
+        if (!pet) {
+            req.flash('error', 'Pet não encontrado.');
+            return res.redirect('/adocao');
+        }
+
+        res.render('view_adocao', { pet, user: req.user, isAdmin: req.isAdmin });
+    } catch (error) {
+        console.error("[adocaoRoutes GET /:id] Erro:", error);
+        res.status(500).render('error', { error: 'Erro ao carregar detalhes do pet.' });
     }
 });
 

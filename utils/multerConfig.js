@@ -91,6 +91,7 @@
          uploadAdocao: createMulterInstance('adocao/', imageFileFilter, defaultLimits),
          uploadProcuraSe: createMulterInstance('procura_se/', imageFileFilter, defaultLimits),
          uploadHome: createMulterInstance('home/', imageFileFilter, defaultLimits),
+         uploadCampanha: createMulterInstance('campanha/', imageFileFilter, defaultLimits),
          uploadParceria: createMulterInstance('parceria/', (req, file, cb) => {
              const filetypes = /jpeg|jpg|png|gif|webp|pdf/;
              const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
@@ -100,8 +101,9 @@
              } else {
                  cb(new Error('Erro: Tipo de arquivo não suportado para parceria!'), false);
              }
-         }, defaultLimits),
-         uploadTransparencia: createMulterInstance('transparencia/', imageFileFilter, defaultLimits)
+        }, defaultLimits),
+        uploadTransparencia: createMulterInstance('transparencia/', imageFileFilter, defaultLimits),
+        uploadTermo: createMulterInstance('termo_assinado/', imageFileFilter, defaultLimits)
      };
     //  console.log('[multerConfig] ATIVO.');
  } catch (error) {

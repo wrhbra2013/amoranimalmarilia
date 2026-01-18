@@ -5,64 +5,180 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= titulo %> - Transparência</title>
     <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/imagem/bootstrap-icons.min.css">
     <style>
-        .lista-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-        .year-group { margin-bottom: 30px; }
-        .year-title { border-bottom: 2px solid #e67e22; padding-bottom: 5px; margin-bottom: 15px; color: #333; }
-        .doc-item { 
-            background: #fff; border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 5px;
-            display: flex; justify-content: space-between; align-items: center;
+        .lista-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px var(--container-shadow);
         }
-        .doc-info h4 { margin: 0 0 5px 0; }
-        .doc-info p { margin: 0; color: #666; font-size: 0.9em; }
-        .doc-actions a { text-decoration: none; color: #e67e22; margin-right: 10px; }
-        .btn-delete { background: none; border: none; color: #dc3545; cursor: pointer; }
-        .btn-voltar { text-decoration: none; color: #333; }
+        .header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .header-flex h1 {
+            margin: 0;
+            color: var(--heading-color);
+            font-size: 1.8rem;
+        }
+        .doc-item {
+            background: var(--card-bg, #fff);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: box-shadow 0.2s;
+        }
+        .doc-item:hover {
+            box-shadow: 0 2px 8px var(--container-shadow);
+            border-color: var(--brand-teal);
+        }
+        .doc-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.1rem;
+            color: var(--heading-color);
+        }
+        .doc-meta {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+        .doc-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-view {
+            background-color: var(--brand-teal);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        .btn-view:hover {
+            background-color: var(--brand-teal-dark);
+            color: white;
+        }
+        .btn-delete {
+            background-color: var(--brand-coral);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        .btn-delete:hover {
+            background-color: var(--brand-coral-2);
+        }
+        .btn-voltar {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-voltar:hover {
+            background-color: var(--button-hover-bg);
+        }
+        .empty-msg {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-color);
+            font-style: italic;
+        }
+        .year-header {
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--brand-teal);
+            color: var(--heading-color);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        @media (max-width: 768px) {
+            .doc-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .doc-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
     </style>
 </head>
 <body>
     <%- include('partials/header') %>
 
     <div class="lista-container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div class="header-flex">
             <h1><%= titulo %></h1>
-            <a href="/transparencia" class="btn-voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
+            <a href="/transparencia" class="btn-voltar"><i class="bi bi-arrow-left"></i> Voltar</a>
         </div>
 
         <% if (docs.length === 0) { %>
-            <p>Nenhum documento encontrado nesta categoria.</p>
-        <% } %>
-
-        <% 
-        let currentYear = null;
-        docs.forEach(doc => {
-            if (doc.ano !== currentYear) {
-                currentYear = doc.ano;
-        %>
-            <div class="year-group">
-                <h2 class="year-title"><%= currentYear %></h2>
-        <% } %>
-            
-            <div class="doc-item">
-                <div class="doc-info">
-                    <h4><%= doc.titulo %></h4>
-                    <% if (doc.descricao) { %><p><%= doc.descricao %></p><% } %>
-                </div>
-                <div class="doc-actions">
-                    <a href="/uploads/transparencia/<%= doc.arquivo %>" target="_blank" title="Visualizar">
-                        <i class="fas fa-file-pdf fa-lg"></i> Visualizar
-                    </a>
-                    <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-                        <form action="/transparencia/delete/<%= doc.id %>/<%= doc.arquivo %>" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este documento?');">
-                            <button type="submit" class="btn-delete" title="Excluir"><i class="fas fa-trash"></i></button>
-                        </form>
-                    <% } %>
-                </div>
+            <div class="empty-msg">
+                Nenhum documento encontrado nesta categoria.
             </div>
-            <% if (docs[docs.indexOf(doc) + 1] && docs[docs.indexOf(doc) + 1].ano !== currentYear) { %> </div> <% } %>
-        <% }); %>
-        <% if (docs.length > 0) { %> </div> <% } %>
+        <% } else { %>
+            <% 
+            let currentYear = null;
+            docs.forEach(doc => { 
+                if (doc.ano !== currentYear) {
+                    currentYear = doc.ano;
+            %>
+                <h2 class="year-header"><i class="bi bi-calendar-event"></i> <%= currentYear %></h2>
+            <% } %>
+                <div class="doc-item">
+                    <div class="doc-info">
+                        <h3><%= doc.titulo %></h3>
+                        <div class="doc-meta">
+                            <% if (doc.descricao) { %>
+                                <span><%= doc.descricao %></span>
+                            <% } %>
+                        </div>
+                    </div>
+                    <div class="doc-actions">
+                        <a href="/uploads/transparencia/<%= doc.arquivo %>" target="_blank" class="btn-view">
+                            <i class="bi bi-file-earmark-pdf-fill"></i> Visualizar
+                        </a>
+                        
+                        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                            <form action="/transparencia/delete/<%= doc.id %>/<%= doc.arquivo %>" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este documento?');" style="margin: 0;">
+                                <button type="submit" class="btn-delete">
+                                    <i class="bi bi-trash-fill"></i> Excluir
+                                </button>
+                            </form>
+                        <% } %>
+                    </div>
+                </div>
+            <% }); %>
+        <% } %>
     </div>
 
     <%- include('partials/footer') %>
