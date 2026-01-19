@@ -65,52 +65,6 @@ async function checkAccessPermission(req, res, next) {
     }
 }
 
-// GET /transparencia - Dashboard
-router.get('/', (req, res) => {
-    res.render('transparencia_dashboard', {
-        types: types,
-        isAdmin: req.session.user && req.session.user.isAdmin
-    });
-});
-
-// GET /transparencia/form - Formulário de Upload (Admin)
-router.get('/form', isAdmin, (req, res) => {
-    res.render('transparencia_form', {
-        types: types,
-        formData: req.flash('formData')[0] || {},
-        error: req.flash('error')
-    });
-});
-
-// POST /transparencia/form - Processa Upload (Admin)
-router.post('/form', isAdmin, uploadTransparencia.single('arquivo'), async (req, res) => {
-    if (!req.file) {
-        req.flash('error', 'Selecione um arquivo PDF ou imagem.');
-        req.flash('formData', req.body);
-        return res.redirect('/transparencia/form');
-    }
-
-    const { titulo, tipo, ano, descricao } = req.body;
-    const arquivo = req.file.filename;
-
-    try {
-        await insert_transparencia(titulo, tipo, parseInt(ano), arquivo, descricao);
-        req.flash('success', 'Documento publicado com sucesso!');
-        res.redirect('/transparencia');
-    } catch (error) {
-        console.error("Erro ao salvar documento de transparência:", error);
-        
-        // Remove o arquivo se falhar no banco
-        try {
-            fs.unlinkSync(req.file.path);
-        } catch (e) { console.error("Erro ao remover arquivo órfão:", e); }
-
-        req.flash('error', 'Erro ao salvar dados. Tente novamente.');
-        req.flash('formData', req.body);
-        res.redirect('/transparencia/form');
-    }
-});
-
 // GET /transparencia/identificacao - Formulário de Identificação
 router.get('/identificacao', (req, res) => {
     res.render('transparencia_identificacao', { 
@@ -185,6 +139,52 @@ router.post('/cadastro', async (req, res) => {
             message: 'Erro ao processar cadastro. Tente novamente.',
             cpfValue: cpf
         });
+    }
+});
+
+// GET /transparencia - Dashboard
+router.get('/', (req, res) => {
+    res.render('transparencia_dashboard', {
+        types: types,
+        isAdmin: req.session.user && req.session.user.isAdmin
+    });
+});
+
+// GET /transparencia/form - Formulário de Upload (Admin)
+router.get('/form', isAdmin, (req, res) => {
+    res.render('transparencia_form', {
+        types: types,
+        formData: req.flash('formData')[0] || {},
+        error: req.flash('error')
+    });
+});
+
+// POST /transparencia/form - Processa Upload (Admin)
+router.post('/form', isAdmin, uploadTransparencia.single('arquivo'), async (req, res) => {
+    if (!req.file) {
+        req.flash('error', 'Selecione um arquivo PDF ou imagem.');
+        req.flash('formData', req.body);
+        return res.redirect('/transparencia/form');
+    }
+
+    const { titulo, tipo, ano, descricao } = req.body;
+    const arquivo = req.file.filename;
+
+    try {
+        await insert_transparencia(titulo, tipo, parseInt(ano), arquivo, descricao);
+        req.flash('success', 'Documento publicado com sucesso!');
+        res.redirect('/transparencia');
+    } catch (error) {
+        console.error("Erro ao salvar documento de transparência:", error);
+        
+        // Remove o arquivo se falhar no banco
+        try {
+            fs.unlinkSync(req.file.path);
+        } catch (e) { console.error("Erro ao remover arquivo órfão:", e); }
+
+        req.flash('error', 'Erro ao salvar dados. Tente novamente.');
+        req.flash('formData', req.body);
+        res.redirect('/transparencia/form');
     }
 });
 

@@ -144,6 +144,61 @@ function calculateMatchScore(pet, candidato) {
 }
 
 // ==============================================================================
+// ROTAS DE ADOÇÃO FÍSICA (Prioritárias)
+// ==============================================================================
+
+// GET /adocao/fisica - Página intermediária para Adoção Física (Cadastro Simplificado ou Seleção)
+router.get('/fisica', async (req, res) => {
+    try {
+        // Busca apenas pets disponíveis (opcionalmente poderia filtrar por status se houvesse)
+        const pets = await executeQuery('SELECT id, nome, especie FROM adocao ORDER BY nome ASC');
+        res.render('adocao_fisica', { pets });
+    } catch (error) {
+        console.error("[adocaoRoutes GET /fisica] Erro:", error);
+        res.redirect('/adocao');
+    }
+});
+
+// POST /adocao/fisica/selecionar - Redireciona pet existente para o termo
+router.post('/fisica/selecionar', (req, res) => {
+    const { petId } = req.body;
+    if (petId) {
+        res.redirect(`/adocao/termo/form?petId=${petId}`);
+    } else {
+        res.redirect('/adocao/fisica');
+    }
+});
+
+// POST /adocao/fisica - Processa o cadastro simplificado e redireciona para o termo
+router.post('/fisica', uploadAdocao.single('arquivo'), async (req, res) => {
+    if (!req.file) {
+        req.flash('error', 'Foto do pet é obrigatória.');
+        return res.redirect('/adocao/fisica');
+    }
+
+    const filename = req.file.filename;
+    const { nome, especie, idade, porte, caracteristicas } = req.body;
+    
+    // Valores padrão para campos não preenchidos no form simplificado
+    const tutor = "Adoção Física";
+    const contato = "Presencial";
+    const whatsapp = "";
+    const termo_arquivo = null;
+
+    try {
+        const result = await insert_adocao(filename, nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp, termo_arquivo);
+        const newPetId = result ? result.insertId : null;
+        
+        req.flash('success', 'Pet cadastrado! Prossiga com a assinatura do termo.');
+        res.redirect(`/adocao/termo/form?petId=${newPetId}`);
+    } catch (error) {
+        console.error("[adocaoRoutes POST /fisica] Erro:", error);
+        req.flash('error', 'Erro ao cadastrar pet simplificado.');
+        res.redirect('/adocao/fisica');
+    }
+});
+
+// ==============================================================================
 // SISTEMA DE MATCHING (Detalhes para um pet)
 // ==============================================================================
 router.get('/match/:id', async (req, res) => {
@@ -222,13 +277,13 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET /adocao/form - Formulário de cadastro (Admin)
-router.get('/form', isAdmin, (req, res) => {
+// GET /adocao/form
+router.get('/form',  (req, res) => {
     res.render('form_adocao');
 });
 
 // POST /adocao/form - Processa o formulário de cadastro de pet
-router.post('/form', isAdmin, uploadAdocao.fields([{ name: 'arquivo', maxCount: 1 }, { name: 'termo', maxCount: 1 }]), async (req, res) => {
+router.post('/form',  uploadAdocao.fields([{ name: 'arquivo', maxCount: 1 }, { name: 'termo', maxCount: 1 }]), async (req, res) => {
     if (!req.files || !req.files['arquivo']) {
         req.flash('error', 'É necessário enviar uma foto do pet.');
         return res.redirect('/adocao/form');
@@ -330,57 +385,6 @@ router.post('/interessados/form', async (req, res) => {
 // ==============================================================================
 // ROTAS DE TERMO DE RESPONSABILIDADE
 // ==============================================================================
-
-// GET /adocao/fisica - Página intermediária para Adoção Física (Cadastro Simplificado ou Seleção)
-router.get('/fisica',  async (req, res) => {
-    try {
-        // Busca apenas pets disponíveis (opcionalmente poderia filtrar por status se houvesse)
-        const pets = await executeQuery('SELECT id, nome, especie FROM adocao ORDER BY nome ASC');
-        res.render('adocao_fisica', { pets });
-    } catch (error) {
-        console.error("[adocaoRoutes GET /fisica] Erro:", error);
-        res.redirect('/adocao');
-    }
-});
-
-// POST /adocao/fisica/selecionar - Redireciona pet existente para o termo
-router.post('/fisica/selecionar',  (req, res) => {
-    const { petId } = req.body;
-    if (petId) {
-        res.redirect(`/adocao/termo/form?petId=${petId}`);
-    } else {
-        res.redirect('/adocao/fisica');
-    }
-});
-
-// POST /adocao/fisica - Processa o cadastro simplificado e redireciona para o termo
-router.post('/fisica',  uploadAdocao.single('arquivo'), async (req, res) => {
-    if (!req.file) {
-        req.flash('error', 'Foto do pet é obrigatória.');
-        return res.redirect('/adocao/fisica');
-    }
-
-    const filename = req.file.filename;
-    const { nome, especie, idade, porte, caracteristicas } = req.body;
-    
-    // Valores padrão para campos não preenchidos no form simplificado
-    const tutor = "Adoção Física";
-    const contato = "Presencial";
-    const whatsapp = "";
-    const termo_arquivo = null;
-
-    try {
-        const result = await insert_adocao(filename, nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp, termo_arquivo);
-        const newPetId = result ? result.insertId : null;
-        
-        req.flash('success', 'Pet cadastrado! Prossiga com a assinatura do termo.');
-        res.redirect(`/adocao/termo/form?petId=${newPetId}`);
-    } catch (error) {
-        console.error("[adocaoRoutes POST /fisica] Erro:", error);
-        req.flash('error', 'Erro ao cadastrar pet simplificado.');
-        res.redirect('/adocao/fisica');
-    }
-});
 
 // GET /adocao/termo/form - Formulário para termo de responsabilidade
 router.get('/termo/form', async (req, res) => {
