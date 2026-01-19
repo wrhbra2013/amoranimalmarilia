@@ -143,7 +143,7 @@ router.post('/cadastro', async (req, res) => {
 });
 
 // GET /transparencia - Dashboard
-router.get('/', (req, res) => {
+router.get('/', checkAccessPermission, (req, res) => {
     res.render('transparencia_dashboard', {
         types: types,
         isAdmin: req.session.user && req.session.user.isAdmin

@@ -199,6 +199,42 @@ router.post('/fisica', uploadAdocao.single('arquivo'), async (req, res) => {
 });
 
 // ==============================================================================
+// ROTA DE COMPATIBILIDADE (Prioritária)
+// ==============================================================================
+
+// GET /adocao/compatibilidade - Lista de pets e análise de compatibilidade
+router.get('/compatibilidade', async (req, res) => {
+    try {
+        // Reutiliza a lógica de busca e matching
+        const pets = await executeQuery('SELECT * FROM adocao ORDER BY id DESC');
+        const interessados = await executeQuery('SELECT * FROM interessados_adocao');
+
+        const petsComMatches = pets.map(pet => {
+            const matchesDetail = interessados
+                .map(candidato => {
+                    const { score, motivos } = calculateMatchScore(pet, candidato);
+                    return { candidato, score, motivos };
+                })
+                .filter(m => m.score > 0)
+                .sort((a, b) => b.score - a.score);
+
+            return { ...pet, matchCount: matchesDetail.length, matchesDetail };
+        });
+
+        res.render('adocao_compatibilidade', {
+            pets: petsComMatches,
+            stats: {
+                totalPets: pets.length,
+                totalInteressados: interessados.length
+            }
+        });
+    } catch (error) {
+        console.error("[adocaoRoutes GET /compatibilidade] Erro:", error);
+        res.status(500).render('error', { error: 'Erro ao carregar análise de compatibilidade.' });
+    }
+});
+
+// ==============================================================================
 // SISTEMA DE MATCHING (Detalhes para um pet)
 // ==============================================================================
 router.get('/match/:id', async (req, res) => {
@@ -447,42 +483,6 @@ router.post('/termo/form',  uploadTermo.single('arquivo_id'), async (req, res) =
 });
 
 // ==============================================================================
-// ROTA DE COMPATIBILIDADE (NOVA)
-// ==============================================================================
-
-// GET /adocao/compatibilidade - Lista de pets e análise de compatibilidade
-router.get('/compatibilidade', async (req, res) => {
-    try {
-        // Reutiliza a lógica de busca e matching
-        const pets = await executeQuery('SELECT * FROM adocao ORDER BY id DESC');
-        const interessados = await executeQuery('SELECT * FROM interessados_adocao');
-
-        const petsComMatches = pets.map(pet => {
-            const matchesDetail = interessados
-                .map(candidato => {
-                    const { score, motivos } = calculateMatchScore(pet, candidato);
-                    return { candidato, score, motivos };
-                })
-                .filter(m => m.score > 0)
-                .sort((a, b) => b.score - a.score);
-
-            return { ...pet, matchCount: matchesDetail.length, matchesDetail };
-        });
-
-        res.render('adocao_compatibilidade', {
-            pets: petsComMatches,
-            stats: {
-                totalPets: pets.length,
-                totalInteressados: interessados.length
-            }
-        });
-    } catch (error) {
-        console.error("[adocaoRoutes GET /compatibilidade] Erro:", error);
-        res.status(500).render('error', { error: 'Erro ao carregar análise de compatibilidade.' });
-    }
-});
-
-// GET /adocao/:id - Visualizar detalhes de um pet específico
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
 
