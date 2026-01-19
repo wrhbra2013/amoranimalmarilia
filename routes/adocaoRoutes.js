@@ -223,12 +223,12 @@ router.get('/', async (req, res) => {
 });
 
 // GET /adocao/form - Formulário de cadastro (Admin)
-router.get('/form', (req, res) => {
+router.get('/form', isAdmin, (req, res) => {
     res.render('form_adocao');
 });
 
 // POST /adocao/form - Processa o formulário de cadastro de pet
-router.post('/form', uploadAdocao.fields([{ name: 'arquivo', maxCount: 1 }, { name: 'termo', maxCount: 1 }]), async (req, res) => {
+router.post('/form', isAdmin, uploadAdocao.fields([{ name: 'arquivo', maxCount: 1 }, { name: 'termo', maxCount: 1 }]), async (req, res) => {
     if (!req.files || !req.files['arquivo']) {
         req.flash('error', 'É necessário enviar uma foto do pet.');
         return res.redirect('/adocao/form');
@@ -332,7 +332,7 @@ router.post('/interessados/form', async (req, res) => {
 // ==============================================================================
 
 // GET /adocao/fisica - Página intermediária para Adoção Física (Cadastro Simplificado ou Seleção)
-router.get('/fisica', async (req, res) => {
+router.get('/fisica',  async (req, res) => {
     try {
         // Busca apenas pets disponíveis (opcionalmente poderia filtrar por status se houvesse)
         const pets = await executeQuery('SELECT id, nome, especie FROM adocao ORDER BY nome ASC');
@@ -344,7 +344,7 @@ router.get('/fisica', async (req, res) => {
 });
 
 // POST /adocao/fisica/selecionar - Redireciona pet existente para o termo
-router.post('/fisica/selecionar', (req, res) => {
+router.post('/fisica/selecionar',  (req, res) => {
     const { petId } = req.body;
     if (petId) {
         res.redirect(`/adocao/termo/form?petId=${petId}`);
@@ -354,7 +354,7 @@ router.post('/fisica/selecionar', (req, res) => {
 });
 
 // POST /adocao/fisica - Processa o cadastro simplificado e redireciona para o termo
-router.post('/fisica', uploadAdocao.single('arquivo'), async (req, res) => {
+router.post('/fisica',  uploadAdocao.single('arquivo'), async (req, res) => {
     if (!req.file) {
         req.flash('error', 'Foto do pet é obrigatória.');
         return res.redirect('/adocao/fisica');
@@ -371,7 +371,7 @@ router.post('/fisica', uploadAdocao.single('arquivo'), async (req, res) => {
 
     try {
         const result = await insert_adocao(filename, nome, idade, especie, porte, caracteristicas, tutor, contato, whatsapp, termo_arquivo);
-        const newPetId = result.insertId;
+        const newPetId = result ? result.insertId : null;
         
         req.flash('success', 'Pet cadastrado! Prossiga com a assinatura do termo.');
         res.redirect(`/adocao/termo/form?petId=${newPetId}`);
@@ -386,24 +386,36 @@ router.post('/fisica', uploadAdocao.single('arquivo'), async (req, res) => {
 router.get('/termo/form', async (req, res) => {
     const { petId } = req.query;
     let pet = null;
+    let pets = [];
     
-    if (petId) {
-        const result = await executeQuery('SELECT * FROM adocao WHERE id = $1', [petId]);
-        if (result.length > 0) pet = result[0];
+    try {
+        // Busca lista completa de pets para o dropdown
+        pets = await executeQuery('SELECT id, nome FROM adocao ORDER BY nome ASC');
+
+        if (petId) {
+            const result = await executeQuery('SELECT * FROM adocao WHERE id = $1', [petId]);
+            if (result.length > 0) pet = result[0];
+        }
+    } catch (error) {
+        console.error("Erro ao buscar dados para termo:", error);
     }
 
     res.render('form_termo_responsabilidade', { 
         error: req.flash('error'), 
         success: req.flash('success'),
         petId: petId || '',
-        petNome: pet ? pet.nome : ''
+        petNome: pet ? pet.nome : '',
+        pets: pets
     });
 });
 
 // POST /adocao/termo/form - Salva o termo assinado
-router.post('/termo/form', uploadTermo.single('arquivo_id'), async (req, res) => {
+router.post('/termo/form',  uploadTermo.single('arquivo_id'), async (req, res) => {
     const { nome, cpf, rg, endereco, contato, whatsapp, email, pet_interesse, petId } = req.body;
     const arquivo = req.file ? req.file.filename : null;
+
+    // O campo 'pet_interesse' recebe o NOME do pet (value do select)
+    // O campo 'petId' recebe o ID do pet (do input hidden atualizado via JS)
 
     try {
         await executeQuery(
@@ -413,7 +425,7 @@ router.post('/termo/form', uploadTermo.single('arquivo_id'), async (req, res) =>
         );
 
         // Se houver um ID de pet vinculado, atualiza a tabela adocao referenciando este termo (arquivo)
-        if (petId && arquivo) {
+        if (petId && !isNaN(petId) && arquivo) {
             await executeQuery(
                 `UPDATE adocao SET termo_arquivo = $1 WHERE id = $2`,
                 [arquivo, petId]
