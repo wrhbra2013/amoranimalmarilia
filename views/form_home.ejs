@@ -16,7 +16,7 @@
                     <img id="frame" src=""  alt="Pré-visualização da foto do pet" class="img-fluid rounded" style="display: none; object-fit: cover; max-width: 100%; height: auto;"/>
                     <span id="preview-placeholder" class="text-muted">Nenhuma imagem selecionada</span> <!-- Placeholder text -->
                 </div>
-                <input type="file" name="arquivo" id="arquivo" class="form-control" onchange="preview()" accept="image/*"/>
+                <input type="file" name="arquivo" id="arquivo" class="form-control" onchange="preview()" accept="image/*" capture="environment"/>
                 <div class="mt-2"> <!-- Div para alinhar o botão -->
                     <button type="reset" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('frame').src=''">
                         <i class="fas fa-times me-1"></i>Limpar  <!-- Ícone adicionado -->
