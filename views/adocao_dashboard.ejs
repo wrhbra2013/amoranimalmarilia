@@ -73,4 +73,81 @@
         <% }); %>
     </div>
 
+    <!-- Lista de Pets Disponíveis -->
+    <div class="row mt-5">
+        <div class="col-12 mb-3 d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">Painel de Adoção</h3>
+            <span class="badge bg-light text-dark border"><%= typeof pets !== 'undefined' ? pets.length : 0 %> encontrados</span>
+        </div>
+
+        <% if (typeof pets !== 'undefined' && pets.length > 0) { %>
+            <div class="col-12">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="width: 80px;">Foto</th>
+                                <th scope="col">Nome</th>
+                                <th scope="col">Espécie</th>
+                                <th scope="col">Idade</th>
+                                <th scope="col">Porte</th>
+                                <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                                    <th scope="col">Matches</th>
+                                <% } %>
+                                <th scope="col" class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% pets.forEach(pet => { %>
+                                <tr>
+                                    <td>
+                                        <% if (pet.arquivo) { %>
+                                            <img src="/uploads/adocao/<%= pet.arquivo %>" alt="<%= pet.nome %>" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                        <% } else { %>
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                <i class="bi bi-paw text-muted fs-5"></i>
+                                            </div>
+                                        <% } %>
+                                    </td>
+                                    <td class="fw-bold"><%= pet.nome %></td>
+                                    <td><%= pet.especie %></td>
+                                    <td><%= pet.idade %></td>
+                                    <td><span class="badge bg-secondary"><%= pet.porte %></span></td>
+                                    
+                                    <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                                        <td>
+                                            <a href="/adocao/match/<%= pet.id %>" class="btn btn-outline-primary btn-sm position-relative">
+                                                Matches
+                                                <% if (pet.matchCount > 0) { %>
+                                                    <span class="badge bg-danger ms-1"><%= pet.matchCount %></span>
+                                                <% } %>
+                                            </a>
+                                        </td>
+                                        <td class="text-end">
+                                            <form action="/adocao/delete/<%= pet.id %>/<%= pet.arquivo %>" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir <%= pet.nome %>?');">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        </td>
+                                    <% } else { %>
+                                        <td class="text-end">
+                                            <a href="/adocao/<%= pet.id %>" class="btn btn-sm btn-primary">Ver Detalhes</a>
+                                        </td>
+                                    <% } %>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="col-12">
+                <div class="alert alert-light text-center py-5 border">
+                    <i class="bi bi-emoji-frown display-4 text-muted mb-3"></i>
+                    <p class="lead mb-0">Nenhum pet disponível para adoção no momento.</p>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</div>
+
 <%- include('partials/footer') %>

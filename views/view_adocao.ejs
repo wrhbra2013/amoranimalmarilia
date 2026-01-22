@@ -2,61 +2,109 @@
 
 <div class="container mt-5 mb-5">
     <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <nav aria-label="breadcrumb" class="mb-4">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/home">Início</a></li>
-                    <li class="breadcrumb-item"><a href="/adocao">Adoção</a></li>
-                    <li class="breadcrumb-item active" aria-current="page"><%= pet.nome %></li>
-                </ol>
-            </nav>
+        <div class="col-lg-8">
+           
+            <div class="nav nav-pills nav-fill mb-4 bg-white p-2 rounded shadow-sm border">
+                <a class="nav-link text-secondary" href="/home">
+                    <i class="bi bi-house-door me-1"></i> Home
+                </a>
+                <a class="nav-link text-secondary" href="/adocao">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar para Adoção
+                </a>
+                <span class="nav-link active bg-primary text-white shadow-sm" style="cursor: default;">
+                    <i class="bi bi-paw me-1"></i> <%= pet.nome %>
+                </span>
+            </div>
 
             <div class="card shadow-lg border-0 overflow-hidden">
-                <div class="row g-0">
-                    <div class="col-md-6 bg-light d-flex align-items-center justify-content-center" style="min-height: 400px;">
-                        <% if (pet.arquivo) { %>
-                            <img src="/uploads/adocao/<%= pet.arquivo %>" class="img-fluid" style="max-height: 500px; width: 100%; object-fit: cover;" alt="<%= pet.nome %>">
-                        <% } else { %>
-                            <div class="text-muted text-center p-5">
-                                <i class="bi bi-camera" style="font-size: 4rem;"></i>
-                                <p>Sem foto disponível</p>
+                <!-- Foto do Pet -->
+                <div class="bg-light position-relative text-center">
+                    <% if (pet.arquivo) { %>
+                        <img src="/uploads/adocao/<%= pet.arquivo %>" class="img-fluid w-100" alt="<%= pet.nome %>" style="max-height: 500px; object-fit: cover;">
+                    <% } else { %>
+                        <div class="d-flex align-items-center justify-content-center text-muted" style="height: 400px;">
+                            <i class="bi bi-camera-fill display-1"></i>
+                        </div>
+                    <% } %>
+                    <div class="position-absolute top-0 start-0 p-3">
+                        <span class="badge bg-primary fs-6 shadow"><%= pet.especie %></span>
+                    </div>
+                </div>
+
+                <!-- Detalhes do Pet -->
+                <div class="card-body p-4 p-lg-5">
+                    <h1 class="display-5 fw-bold text-dark mb-4 text-center"><%= pet.nome %></h1>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered table-striped table-hover">
+                            <tbody>
+                                <tr>
+                                    <th scope="row" class="w-25 bg-light">Espécie</th>
+                                    <td><%= pet.especie %></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="bg-light">Idade</th>
+                                    <td><%= pet.idade %></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="bg-light">Porte</th>
+                                    <td><%= pet.porte %></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="bg-light">Sobre</th>
+                                    <td><%= pet.caracteristicas || 'Nenhuma característica informada.' %></td>
+                                </tr>
+                                <tr>
+                                    <th scope="row" class="bg-light">Status</th>
+                                    <td class="text-success fw-bold">Disponível para adoção</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                            <div class="table-responsive mb-4">
+                                <table class="table table-bordered table-sm border-warning">
+                                    <thead class="table-warning">
+                                        <tr>
+                                            <th colspan="2" class="text-center"><i class="bi bi-shield-lock"></i> Área Administrativa</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row" class="w-25">Tutor</th>
+                                            <td><%= pet.tutor || 'N/A' %></td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">Contato</th>
+                                            <td><%= pet.contato || 'N/A' %></td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">ID</th>
+                                            <td>#<%= pet.id %></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" class="text-center">
+                                                <a href="/adocao/match/<%= pet.id %>" class="btn btn-outline-dark btn-sm">
+                                                    <i class="bi bi-search"></i> Ver Matches
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         <% } %>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card-body p-4 p-lg-5 d-flex flex-column h-100">
-                            <h1 class="card-title display-5 fw-bold mb-2"><%= pet.nome %></h1>
-                            <div class="mb-4">
-                                <span class="badge bg-primary me-2"><%= pet.especie %></span>
-                                <span class="badge bg-info text-dark me-2"><%= pet.porte %></span>
-                                <span class="badge bg-secondary"><%= pet.idade %></span>
-                            </div>
 
-                            <h5 class="text-muted mb-3">Sobre mim</h5>
-                            <p class="card-text fs-5 mb-4"><%= pet.caracteristicas || 'Nenhuma descrição informada.' %></p>
-
-                            <div class="mt-auto">
-                                <div class="d-grid gap-2">
-                                    <a href="/adocao/interessados/form" class="btn btn-success btn-lg">
-                                        <i class="bi bi-heart-fill me-2"></i> Tenho Interesse
-                                    </a>
-                                    <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-                                        <div class="d-flex gap-2 mt-3">
-                                            <a href="/adocao/match/<%= pet.id %>" class="btn btn-outline-primary flex-grow-1">
-                                                <i class="bi bi-people"></i> Ver Matches
-                                            </a>
-                                            <form action="/adocao/delete/<%= pet.id %>/<%= pet.arquivo %>" method="POST" class="flex-grow-1" onsubmit="return confirm('Tem certeza que deseja excluir este pet?');">
-                                                <button type="submit" class="btn btn-outline-danger w-100">
-                                                    <i class="bi bi-trash"></i> Excluir
-                                                </button>
-                                            </form>
-                                        </div>
-                                    <% } %>
-                                    <a href="/adocao" class="btn btn-link text-muted mt-2">Voltar para a lista</a>
-                                </div>
-                            </div>
+                        <div class="mt-auto d-grid gap-2">
+                            <a href="/adocao/termo/form?petId=<%= pet.id %>" class="btn btn-success btn-lg shadow-sm">
+                                <i class="bi bi-heart-fill me-2"></i> Quero Adotar
+                            </a>
+                            <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                                <form action="/adocao/delete/<%= pet.id %>/<%= pet.arquivo %>" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este pet?');">
+                                    <button type="submit" class="btn btn-outline-danger w-100">Excluir Pet</button>
+                                </form>
+                            <% } %>
                         </div>
-                    </div>
                 </div>
             </div>
         </div>

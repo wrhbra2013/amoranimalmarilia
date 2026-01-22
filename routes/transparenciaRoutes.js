@@ -121,6 +121,26 @@ router.post('/cadastro', async (req, res) => {
     const token = crypto.randomBytes(32).toString('hex'); // Mantido para compatibilidade, mas o login agora é via CPF
 
     try {
+        // Verifica se já existe solicitação para este CPF
+        const [existing] = await executeQuery("SELECT status FROM solicitacao_acesso WHERE cpf = $1", [cpfLimpo]);
+        
+        if (existing) {
+            let msg = 'Este CPF já possui uma solicitação registrada.';
+            if (existing.status === 'PENDENTE') {
+                msg = 'Já existe uma solicitação em análise para este CPF. Aguarde a aprovação.';
+            } else if (existing.status === 'APROVADO') {
+                msg = 'Este CPF já possui acesso aprovado. Por favor, faça o login.';
+            } else if (existing.status === 'REJEITADO') {
+                msg = 'A solicitação para este CPF foi rejeitada anteriormente.';
+            }
+            
+            return res.render('transparencia_identificacao', { 
+                step: 'login',
+                message: msg,
+                cpfValue: cpf
+            });
+        }
+
         // Inserção direta para garantir o campo CPF
         await executeQuery(
             "INSERT INTO solicitacao_acesso (nome, organizacao, telefone, email, token, cpf, status) VALUES ($1, $2, $3, $4, $5, $6, 'PENDENTE')",
