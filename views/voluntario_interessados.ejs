@@ -1,0 +1,53 @@
+<%- include("_header") -%>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Interessados em Voluntariar</h1>
+        <a href="/doacao/voluntario" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+    </div>
+
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-hover align-middle mb-0 bg-white">
+            <thead class="bg-light">
+                <tr>
+                    <th>Data</th>
+                    <th>Nome</th>
+                    <th>Contato</th>
+                    <th>Localidade</th>
+                    <th>Habilidade</th>
+                    <th>Disponibilidade</th>
+                    <th>Como Ajudar</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (typeof model !== 'undefined' && model.length > 0) { %>
+                    <% model.forEach(item => { %>
+                        <tr>
+                            <td><%= item.origem ? new Date(item.origem).toLocaleDateString('pt-BR') : '-' %></td>
+                            <td class="fw-bold"><%= item.nome %></td>
+                            <td>
+                                <% if(item.telefone) { %>
+                                    <a href="https://api.whatsapp.com/send?phone=55<%= item.telefone.replace(/\D/g, '') %>" target="_blank" class="text-decoration-none text-success">
+                                        <i class="fab fa-whatsapp"></i> <%= item.telefone %>
+                                    </a>
+                                <% } %>
+                            </td>
+                            <td><%= item.localidade %></td>
+                            <td><%= item.habilidade %></td>
+                            <td><%= item.disponibilidade %></td>
+                            <td><small><%= item.como_ajudar %></small></td>
+                        </tr>
+                    <% }); %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            Nenhum interesse registrado até o momento.
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include("_footer") -%>

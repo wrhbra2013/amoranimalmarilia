@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Voluntários - Amor Animal</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/imagem/bootstrap-icons.min.css">
+    <style>
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .dashboard-card {
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            box-shadow: 0 4px 6px var(--container-shadow);
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px var(--container-shadow);
+            border-color: var(--brand-teal);
+        }
+        .dashboard-card i {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            color: var(--brand-teal);
+        }
+        .dashboard-card h3 {
+            margin: 0;
+            font-size: 1.5em;
+            color: var(--heading-color);
+            font-weight: 600;
+        }
+        .dashboard-card p {
+            margin-top: 10px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <div class="dashboard-container">
+        <h1 class="text-center mb-4">Gestão de Voluntários</h1>
+
+        
+        <div class="dashboard-grid">
+           
+            <% if (user) { %>
+                <div class="alert alert-info" role="alert">
+                    Você está logado como administrador.
+                </div>
+                <a href="/doacao/voluntario/ativos" class="dashboard-card">
+                    <i class="bi bi-list-ul"></i>
+                    <h3>Lista de Voluntários Ativos</h3>
+                    <p>Visualizar e gerenciar voluntários cadastrados</p>
+                </a>
+                <a href="/doacao/voluntario/interessados" class="dashboard-card">
+                    <i class="bi bi-person-lines-fill"></i>
+                    <h3>Lista de Interessados</h3>
+                    <p>Visualizar novos interessados em voluntariar</p>
+                </a>
+
+            <% } %>
+            <a href="/doacao/voluntario/form" class="dashboard-card">
+                <i class="bi bi-people-fill"></i>
+                <h3>Voluntários Ativos</h3>
+                <p>Gerenciar lista de voluntários atuais</p>
+            </a>
+            <a href="/doacao/voluntario/interesse/form" class="dashboard-card">
+                <i class="bi bi-person-plus-fill"></i>
+                <h3>Interesse em Voluntariar</h3>
+                <p>Verificar novas solicitações de interesse</p>
+            </a>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

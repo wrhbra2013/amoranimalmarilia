@@ -1,8 +1,8 @@
 // Importa o Express
 const express = require('express');
-const { insert_voluntario, insert_coleta } = require('../database/insert');
+const { insert_voluntario, insert_coleta, insert_interesse_voluntario } = require('../database/insert');
 const { isAdmin } = require('../middleware/auth');
-const {executeAllQueries} = require('../database/queries');
+const { executeAllQueries, executeQuery } = require('../database/queries');
 
 
 
@@ -21,19 +21,37 @@ router.get('/form', (req, res) => {
 
 });
 
+// Dashboard de Voluntários (Admin)
+router.get('/voluntario',  async (req, res) => {
+    res.render('voluntario_dashboard');
+});
+
+// Lista de Voluntários Ativos (Tabela antiga)
+router.get('/voluntario/ativos', async (req, res) => {
+    const results = await executeAllQueries();
+    const voluntario = results.voluntario;
+    // Reutiliza a view 'voluntario' existente que lista os ativos
+    res.render('voluntario', { model: voluntario });
+});
+
+// Lista de Interessados (Nova Tabela)
+router.get('/voluntario/interessados', isAdmin,  async (req, res) => {
+    try {
+        const interessados = await executeQuery("SELECT * FROM interesse_voluntario ORDER BY origem DESC");
+        res.render('voluntario_interessados', { model: interessados });
+    } catch (error) {
+        console.error("Erro ao buscar interessados:", error);
+        res.redirect('/doacao/voluntario');
+    }
+});
+
+// Rota antiga mantida para compatibilidade ou redirecionada se preferir
+// Se a rota /coleta for acessada diretamente
 router.get('/coleta',  isAdmin, async (req, res) => {             
          
                 const results = await executeAllQueries();
                 const coleta = results.coleta;       
                 res.render('coleta', { model: coleta }); 
-         
-        });
-
-router.get('/voluntario',  isAdmin, async (req, res) => {               
-       
-                const results =  await executeAllQueries();
-                const voluntario = results.voluntario;       
-                res.render('voluntario', { model: voluntario }); 
             
         });
 
@@ -69,6 +87,38 @@ router.post('/voluntario/form', async (req, res) => { // Tornando a função ass
         console.error("Erro ao cadastrar voluntário:", error);
         req.flash('error_msg', 'Falha ao cadastrar voluntário. Tente novamente.');
         res.redirect('/doacao/voluntario/form'); // Redireciona de volta para o formulário
+    }
+});
+
+// Formulário de Interesse em Voluntariar (Nova Tabela)
+router.get('/voluntario/interesse/form', (req, res) => {
+    res.render('form_interesse_voluntario');
+});
+
+router.post('/voluntario/interesse/form', async (req, res) => {
+    const form = {
+        nome: req.body.nome,
+        telefone: req.body.telefone,
+        localidade: req.body.localidade,
+        habilidade: req.body.habilidade,
+        disponibilidade: req.body.disponibilidade,
+        como_ajudar: req.body.como_ajudar
+    };
+    try {
+        await insert_interesse_voluntario(
+            form.nome,
+            form.telefone,
+            form.localidade,
+            form.habilidade,
+            form.disponibilidade,
+            form.como_ajudar
+        );
+        req.flash('success', 'Interesse registrado com sucesso! Entraremos em contato.');
+        res.redirect('/home');
+    } catch (error) {
+        console.error("Erro ao registrar interesse:", error);
+        req.flash('error', 'Erro ao registrar interesse.');
+        res.redirect('/doacao/voluntario/interesse/form');
     }
 });
 

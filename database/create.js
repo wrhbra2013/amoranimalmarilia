@@ -144,6 +144,20 @@ async function create_voluntario() {
     await executeDDL(ddl, 'voluntario');
  }
  
+ async function create_interesse_voluntario() {
+    const ddl = `CREATE TABLE IF NOT EXISTS interesse_voluntario (
+        id SERIAL PRIMARY KEY,
+        origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        nome VARCHAR(255),
+        telefone VARCHAR(20),
+        localidade VARCHAR(255),
+        habilidade TEXT,
+        disponibilidade TEXT,
+        como_ajudar TEXT
+    );`;
+    await executeDDL(ddl, 'interesse_voluntario');
+ }
+ 
  async function create_coleta() {
      const ddl = `CREATE TABLE IF NOT EXISTS coleta (
          id SERIAL PRIMARY KEY,
@@ -343,6 +357,7 @@ async function migrateSolicitacaoAcessoCpfColumn() {
      await create_clinicas();
       await create_parceria();
       await create_voluntario();
+      await create_interesse_voluntario();
       await create_coleta();
       await create_home();
       await create_campanha_fotos();
@@ -367,6 +382,7 @@ async function migrateSolicitacaoAcessoCpfColumn() {
      create_procura_se,
      create_parceria,
      create_login,
+     create_interesse_voluntario,
      create_transparencia,
      create_solicitacao_acesso,
      initializeDatabaseTables

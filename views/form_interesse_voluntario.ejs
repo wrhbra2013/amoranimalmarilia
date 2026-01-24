@@ -1,0 +1,46 @@
+<%- include("_header") -%>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="text-center mb-4">Interesse em Voluntariar</h2>
+                    <p class="text-muted text-center mb-4">Preencha o formulário abaixo e entraremos em contato conforme nossa necessidade.</p>
+                    
+                    <form action="/doacao/voluntario/interesse/form" method="POST">
+                        <div class="mb-3">
+                            <label for="nome" class="form-label fw-bold">Nome Completo:*</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="telefone" class="form-label fw-bold">Telefone/WhatsApp:*</label>
+                                <input type="tel" class="form-control" id="telefone" name="telefone" onInput="this.value = phoneFormat(this.value)" placeholder="(00) 00000-0000" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="localidade" class="form-label fw-bold">Localidade (Bairro/Cidade):*</label>
+                                <input type="text" class="form-control" id="localidade" name="localidade" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="habilidade" class="form-label fw-bold">Habilidades / Profissão:</label>
+                            <input type="text" class="form-control" id="habilidade" name="habilidade" placeholder="Ex: Veterinário, Motorista, Design, etc.">
+                        </div>
+                        <div class="mb-3">
+                            <label for="disponibilidade" class="form-label fw-bold">Disponibilidade de Tempo:</label>
+                            <input type="text" class="form-control" id="disponibilidade" name="disponibilidade" placeholder="Ex: Finais de semana, Manhãs, etc.">
+                        </div>
+                        <div class="mb-3">
+                            <label for="como_ajudar" class="form-label fw-bold">Como posso ajudar?</label>
+                            <textarea class="form-control" id="como_ajudar" name="como_ajudar" rows="3" placeholder="Descreva brevemente como gostaria de contribuir."></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Enviar Interesse</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<%- include("_footer")-%>

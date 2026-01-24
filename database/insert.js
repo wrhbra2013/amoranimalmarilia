@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿const { pool } = require('./database');
+﻿﻿const { pool } = require('./database');
  
  
  async function executeInsert(sql, values, tableName) {
@@ -108,6 +108,14 @@ async function insert_voluntario(nome, localidade, telefone, whatsapp, disponibi
     return executeInsert(insertSQL, values, 'voluntario');
  }
  
+ async function insert_interesse_voluntario(nome, telefone, localidade, habilidade, disponibilidade, como_ajudar) {
+    const insertSQL = `INSERT INTO interesse_voluntario (
+        nome, telefone, localidade, habilidade, disponibilidade, como_ajudar
+    ) VALUES ($1, $2, $3, $4, $5, $6);`;
+    const values = [nome, telefone, localidade, habilidade, disponibilidade, como_ajudar];
+    return executeInsert(insertSQL, values, 'interesse_voluntario');
+ }
+ 
  async function insert_coleta(nome, telefone, whatsapp, item, quantidade, data, hora, cep, endereco, numero, complemento, bairro, cidade, estado, mensagem)
  {
     const insertSQL = `INSERT INTO coleta (
@@ -168,6 +176,7 @@ async function insert_voluntario(nome, localidade, telefone, whatsapp, disponibi
      insert_parceria,
      insert_procura_se,
      insert_voluntario,
+     insert_interesse_voluntario,
      insert_coleta,
      insert_home,
      insert_campanha_foto,
