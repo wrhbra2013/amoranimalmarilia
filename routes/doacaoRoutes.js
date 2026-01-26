@@ -81,11 +81,11 @@ router.post('/voluntario/form', async (req, res) => { // Tornando a função ass
             form.habilidade,
             form.mensagem
         );
-        req.flash('success_msg', 'Voluntário cadastrado com sucesso!'); // Usando success_msg para consistência
+        req.flash('success', 'Voluntário cadastrado com sucesso!');
         res.redirect('/home');
     } catch (error) {
         console.error("Erro ao cadastrar voluntário:", error);
-        req.flash('error_msg', 'Falha ao cadastrar voluntário. Tente novamente.');
+        req.flash('error', 'Falha ao cadastrar voluntário. Tente novamente.');
         res.redirect('/doacao/voluntario/form'); // Redireciona de volta para o formulário
     }
 });
@@ -167,5 +167,53 @@ router.post('/coleta/form', (req, res) => {
         res.redirect('/home');        
  })
 
+ // Rota para deletar um voluntário
+router.post('/delete/voluntario/:id', isAdmin, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Execute a query para deletar o voluntário do banco de dados
+        const result = await executeQuery('DELETE FROM voluntario WHERE id = $1', [id]);
+
+        // Verifica se a exclusão foi bem-sucedida
+        if (result.rowCount > 0) {
+            req.flash('success', 'Voluntário excluído com sucesso!');
+        } else {
+            req.flash('error', 'Voluntário não encontrado.');
+        }
+
+        // Redireciona de volta para a lista de voluntários ativos
+        res.redirect('/doacao/voluntario/ativos');
+    } catch (error) {
+        console.error("Erro ao excluir voluntário:", error);
+        req.flash('error', 'Erro ao excluir voluntário.');
+        res.redirect('/doacao/voluntario/ativos');
+    }
+});
+ //Rota para deletear interesado    
+router.post('/delete/interessado/:id', isAdmin, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Execute a query para deletar o interessado do banco de dados
+        const result = await executeQuery('DELETE FROM interesse_voluntario WHERE id = $1', [id]);
+
+        // Verifica se a exclusão foi bem-sucedida
+        if (result.rowCount > 0) {
+            req.flash('success', 'Interessado excluído com sucesso!');
+        } else {
+            req.flash('error', 'Interessado não encontrado.');
+        }
+
+        // Redireciona de volta para a lista de interessados
+        res.redirect('/doacao/voluntario/interessados');
+    } catch (error) {
+        console.error("Erro ao excluir interessado:", error);
+        req.flash('error', 'Erro ao excluir interessado.');
+        res.redirect('/doacao/voluntario/interessados');
+    }
+});
+
+// Exporta o router
 
 module.exports = router;

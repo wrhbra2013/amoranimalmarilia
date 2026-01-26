@@ -41,10 +41,10 @@
                                 </div>
                             </td>
                         </tr>
-                          </tbody>
+                        <% } %>
+                    </tbody>
                 </table>
             </div>
-            <%}%>
             <% } else { %>
             <div class="text-center p-4">
                 <i class="fas fa-info-circle fa-2x text-muted mb-2"></i>
@@ -62,9 +62,12 @@
 
 <script>
     function confirmDelete(id) {
-        if (confirm('Tem certeza de que deseja excluir este voluntário? Esta ação não poderá ser desfeita.')) {
-            window.location.href = `/delete/voluntario/${id}`;
-        }
+       if (confirm('Tem certeza de que deseja excluir este voluntário? Esta ação não poderá ser desfeita.')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/doacao/delete/voluntario/${id}`;
+            document.body.appendChild(form);
+            form.submit();       }
     }
 </script>
 

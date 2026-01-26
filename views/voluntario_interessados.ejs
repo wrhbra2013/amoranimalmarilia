@@ -17,6 +17,7 @@
                     <th>Habilidade</th>
                     <th>Disponibilidade</th>
                     <th>Como Ajudar</th>
+                    <th class="text-center">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -36,6 +37,18 @@
                             <td><%= item.habilidade %></td>
                             <td><%= item.disponibilidade %></td>
                             <td><small><%= item.como_ajudar %></small></td>
+                            <td class="text-center"><div class="d-flex justify-content-center gap-2">
+                                <a href="/doacao/voluntario/interessados/delete/<%= item.id %>" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja excluir este registro?');" title="Excluir">
+                                      <form method="POST" action="/doacao/delete/interessado/<%= item.id %>" style="display: inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                            Delete
+                                        </button>
+                                    </form>
+                                      </div>
+                            
+                            
+                                </td>
                         </tr>
                     <% }); %>
                 <% } else { %>
@@ -45,6 +58,7 @@
                         </td>
                     </tr>
                 <% } %>
+
             </tbody>
         </table>
     </div>

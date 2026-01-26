@@ -42,8 +42,8 @@
  
   const printer = new PdfPrinter(fontDescriptors);
  
-  const TABELAS_PERMITIDAS = ['adocao', 'adotante', 'adotado', 'castracao', 'procura_se', 'parceria', 'home', 'login', 'voluntario', 'coleta', 'clinicas'];
-  const TABELAS_COM_COLUNA_ORIGEM = ['adocao', 'adotante', 'adotado', 'castracao', 'procura_se', 'parceria', 'home', 'login', 'voluntario', 'coleta'];
+  const TABELAS_PERMITIDAS = ['adocao', 'adotante', 'adotado', 'castracao', 'procura_se', 'parceria', 'home', 'login', 'voluntario', 'interesse_voluntario', 'interessados_adocao', 'coleta', 'clinicas'];
+  const TABELAS_COM_COLUNA_ORIGEM = ['adocao', 'adotante', 'adotado', 'castracao', 'procura_se', 'parceria', 'home', 'login', 'voluntario', 'coleta', 'interesse_voluntario'];
  
   async function fetchReportData(tabela) {
    if (!TABELAS_PERMITIDAS.includes(tabela)) {
@@ -205,19 +205,7 @@
      minute: '2-digit',
      second: '2-digit'
     });
-    content.push({
-     text: sanitizeTextForPdf(`ONG Amor Animal Marilia.`),
-     style: 'mainHeader'
-    });
-    content.push({
-     text: sanitizeTextForPdf(`Relatório: ${tabela.charAt(0).toUpperCase() + tabela.slice(1)}`),
-     style: 'subHeader'
-    });
-    content.push({
-     text: sanitizeTextForPdf(`Gerado em: ${time}`),
-     style: 'subHeader',
-     margin: [0, 0, 0, 20]
-    });
+    // Cabeçalho movido para a função header do PDF
  
     if (tableHeaders.length === 0) {
      content.push({
@@ -327,12 +315,84 @@
      });
     }
  
+   const logoPath = path.join(__dirname, '..', 'static', 'css','imagem', 'ong.jpg');
+
     const docDefinition = { // Define o documento PDF
+    header: (currentPage, pageCount, pageSize) => {
+     return {
+      margin: [20, 10, 20, 0],
+      table: {
+       widths: [70, '*', 140],
+       body: [
+        [{
+         image: logoPath,
+         width: 60,
+         alignment: 'center',
+         margin: [0, 2, 0, 2]
+        }, {
+         stack: [{
+          text: 'ONG Amor Animal Marilia',
+          style: 'headerTitle',
+          alignment: 'center'
+         }, {
+          text: sanitizeTextForPdf(`Relatório: ${tabela.charAt(0).toUpperCase() + tabela.slice(1)}`),
+          style: 'headerSubtitle',
+          alignment: 'center'
+         }, {
+          text: sanitizeTextForPdf(`Gerado em: ${time}`),
+          style: 'headerDate',
+          alignment: 'center'
+         }],
+         margin: [0, 5, 0, 0]
+        }, {
+         text: 'Rua Alcides Caliman, 407\nJd. Bandeirantes\nMarília - SP\nhttps://amoranimalmarilia.ong.br',
+         style: 'addressHeader',
+         alignment: 'right',
+         margin: [0, 5, 5, 0]
+        }]
+       ]
+      },
+      layout: {
+       hLineWidth: function(i, node) {
+        return 0.5;
+       },
+       vLineWidth: function(i, node) {
+        return 0.5;
+       },
+       hLineColor: function(i, node) {
+        return '#cccccc';
+       },
+       vLineColor: function(i, node) {
+        return '#cccccc';
+       }
+      }
+     };
+    },
      content: content,
      pageSize: 'A4',
      pageOrientation: 'portrait', //or landscape (paisagem ou retrato)
-     pageMargins: [20, 30, 20, 50],
+     pageMargins: [20, 80, 20, 50],
      styles: {
+      addressHeader: {
+       fontSize: 8,
+       color: '#555555'
+      },
+      headerTitle: {
+       fontSize: 12,
+       bold: true,
+       color: '#333333',
+       margin: [0, 0, 0, 2]
+      },
+      headerSubtitle: {
+       fontSize: 10,
+       bold: true,
+       color: '#333333',
+       margin: [0, 0, 0, 2]
+      },
+      headerDate: {
+       fontSize: 8,
+       color: '#555555'
+      },
       mainHeader: {
        fontSize: 16,
        bold: true,
