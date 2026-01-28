@@ -139,7 +139,8 @@ app.use((req, res, next) => {
  });
  
  app.post('/accept-cookies', (req, res) => { // Esta rota deve vir ANTES do 404
-     res.cookie('cookie_consent', 'accepted', { maxAge: 365 * 24 * 60 * 60 * 1000, httpOnly: true });
+     // Removemos o maxAge para que o cookie dure apenas enquanto a sessão do navegador estiver aberta
+     res.cookie('cookie_consent', 'accepted', { httpOnly: true });
      res.sendStatus(200);
  });
  
