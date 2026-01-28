@@ -17,18 +17,11 @@ router.get('/login', (req, res) => {
 });
 
 router.get('/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            console.error('Erro ao destruir a sessão:', err);
-            return res.status(500).render('error', {
-                error: 'Erro ao tentar fazer logout. Tente novamente.'
-            });
-        }
-        console.log('Usuário deslogado com sucesso.');
-
-        // THEN redirect
-        res.render('logout'); // Redirect to home AFTER setting the flash message
-    });
+    // Remove o usuário da sessão em vez de destruir a sessão inteira
+    // Isso permite que o flash message persista para o redirecionamento
+    req.session.user = null;
+    req.flash('success', 'Usuário deslogado com sucesso.');
+    res.redirect('/home');
 });
 
 // POST /login - Processa a tentativa de login

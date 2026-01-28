@@ -23,7 +23,10 @@ const storageTransparencia = multer.diskStorage({
         cb(null, Date.now() + '-' + safeName);
     }
 });
-const uploadTransparencia = multer({ storage: storageTransparencia });
+const uploadTransparencia = multer({ 
+    storage: storageTransparencia,
+    limits: { fileSize: 8 * 1024 * 1024 } // Limite de 8MB
+});
 
 const types = {
     'estatuto': 'Estatuto Social',
@@ -45,7 +48,7 @@ router.get('/', (req, res) => {
 
 // GET /transparencia/form - Formulário de Upload (Admin)
 router.get('/form', isAdmin, (req, res) => {
-    res.render('transparencia_form', {
+    res.render('form_transparencia', {
         types: types,
         formData: req.flash('formData')[0] || {},
         error: req.flash('error')
@@ -53,7 +56,20 @@ router.get('/form', isAdmin, (req, res) => {
 });
 
 // POST /transparencia/form - Processa Upload (Admin)
-router.post('/form', isAdmin, uploadTransparencia.single('arquivo'), async (req, res) => {
+router.post('/form', isAdmin, (req, res, next) => {
+    uploadTransparencia.single('arquivo')(req, res, function (err) {
+        if (err) {
+            if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+                req.flash('error', 'O arquivo é muito grande. O tamanho máximo permitido é 8MB.');
+            } else {
+                req.flash('error', 'Erro no upload: ' + err.message);
+            }
+            req.flash('formData', req.body);
+            return res.redirect('/transparencia/form');
+        }
+        next();
+    });
+}, async (req, res) => {
     if (!req.file) {
         req.flash('error', 'Selecione um arquivo PDF ou imagem.');
         req.flash('formData', req.body);
