@@ -25,7 +25,7 @@ const storageTransparencia = multer.diskStorage({
 });
 const uploadTransparencia = multer({ 
     storage: storageTransparencia,
-    limits: { fileSize: 8 * 1024 * 1024 } // Limite de 8MB
+    limits: { fileSize: 10 * 1024 * 1024 } // Limite de 10MB
 });
 
 const types = {

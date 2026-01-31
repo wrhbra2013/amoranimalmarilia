@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Se os elementos não existirem na página, encerra a execução
     if (!cookieBanner || !acceptCookieBtn) return;
 
-    // Verifica se o usuário já aceitou os cookies NESTA SESSÃO (sessionStorage)
-    if (sessionStorage.getItem('cookiesAccepted') === 'true') {
+    // Verifica se o usuário já aceitou os cookies (localStorage)
+    if (localStorage.getItem('cookiesAccepted') === 'true') {
         cookieBanner.style.display = 'none';
         return;
     }
@@ -21,8 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
     acceptCookieBtn.addEventListener('click', function() {
         cookieBanner.style.display = 'none';
         
-        // Armazena a aceitação no sessionStorage (limpa ao fechar o navegador)
-        sessionStorage.setItem('cookiesAccepted', 'true');
+        // Armazena a aceitação no localStorage (permanece mesmo após fechar o navegador)
+        localStorage.setItem('cookiesAccepted', 'true');
         
         // Envia requisição ao servidor para registrar o cookie de sessão (httpOnly)
         fetch('/accept-cookies', { method: 'POST' })
@@ -36,7 +36,7 @@ function setupBannerContent(banner) {
         textP = document.createElement('p');
         banner.insertBefore(textP, banner.firstChild);
     }
-    textP.innerHTML = 'Utilizamos cookies para melhorar a sua experiência. Ao clicar em "Aceitar", você concorda com a nossa <a href="/privacy/policy" style="color: inherit; text-decoration: underline;">Política de Privacidade</a>.';
+    textP.innerHTML = ' Estamos comprometidos com a sua segurança. Esta é a nossa<a href="/privacy/policy" style="color: inherit; text-decoration: underline;">Política de Privacidade</a>.';
     textP.style.margin = '0';
 }
 
