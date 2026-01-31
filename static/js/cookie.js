@@ -36,7 +36,7 @@ function setupBannerContent(banner) {
         textP = document.createElement('p');
         banner.insertBefore(textP, banner.firstChild);
     }
-    textP.innerHTML = ' Estamos comprometidos com a sua segurança. Esta é a nossa<a href="/privacy/policy" style="color: inherit; text-decoration: underline;">Política de Privacidade</a>.';
+    textP.innerHTML = ' Estamos comprometidos com a sua segurança. Esta é a nossa <a href="/privacy/policy" style="color: inherit; text-decoration: underline;">Política de Privacidade</a>.';
     textP.style.margin = '0';
 }
 
