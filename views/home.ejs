@@ -240,39 +240,85 @@
                      <div class="card card-impact h-100" style="border: none; background: transparent;">
                          <div class="card-body">
                              <i class="fas fa-ticket-alt fa-3x mb-3" style="color: var(--heading-color);"></i> <!-- Ícone alterado para ticket -->
-                             <h3 class="card-title h4 fw-bold">Tickets de Castração</h3> <!-- Ajustado para h4 para não competir com os números grandes -->
+                              <div class="text-end mb-4">
+    <a href="/castracao/form" class="btn btn-primary">
+    <i class="fas fa-plus me-1"></i> Agendar Nova Castração
+    </a>
+    </div>
+
+                             <h3 class="card-title h4 fw-bold">Agendamentos de Castração</h3> <!-- Ajustado para h4 para não competir com os números grandes -->
                              <div class="table-responsive">
                                  <table class="table table-striped table-hover table-sm caption-top">
                                      <thead>
-                                         <tr>               
-                                             <th >Ticket</th>               
+                                         <tr>
+                                             <th>Ticket</th>
                                              <th>Nome</th>
                                              <th>Espécie</th>
                                              <th>Clínica</th>
                                              <th>Data</th>
+                                             <th>Status</th>
+                                             <th>Ações</th>
+                                             <% if (user) { %>
+                                                 <th>Excluir</th>
+                                             <% } %>    
+                                             <th>Detalhes</th>
                                          </tr>
                                      </thead>
                                      <tbody>
                                          <% if (typeof model8 !== 'undefined' && model8.length > 0) { %>
                                              <% model8.slice(0, 5).forEach(castracao => { %>
                                                  <tr>
-                                                     <td style="color:brown; font-size: large;"><%= castracao.ticket %></td>                
-                                                        
+                                                     <td style="color:brown; font-size: large;"><%= castracao.ticket %></td>
                                                      <td><%= castracao.nome %></td>
                                                      <td><%= castracao.especie %></td>
-                                                     <td><%= castracao.clinica %></td>   
-                                                     <td><%= castracao.origem ? new Date(castracao.origem).toLocaleDateString('pt-BR') : 'N/A' %></td>          
-                                                 </tr>
+                                                     <td><%= castracao.clinica %></td>
+                                                     <td><%= castracao.origem ? new Date(castracao.origem).toLocaleDateString('pt-BR') : 'N/A' %></td>
+                                                     <% 
+                                                         const rawStatus = (castracao && castracao.status) ? String(castracao.status).trim().toUpperCase() : 'PENDENTE';
+                                                         const isPending = rawStatus === 'PENDENTE';
+                                                     %>
+                                                     <td>
+                                                         <span class="<%= isPending ? 'text-warning' : 'text-success' %>"><%= isPending ? 'Pendente' : 'Atendido' %></span>
+                                                     </td>
+
+                                                     <td class="action-buttons text-center">
+                                                         <% if (isPending) { %>
+                                                             <form action="/castracao/updateStatus/<%= castracao.id %>" method="post">
+                                                                 <button type="submit" class="btn btn-success btn-sm" title="Atender">Atender</button>
+                                                             </form>
+                                                         <% } else { %>
+                                                             <span class="text-success">-</span>
+                                                         <% } %>
+                                                        <% if (user) { %>
+                                                            <form action="/castracao/delete/<%= castracao.id %>/<%= castracao.arquivo || 'sem_arquivo' %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento')">
+                                                                <button type="submit" class="btn btn-danger btn-sm" title="Excluir Agendamento">
+                                                                    <i class="fas fa-trash-alt"></i>
+                                                                    <span class="visually-hidden">Excluir</span>
+                                                                </button>
+                                                            </form>
+                                                        <% } %>
+                                                     </td>
+                                                                                                    
+                                                    <td>
+                                                        <a href="/castracao/<%= castracao.id %>" class="btn btn-info btn-sm">Detalhes</a>
+                                                    </td>
+                                                </tr>
+
                                              <% }); %>            
                                          <% } else { %>              
                                              <tr><td colspan="6" class="text-center text-muted">Nenhum ticket de castração para exibir no momento.</td></tr>
                                          <% } %>
                                      </tbody>
                                  </table>
-                             </div>
-                         </div>
+                                 
+                    
                      </div>
                  </div>
+                  <style>
+                    .table-responsive { overflow-x: auto; }
+                  </style>
+
+
              </div> <!-- Fechamento do .row principal da seção de impacto -->
           </div>
       </section>

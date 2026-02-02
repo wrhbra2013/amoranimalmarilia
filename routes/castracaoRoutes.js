@@ -16,7 +16,11 @@
           const results = await executeAllQueries();
           const castracaoData = results.castracao; // Extrai os dados específicos de castração
   
-          
+          // Formata a data de origem para uma versão resumida (DD/MM/AAAA)
+          castracaoData.forEach(item => {
+              item.data_solicitacao = item.origem
+                  ? new Date(item.origem).toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : 'N/A';
+          });
   
           res.render('castracao', { model: castracaoData });
       } catch (error) {
@@ -159,7 +163,44 @@
       }
   });
 
-  //Rota generica
+  // POST /castracao/updateStatus/:id - Updates the status of a castracao entry
+  router.post('/updateStatus/:id',  async (req, res) => {
+      const { id } = req.params;
+
+      try {
+          // Valida o ID para evitar passar undefined/null ao pool.query
+          const idNum = parseInt(id, 10);
+          if (!Number.isInteger(idNum) || idNum <= 0) {
+              console.warn(`[castracaoRoutes UPDATE] ID inválido recebido: ${id}`);
+              req.flash('error', 'ID inválido para atualização do status.');
+              return res.redirect('/home');
+          }
+
+          // Atualiza apenas o status e grava o timestamp de atendimento em 'atendido_em'.
+          const updateSql = `UPDATE castracao SET status = 'ATENDIDO', atendido_em = CURRENT_TIMESTAMP WHERE id = $1`;
+          const result = await pool.query(updateSql, [idNum]);
+
+          if (result.rowCount === 0) {
+              console.warn(`[castracaoRoutes UPDATE] Nenhum registro encontrado na tabela 'castracao' com ID: ${id} para atualizar o status.`);
+              req.flash('error', `Nenhum registro encontrado na tabela 'castracao' com ID: ${id} para atualizar o status.`);
+          } else {
+              console.log(`[castracaoRoutes UPDATE] Registro de castracao com ID: ${id} teve o status atualizado para ATENDIDO.`);
+              req.flash('success', 'Status do agendamento de castração atualizado para ATENDIDO com sucesso.');
+          }
+          res.redirect('/home');
+      } catch (error) {
+          console.error(`[castracaoRoutes UPDATE /updateStatus/:id] Erro ao atualizar o status do registro de castracao com ID: ${id}:`, error && error.stack ? error.stack : error);
+          // Mostra mensagem amigável ao usuário, e mantém o log com stack trace para debugging
+          req.flash('error', 'Erro ao atualizar o status do agendamento de castração. Tente novamente.');
+          res.redirect('/home');
+      }
+    });
+      
+
+  
+    
+
+  // Rota generica
    router.get('/:id', async (req, res) => {
    const id = req.params.id;
    const tabela = 'castracao';
@@ -177,7 +218,28 @@
         console.error(`[castracaoRoutes GET /:id] Error fetching castracao detail for id ${id}:`, error);
         res.status(500).render('error', { error: 'Não foi possível carregar os detalhes do registro de castração.' });
    }
+   });
+
+  // Rota para edição de castração
+  router.get('/edit/:id', async (req, res) => {
+      const id = req.params.id;
+      try {
+          const query = "SELECT * FROM castracao WHERE id = $1 LIMIT 1";
+          const [item] = await executeQuery(query, [id]);
+
+          if (!item) {
+              req.flash('error', 'Registro de castração não encontrado.');
+              return res.redirect('/castracao');
+          }
+
+          res.render('edit', { model: item, tabela: 'castracao', id: id });
+      } catch (error) {
+          console.error(`[castracaoRoutes GET /edit/:id] Error fetching castracao detail for id ${id}:`, error);
+          res.status(500).render('error', { error: 'Não foi possível carregar os detalhes do registro de castração.' });
+      }
    })
   
+
+
   module.exports = router;
  

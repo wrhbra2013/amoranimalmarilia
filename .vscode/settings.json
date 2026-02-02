@@ -2,5 +2,6 @@
     "files.autoSaveDelay": 100,
     "files.autoSave": "afterDelay",
     "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": true,
-    "editor.cursorStyle": "line"
+    "editor.cursorStyle": "line",
+    "editor.minimap.enabled": false
 }

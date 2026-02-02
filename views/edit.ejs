@@ -18,7 +18,11 @@
              <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                  <h4 class="mb-0">Detalhes de <%= itemTypeName %>: <%= displayName %></h4>
                  <% if (tabela) { %>
-                     <a href="/<%= tabela %>" class="btn btn-light btn-sm" title="Voltar para a lista de <%= itemTypeName %>">
+                     <% let backLink = "/"; // Default to home page %>
+                     <% if (tabela === 'castracao') { %>
+                         <% backLink = "/home"; // Redirect to home for castracao %>
+                     <% } %>
+                     <a href="<%= backLink %>" class="btn btn-light btn-sm" title="Voltar para a lista de <%= itemTypeName %>">
                          <i class="fas fa-arrow-left"></i> Voltar
                      </a>
                  <% } %>
@@ -39,7 +43,7 @@
                              // Adicione outros mapeamentos de tabela para pasta conforme necessário
                          };
                          const uploadFolder = uploadFoldersMap[tabela.toLowerCase()] || tabela.toLowerCase();
-                         imagePath = `/static/uploads/${uploadFolder}/${model.arquivo}`;
+                         imagePath = `/uploads/${uploadFolder}/${model.arquivo}`;
                          hasImage = true;
                      }
                      %>
@@ -47,7 +51,7 @@
                      <%# Coluna da Imagem: Exibe se uma imagem existir %>
                      <% if (hasImage) { %>
                          <div class="col-md-4 text-center mb-3 mb-md-0">
-                             <img src="<%= imagePath %>" 
+                             <img src="<%= imagePath %>"
                                   alt="Imagem de <%= displayName || itemTypeName %>" 
                                   class="img-fluid rounded shadow-sm" 
                                   style="max-height: 350px; object-fit: contain; border: 1px solid #dee2e6;">

@@ -80,7 +80,9 @@ const { pool } = require('./database');
           especie VARCHAR(100),
           porte VARCHAR(50),
           clinica VARCHAR(255),
-          agenda VARCHAR(255)
+          agenda VARCHAR(255),
+          status VARCHAR(50) DEFAULT 'PENDENTE',
+          atendido_em TIMESTAMP NULL
       );`;
   await executeDDL(ddl, 'castracao');
  }
@@ -341,6 +343,54 @@ async function migrateSolicitacaoAcessoCpfColumn() {
     }
 }
 
+/**
+ * Garante que a coluna 'status' exista na tabela 'castracao'.
+ * Adiciona a coluna com valor default 'PENDENTE' quando ausente.
+ */
+async function migrateCastracaoStatusColumn() {
+    const checkColumnSql = `
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'castracao' AND column_name = 'status';
+    `;
+    const alterTableSql = `ALTER TABLE castracao ADD COLUMN status VARCHAR(50) DEFAULT 'PENDENTE';`;
+
+    try {
+        const result = await pool.query(checkColumnSql);
+        if (result.rows.length === 0) {
+            console.log("MIGRATION: Adicionando coluna 'status' na tabela 'castracao'.");
+            await pool.query(alterTableSql);
+            console.log("MIGRATION: Coluna 'status' adicionada com sucesso na tabela 'castracao'.");
+        }
+    } catch (error) {
+        console.error("MIGRATION-ERROR: Falha ao migrar tabela 'castracao' (status):", error);
+    }
+}
+
+/**
+ * Garante que a coluna 'atendido_em' exista na tabela 'castracao'.
+ * Armazena o timestamp de quando o agendamento foi atendido.
+ */
+async function migrateCastracaoAtendidoColumn() {
+    const checkColumnSql = `
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'castracao' AND column_name = 'atendido_em';
+    `;
+    const alterTableSql = `ALTER TABLE castracao ADD COLUMN atendido_em TIMESTAMP NULL;`;
+
+    try {
+        const result = await pool.query(checkColumnSql);
+        if (result.rows.length === 0) {
+            console.log("MIGRATION: Adicionando coluna 'atendido_em' na tabela 'castracao'.");
+            await pool.query(alterTableSql);
+            console.log("MIGRATION: Coluna 'atendido_em' adicionada com sucesso na tabela 'castracao'.");
+        }
+    } catch (error) {
+        console.error("MIGRATION-ERROR: Falha ao migrar tabela 'castracao' (atendido_em):", error);
+    }
+}
+
  /**
    * Função para inicializar todas as tabelas do banco de dados.
    * Chame esta função durante a inicialização da sua aplicação.
@@ -353,6 +403,10 @@ async function migrateSolicitacaoAcessoCpfColumn() {
       await create_adotante();
       await create_adotado();
       await create_castracao();
+      // Garante que, em bases legadas, a coluna 'status' exista
+      await migrateCastracaoStatusColumn();
+    // Garante que, em bases legadas, a coluna 'atendido_em' exista
+    await migrateCastracaoAtendidoColumn();
       await create_procura_se();
      await create_clinicas();
       await create_parceria();

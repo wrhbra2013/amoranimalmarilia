@@ -51,9 +51,9 @@
     <tbody>
     <% model.forEach(castracao => { %>
     <tr>
-    <td>
-    <%= castracao.origem%>
+    <td><%= castracao.origem ? new Date(castracao.origem).toLocaleDateString('pt-BR') : 'N/A' %>
     </td>
+   
     <td class="ticket fw-bold"><%= castracao.ticket %></td>
     <td><%= castracao.nome %></td>
     <td><%= castracao.contato %></td>
