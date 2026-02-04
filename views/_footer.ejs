@@ -1,5 +1,3 @@
-<%-include("_cookie")-%>
-
     <footer> <!-- Mantendo a tag footer -->
         <div class="footer-content"> <!-- Adicionando um container para o conteúdo do footer -->
             <p class="footer-copyright"> <!-- Adicionando classe para o parágrafo de copyright -->
@@ -35,6 +33,13 @@
     <script src="/static/js/home.js"></script>
     <script src="/static/js/procura_se.js"></script>
     <script src="/static/js/cookie.js"></script>
+    <% if (typeof enableAnalytics !== 'undefined' && enableAnalytics) { %>
+        <!-- Analytics only loaded with consent -->
+        <script>
+            // Placeholder analytics snippet — substituir pelo real (Matomo/GA/others)
+            console.log('Analytics enabled by user consent');
+        </script>
+    <% } %>
     </body>
 
     </html>

@@ -138,11 +138,13 @@ app.use((req, res, next) => {
      res.render('cookie-consent'); // Supondo que você tenha um 'cookie-consent.ejs'
  });
  
- app.post('/accept-cookies', (req, res) => { // Esta rota deve vir ANTES do 404
-     // Removemos o maxAge para que o cookie dure apenas enquanto a sessão do navegador estiver aberta
-     res.cookie('cookie_consent', 'accepted', { httpOnly: true });
-     res.sendStatus(200);
- });
+app.post('/accept-cookies', (req, res) => { // Esta rota deve vir ANTES do 404
+    // Permite receber { level: 'essential' | 'all' } do cliente
+    const level = req.body && req.body.level ? String(req.body.level) : 'essential';
+    // Define valor do cookie (httpOnly) para uso em servidor; não expor dados sensíveis
+    res.cookie('cookie_consent', level, { httpOnly: true, sameSite: 'Lax' });
+    res.sendStatus(200);
+});
  
  // Se você tem uma rota específica para exibir uma página de erro genérica
  app.use('/error', errorRoutes);

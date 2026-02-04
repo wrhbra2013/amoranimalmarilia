@@ -12,13 +12,13 @@
   
   // Middleware para verificar consentimento de cookies
   function checkCookieConsent(req, res, next) {
-      const cookieAccepted = req.cookies && req.cookies.cookie_consent === 'accepted';
-
-      if (cookieAccepted) {
-          res.locals.showCookieBanner = false;
-      } else {
-          res.locals.showCookieBanner = true;
-      }
+      const level = req.cookies && req.cookies.cookie_consent ? String(req.cookies.cookie_consent) : null;
+      // Expor nível de consentimento para templates
+      res.locals.cookieConsentLevel = level;
+      // Mostrar banner quando não houver preferência definida
+      res.locals.showCookieBanner = !level;
+      // Habilitar features de analytics apenas se o usuário aceitou todas
+      res.locals.enableAnalytics = level === 'all';
       next();
   }
   

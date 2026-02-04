@@ -49,10 +49,32 @@
             font-size: 1.1rem;
             color: var(--heading-color);
         }
+        .doc-meta p {
+            margin: 0;
+            max-width: 60ch;
+            /* Preferred: multiline truncation for WebKit/Blink */
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            /* Fallback for other browsers: limit by max-height calculated from line-height */
+            line-height: 1.3em;
+            max-height: calc(1.3em * 3);
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .doc-meta {
             font-size: 0.9rem;
             color: var(--text-color);
             opacity: 0.8;
+        }
+        .badge {
+            display:inline-block;
+            padding:4px 8px;
+            border-radius:12px;
+            background:var(--muted-bg,#f1f1f1);
+            color:var(--text-color);
+            font-size:0.8rem;
+            margin-right:6px;
         }
         .doc-actions {
             display: flex;
@@ -158,16 +180,27 @@
                     <div class="doc-info">
                         <h3><%= doc.titulo %></h3>
                         <div class="doc-meta">
+                            <% // compute file extension and formatted date %>
+                            <% const ext = doc.arquivo ? doc.arquivo.split('.').pop().toUpperCase() : 'N/A'; %>
+                            <% const formattedDate = doc.origem ? new Date(doc.origem).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : (doc.ano || 'N/A'); %>
+                            <div style="margin-bottom:6px;">
+                                <span class="badge"><i class="bi bi-file-earmark"></i> <%= ext %></span>
+                                <span class="badge"><i class="bi bi-calendar-event"></i> <%= formattedDate %></span>
+                                <% if (doc.tipo) { %><span class="badge"><%= doc.tipo %></span><% } %>
+                            </div>
                             <% if (doc.descricao) { %>
-                                <span><%= doc.descricao %></span>
+                                <p><%= doc.descricao %></p>
                             <% } %>
                         </div>
                     </div>
                     <div class="doc-actions">
-                        <a href="/uploads/transparencia/<%= doc.arquivo %>" target="_blank" class="btn-view">
-                            <i class="bi bi-file-earmark-pdf-fill"></i> Visualizar
+                        <a href="/uploads/transparencia/<%= doc.arquivo %>" target="_blank" class="btn-view" aria-label="Visualizar <%= doc.titulo %>">
+                            <i class="bi bi-eye-fill"></i> Visualizar
                         </a>
-                        
+                        <a href="/uploads/transparencia/<%= doc.arquivo %>" download class="btn-view" style="background-color:var(--button-bg); color:var(--button-text);">
+                            <i class="bi bi-download"></i> Baixar
+                        </a>
+
                         <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
                             <form action="/transparencia/delete/<%= doc.id %>/<%= doc.arquivo %>" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este documento?');" style="margin: 0;">
                                 <button type="submit" class="btn-delete">

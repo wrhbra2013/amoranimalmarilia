@@ -1,33 +1,44 @@
 document.addEventListener('DOMContentLoaded', function() {
     const cookieBanner = document.getElementById('cookie-consent-banner');
-    const acceptCookieBtn = document.getElementById('accept-cookie-btn');
+    const acceptEssentialBtn = document.getElementById('accept-essential-btn');
+    const acceptAllBtn = document.getElementById('accept-all-btn');
+    const openPrefBtn = document.getElementById('open-preferences-btn');
 
     // Se os elementos não existirem na página, encerra a execução
     if (!cookieBanner || !acceptCookieBtn) return;
 
-    // Verifica se o usuário já aceitou os cookies (localStorage)
-    if (localStorage.getItem('cookiesAccepted') === 'true') {
+    // Verifica se o usuário já deixou uma preferência (localStorage)
+    const stored = localStorage.getItem('cookiePreference');
+    if (stored) {
         cookieBanner.style.display = 'none';
         return;
     }
 
-    // Configura o conteúdo do banner (LGPD)
-    setupBannerContent(cookieBanner);
-    
     // Exibe o banner
     showBanner(cookieBanner);
 
-    // Adiciona evento de clique
-    acceptCookieBtn.addEventListener('click', function() {
+    function setPreference(level) {
         cookieBanner.style.display = 'none';
-        
-        // Armazena a aceitação no localStorage (permanece mesmo após fechar o navegador)
-        localStorage.setItem('cookiesAccepted', 'true');
-        
-        // Envia requisição ao servidor para registrar o cookie de sessão (httpOnly)
-        fetch('/accept-cookies', { method: 'POST' })
-            .catch(err => console.error('Erro ao salvar cookie no servidor:', err));
-    });
+        const payload = { level };
+        // Guarda preferência no localStorage para checagem futura
+        localStorage.setItem('cookiePreference', JSON.stringify({ level, ts: Date.now() }));
+        // Envia preferência ao servidor (cookie httpOnly)
+        fetch('/accept-cookies', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(err => console.error('Erro ao salvar cookie no servidor:', err));
+    }
+
+    if (acceptEssentialBtn) {
+        acceptEssentialBtn.addEventListener('click', function() { setPreference('essential'); });
+    }
+    if (acceptAllBtn) {
+        acceptAllBtn.addEventListener('click', function() { setPreference('all'); });
+    }
+    if (openPrefBtn) {
+        openPrefBtn.addEventListener('click', function() { window.location.href = '/privacy/policy'; });
+    }
 });
 
 function setupBannerContent(banner) {
@@ -41,9 +52,13 @@ function setupBannerContent(banner) {
 }
 
 function showBanner(banner) {
-    banner.style.display = 'flex';
-    banner.style.justifyContent = 'center';
-    banner.style.alignItems = 'center';
-    banner.style.gap = '20px';
-    banner.style.flexWrap = 'wrap';
+    banner.style.display = 'block';
+    banner.style.padding = '14px 10px';
+    banner.style.position = 'fixed';
+    banner.style.bottom = '20px';
+    banner.style.left = '20px';
+    banner.style.right = '20px';
+    banner.style.zIndex = '9999';
+    banner.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)';
+    banner.style.borderRadius = '8px';
 }
