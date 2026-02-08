@@ -1,0 +1,253 @@
+<%- include("_header") -%>
+
+<main class="main-content">
+  <div class="container py-5">
+    <% if (evento) { %>
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <h1 class="mb-3"><%= evento.titulo %></h1>
+          <% if (evento.data_evento) { %>
+            <p class="text-muted">Data: <%= evento.data_evento.toISOString ? evento.data_evento.toISOString().slice(0,10) : evento.data_evento %></p>
+          <% } %>
+          <% if (evento.descricao) { %>
+            <div class="mb-3"><%= evento.descricao %></div>
+          <% } %>
+
+          <% if (fotos && fotos.length > 0) { %>
+            <div class="event-gallery">
+              <!-- Carrossel Principal -->
+              <div class="evt-carousel-wrapper">
+                <div id="evtFeaturedInner" class="evt-carousel-inner">
+                  <% fotos.forEach(function(f, i) { %>
+                    <div class="evt-feature-slide <%= i===0 ? 'active' : '' %>" data-index="<%= i %>">
+                      <% if (isAdmin) { %>
+                        <form action="/eventos/foto/delete/<%= f.id %>" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir esta foto?');" class="evt-delete-btn">
+                          <button type="submit" class="btn btn-danger btn-sm rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Excluir foto">
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </form>
+                      <% } %>
+                      <img class="featured-image" loading="lazy" src="/uploads/eventos/<%= f.arquivo %>" alt="Foto <%= i+1 %>">
+                      <% if (f.descricao) { %>
+                        <div class="evt-caption"><%= f.descricao %></div>
+                      <% } %>
+                    </div>
+                  <% }); %>
+                  <button id="evtPrev" class="evt-nav-btn prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
+                  <button id="evtNext" class="evt-nav-btn next" aria-label="Próximo"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div id="evtCount" class="text-center text-muted small mt-2">1 / <%= fotos.length %></div>
+              </div>
+
+              <!-- Miniaturas -->
+              <div id="evtThumbs" class="mt-3 d-flex gap-2 overflow-auto pb-2 justify-content-center justify-content-md-start" style="display: flex; flex-direction: row;">
+                <% fotos.forEach(function(f, i) { %>
+                  <div class="evt-thumb <%= i===0 ? 'active' : '' %>" data-index="<%= i %>">
+                    <img src="/uploads/eventos/<%= f.arquivo %>" alt="thumb <%= i+1 %>">
+                  </div>
+                <% }); %>
+              </div>
+            </div>
+          <% } else { %>
+            <p class="text-muted">Nenhuma foto enviada para este evento.</p>
+          <% } %>
+
+          <% if (isAdmin) { %>
+            <div class="mt-3 d-flex gap-2">
+              <a href="/eventos/<%= evento.id %>/adicionar-foto" class="button btn-sm">Adicionar foto</a>
+              <!-- <a href="#" class="btn btn-link btn-sm" onclick="document.getElementById('foto').click(); return false;">Enviar foto rápida</a> -->
+            </div>
+            <noscript><p class="small text-muted">Use a página de adicionar foto para enviar imagens quando JavaScript estiver desabilitado.</p></noscript>
+          <% } %>
+
+          <div class="mt-3">
+            <a href="/" class="button btn-secondary">Voltar</a>
+          </div>
+          
+          <hr class="my-5">
+
+          <!-- Seção de Comentários -->
+          <div class="comments-section">
+           
+            
+            <!-- Formulário -->
+            <div class="card mb-4 shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title mb-3">Deixe seu comentário</h5>
+                <form action="/eventos/<%= evento.id %>/comment" method="POST">
+                  <div class="row g-2">
+                    <div class="col-md-3">
+                      <input type="text" class="form-control" id="nome" name="nome" placeholder="Seu nome">
+                    </div>
+                    <div class="col-md-7">
+                      <textarea class="form-control" id="comentario" name="comentario" rows="1" required placeholder="Escreva seu comentário aqui..." style="resize:none; height: 38px;"></textarea>
+                    </div>
+                    <div class="col-md-2">
+                      <button type="submit" class="button btn-sm w-100">Enviar</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Lista de Comentários -->
+            <% if (typeof comments !== 'undefined' && comments.length > 0) { %>
+              <div class="list-group" >
+                <% comments.forEach(function(c) { %>
+                  
+                  <div class="list-group-item list-group-item-action flex-column align-items-start" >
+                    <div class="d-flex w-100 justify-content-between">
+                       <p class="mb-1 text-break"><%= c.comentario %></p> 
+                      <h6 class="mb-1 fw-bold"><%= c.nome || 'Anônimo' %></h6>
+                      <small class="text-muted"><%= c.created_at ? new Date(c.created_at).toLocaleDateString('pt-BR') : '' %></small>
+                    </div>
+                   
+                <% }); %>
+              </div>
+              <hr>
+            <% } else { %>
+              <p class="text-muted fst-italic">Nenhum comentário ainda. Seja o primeiro a comentar!</p>
+            <% } %>
+          </div>
+
+        </div>
+      </div>
+    <% } else { %>
+      <p class="text-center text-muted">Evento não encontrado.</p>
+    <% } %>
+  </div>
+</main>
+
+<%- include("_footer") -%>
+
+<style>
+  /* Container do Carrossel */
+  .evt-carousel-inner {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    height: 480px;
+    margin: 0 auto;
+    background: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+
+  /* Slides com Fade */
+  .evt-feature-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+  }
+  .evt-feature-slide.active { opacity: 1; z-index: 2; }
+
+  .featured-image { width: 100%; height: 100%; object-fit: contain; background: #000; }
+
+  /* Controles de Navegação */
+  .evt-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.3);
+    color: white;
+    border: none;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .evt-nav-btn:hover { background: rgba(0,0,0,0.7); }
+  .evt-nav-btn.prev { left: 10px; }
+  .evt-nav-btn.next { right: 10px; }
+
+  /* Legenda Overlay */
+  .evt-caption {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    color: white;
+    padding: 30px 15px 15px;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  }
+
+  /* Botão de Deletar */
+  .evt-delete-btn { position: absolute; top: 10px; right: 10px; z-index: 20; }
+
+  /* Miniaturas */
+  .evt-thumb {
+    flex: 0 0 auto;
+    width: 100px; height: 70px;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+  }
+  .evt-thumb.active { opacity: 1; border-color: var(--brand-teal, #2aa89a); transform: scale(1.05); }
+  .evt-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Lightbox */
+  .evt-lightbox { position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:1200; padding:20px; }
+  .evt-lightbox img { max-width:95%; max-height:85%; border-radius:6px; }
+  
+  @media (max-width:768px){ 
+    .evt-carousel-inner { height: 300px; } 
+    .evt-thumb { width: 80px; height: 60px; }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const slides = Array.from(document.querySelectorAll('.evt-feature-slide'));
+    const thumbs = Array.from(document.querySelectorAll('.evt-thumb'));
+    const prev = document.getElementById('evtPrev');
+    const next = document.getElementById('evtNext');
+    const count = document.getElementById('evtCount');
+    let idx = 0;
+
+    function show(n){
+      if(!slides.length) return;
+      idx = (n + slides.length) % slides.length;
+      
+      // Atualiza slides (usando classes para transição CSS)
+      slides.forEach((s,i) => {
+        if (i === idx) s.classList.add('active');
+        else s.classList.remove('active');
+      });
+
+      if(count) count.textContent = (idx+1) + ' / ' + slides.length;
+      
+      // Atualiza thumbs
+      thumbs.forEach((t,i)=> t.classList.toggle('active', i===idx));
+      const activeThumb = thumbs[idx];
+      if(activeThumb) activeThumb.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+    }
+
+    prev?.addEventListener('click', ()=> show(idx-1));
+    next?.addEventListener('click', ()=> show(idx+1));
+    thumbs.forEach((t,i)=> t.addEventListener('click', ()=> show(i)));
+    
+    // Lightbox
+    slides.forEach(s=>{ const img = s.querySelector('img'); if(img) img.addEventListener('click', ()=>{
+        const lb = document.createElement('div'); lb.className='evt-lightbox';
+        const im = document.createElement('img'); im.src = img.src;
+        const close = document.createElement('div'); close.style.position='absolute'; close.style.top='18px'; close.style.right='22px'; close.style.color='#fff'; close.style.fontSize='24px'; close.style.cursor='pointer'; close.textContent='✕'; close.onclick = ()=> document.body.removeChild(lb);
+        lb.appendChild(close); lb.appendChild(im); lb.addEventListener('click', (ev)=>{ if(ev.target===lb) document.body.removeChild(lb); }); document.body.appendChild(lb);
+    })
+    });
+
+    // Teclado
+    document.addEventListener('keydown', e=>{ if(e.key==='ArrowLeft') show(idx-1); if(e.key==='ArrowRight') show(idx+1); });
+  });
+</script>

@@ -196,17 +196,83 @@ async function create_voluntario() {
       );`;
   await executeDDL(ddl, 'home');
  }
+
+async function create_eventos() {
+    const ddl = `CREATE TABLE IF NOT EXISTS eventos (
+        id SERIAL PRIMARY KEY,
+        origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        titulo VARCHAR(255),
+        data_evento DATE,
+        arquivo VARCHAR(255),
+        descricao TEXT
+    );`;
+    await executeDDL(ddl, 'eventos');
+}
+
+async function create_evento_fotos() {
+    const ddl = `CREATE TABLE IF NOT EXISTS evento_fotos (
+        id SERIAL PRIMARY KEY,
+        evento_id INT NOT NULL,
+        arquivo VARCHAR(255),
+        descricao TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (evento_id) REFERENCES eventos(id) ON DELETE CASCADE
+    );`;
+    await executeDDL(ddl, 'evento_fotos');
+}
  
+ async function create_evento_comments() {
+    const ddl = `CREATE TABLE IF NOT EXISTS evento_comments (
+        id SERIAL PRIMARY KEY,
+        evento_id INT NOT NULL,
+        nome VARCHAR(255),
+        comentario TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (evento_id) REFERENCES eventos(id) ON DELETE CASCADE
+    );`;
+    await executeDDL(ddl, 'evento_comments');
+ }
+
  async function create_campanha_fotos() {
-    const ddl = `CREATE TABLE IF NOT EXISTS campanha_fotos (
+   const ddl = `CREATE TABLE IF NOT EXISTS campanha_fotos (
         id SERIAL PRIMARY KEY,
         campanha_id INT NOT NULL,
         arquivo VARCHAR(255),
+        descricao TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (campanha_id) REFERENCES home(id) ON DELETE CASCADE
     );`;
     await executeDDL(ddl, 'campanha_fotos');
  }
+
+async function create_campanha_foto_comments() {
+    const ddl = `CREATE TABLE IF NOT EXISTS campanha_foto_comments (
+        id SERIAL PRIMARY KEY,
+        foto_id INT NOT NULL,
+        nome VARCHAR(255),
+        comentario TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (foto_id) REFERENCES campanha_fotos(id) ON DELETE CASCADE
+    );`;
+    await executeDDL(ddl, 'campanha_foto_comments');
+}
+
+// Migração para adicionar coluna 'descricao' caso esteja faltando em bases legadas
+async function migrateCampanhaFotosDescricaoColumn() {
+    const checkColumnSql = `SELECT column_name FROM information_schema.columns WHERE table_name='campanha_fotos' AND column_name='descricao'`;
+    const alterTableSql = `ALTER TABLE campanha_fotos ADD COLUMN descricao TEXT;`;
+
+    try {
+        const result = await pool.query(checkColumnSql);
+        if (result.rows.length === 0) {
+            console.log("MIGRATION: Adicionando coluna 'descricao' na tabela 'campanha_fotos'.");
+            await pool.query(alterTableSql);
+            console.log("MIGRATION: Coluna 'descricao' adicionada com sucesso na tabela 'campanha_fotos'.");
+        }
+    } catch (error) {
+        console.error("MIGRATION-ERROR: Falha ao migrar tabela 'campanha_fotos' (descricao):", error);
+    }
+}
  
  async function create_transparencia() {
     const ddl = `CREATE TABLE IF NOT EXISTS transparencia (
@@ -413,8 +479,13 @@ async function migrateCastracaoAtendidoColumn() {
       await create_voluntario();
       await create_interesse_voluntario();
       await create_coleta();
-      await create_home();
-      await create_campanha_fotos();
+    await create_home();
+            await create_eventos();
+        await create_evento_fotos();
+        await create_evento_comments();
+    await create_campanha_fotos();
+    await migrateCampanhaFotosDescricaoColumn();
+    await create_campanha_foto_comments();
       await create_transparencia();
       await create_solicitacao_acesso();
       await migrateSolicitacaoAcessoCpfColumn(); // Garante que a coluna CPF exista

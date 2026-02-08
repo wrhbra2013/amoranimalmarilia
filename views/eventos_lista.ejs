@@ -1,0 +1,49 @@
+<%- include("_header") -%>
+
+<main class="main-content">
+  <div class="container py-5">
+    <h2>Eventos</h2>
+
+    <% if (typeof error_msg !== 'undefined' && error_msg.length) { %>
+      <div class="alert alert-danger"><%= error_msg %></div>
+    <% } %>
+    <% if (typeof success_msg !== 'undefined' && success_msg.length) { %>
+      <div class="alert alert-success"><%= success_msg %></div>
+    <% } %>
+
+    <% if (!eventos || eventos.length === 0) { %>
+      <p>Nenhum evento cadastrado.</p>
+    <% } else { %>
+      <div class="row">
+        <% eventos.forEach(function(evento){ %>
+          <div class="col-md-4 mb-4">
+            <div class="card h-100">
+              <% if (evento.arquivo) { %>
+                <img src="/uploads/eventos/<%= evento.arquivo %>" class="card-img-top" alt="<%= evento.titulo || 'Evento' %>">
+              <% } %>
+              <div class="card-body">
+                <h5 class="card-title"><%= evento.titulo %></h5>
+                <% if (evento.data_evento) { %>
+                  <p class="card-subtitle text-muted"><%= (evento.data_evento && evento.data_evento.toISOString) ? evento.data_evento.toISOString().slice(0,10) : evento.data_evento %></p>
+                <% } %>
+                <% if (evento.descricao) { %>
+                  <p class="card-text"><%= evento.descricao %></p>
+                <% } %>
+              </div>
+              <div class="card-footer d-flex justify-content-between">
+                <a href="/eventos/<%= evento.id %>" class="btn btn-sm btn-primary">Ver</a>
+                <form action="/eventos/delete/<%= evento.id %>/<%= encodeURIComponent(evento.arquivo || '') %>" method="post" onsubmit="return confirm('Remover este evento?');">
+                  <button type="submit" class="btn btn-sm btn-danger">Remover</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <a href="/" class="button btn-secondary mt-3">Voltar</a>
+  </div>
+</main>
+
+<%- include("_footer") -%>

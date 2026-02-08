@@ -1,4 +1,4 @@
-﻿﻿const { pool } = require('./database');
+﻿﻿﻿﻿const { pool } = require('./database');
  
  
  async function executeInsert(sql, values, tableName) {
@@ -134,11 +134,35 @@ async function insert_voluntario(nome, localidade, telefone, whatsapp, disponibi
      return executeInsert(insertSQL, values, 'home');
  }
  
- async function insert_campanha_foto(campanha_id, arquivo) {
-     const insertSQL = `INSERT INTO campanha_fotos (campanha_id, arquivo) VALUES ($1, $2);`;
-     const values = [campanha_id, arquivo];
-     return executeInsert(insertSQL, values, 'campanha_fotos');
- }
+async function insert_campanha_foto(campanha_id, arquivo, descricao = null) {
+    const insertSQL = `INSERT INTO campanha_fotos (campanha_id, arquivo, descricao) VALUES ($1, $2, $3);`;
+    const values = [campanha_id, arquivo, descricao];
+    return executeInsert(insertSQL, values, 'campanha_fotos');
+}
+
+async function insert_eventos(titulo = null, data_evento = null, arquivo = null, descricao = null) {
+    const insertSQL = `INSERT INTO eventos (titulo, data_evento, arquivo, descricao) VALUES ($1, $2, $3, $4);`;
+    const values = [titulo, data_evento || null, arquivo, descricao];
+    return executeInsert(insertSQL, values, 'eventos');
+}
+
+async function insert_evento_foto(evento_id, arquivo, descricao = null) {
+    const insertSQL = `INSERT INTO evento_fotos (evento_id, arquivo, descricao) VALUES ($1, $2, $3);`;
+    const values = [evento_id, arquivo, descricao];
+    return executeInsert(insertSQL, values, 'evento_fotos');
+}
+
+async function insert_evento_comment(evento_id, nome, comentario) {
+    const insertSQL = `INSERT INTO evento_comments (evento_id, nome, comentario) VALUES ($1, $2, $3);`;
+    const values = [evento_id, nome, comentario];
+    return executeInsert(insertSQL, values, 'evento_comments');
+}
+
+async function insert_campanha_foto_comment(foto_id, nome, comentario) {
+    const insertSQL = `INSERT INTO campanha_foto_comments (foto_id, nome, comentario) VALUES ($1, $2, $3);`;
+    const values = [foto_id, nome, comentario];
+    return executeInsert(insertSQL, values, 'campanha_foto_comments');
+}
  
  async function insert_solicitacao_acesso(nome, organizacao, telefone, email, token) {
     const insertSQL = `INSERT INTO solicitacao_acesso (
@@ -180,6 +204,10 @@ async function insert_voluntario(nome, localidade, telefone, whatsapp, disponibi
      insert_coleta,
      insert_home,
      insert_campanha_foto,
+    insert_campanha_foto_comment,
+    insert_eventos,
+    insert_evento_foto,
+    insert_evento_comment,
      insert_solicitacao_acesso,
      insert_transparencia,
      insert_login

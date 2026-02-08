@@ -2,7 +2,7 @@
   const express = require('express');
   const { pool } = require('../database/database'); // Usa o pool de conexões do PostgreSQL
   const { executeAllQueries, executeQuery } = require('../database/queries'); // Essencial para buscar dados para a home
-  const { insert_home, insert_campanha_foto } = require('../database/insert');     // Para o formulário de notícias da home
+    const { insert_home, insert_campanha_foto, insert_campanha_foto_comment } = require('../database/insert');     // Para o formulário de notícias da home
   const fs = require('fs').promises;
   const path = require('path');
   const { isAdmin } = require('../middleware/auth');
@@ -12,7 +12,7 @@
   
   // Middleware para verificar consentimento de cookies
   function checkCookieConsent(req, res, next) {
-      const level = req.cookies && req.cookies.cookie_consent ? String(req.cookies.cookie_consent) : null;
+      const level = req.session && req.session.cookieConsent ? String(req.session.cookieConsent) : null;
       // Expor nível de consentimento para templates
       res.locals.cookieConsentLevel = level;
       // Mostrar banner quando não houver preferência definida
@@ -30,7 +30,16 @@
  async function getHomePageData() {
      try {
          const rawData = await executeAllQueries(); // Retorna o objeto 'results' de executeAllQueries
-         const data = rawData || {};
+        const data = rawData || {};
+
+        // Busca eventos recentes (tabela `eventos`) para exibir no carrossel da home
+        let eventos = [];
+        try {
+            eventos = await executeQuery('SELECT * FROM eventos ORDER BY origem DESC LIMIT 6');
+        } catch (evErr) {
+            console.error('Erro ao buscar eventos para home:', evErr);
+            eventos = [];
+        }
  
          // Função auxiliar para extrair a contagem de forma segura
          const extractCountValue = (countResult) => {
@@ -64,8 +73,9 @@
              parceriaCount: extractCountValue(data.parceriaCount),
              voluntario: data.voluntario || [],
              voluntarioCount: extractCountValue(data.voluntarioCount),
-             coleta: data.coleta || [],
-             coletaCount: extractCountValue(data.coletaCount),
+            coleta: data.coleta || [],
+            coletaCount: extractCountValue(data.coletaCount),
+            eventos: eventos || [],
              errorLoadingData: false // Agora será um número
          };
      } catch (error) {
@@ -111,8 +121,9 @@
              model13: homePageData.parceriaCount, // Será um número
              model14: homePageData.voluntario,
              model15: homePageData.voluntarioCount, 
-             model16: homePageData.coleta,
-             model17: homePageData.coletaCount,
+            model16: homePageData.coleta,
+            model17: homePageData.coletaCount,
+            modelEventos: homePageData.eventos,
              success_msg: req.flash('success'),
              error_msg: req.flash('error') // Adicionando para consistência
          });
@@ -134,6 +145,25 @@
       res.render('form_home'); // Assumes form_home.ejs exists
   });
 
+  // Rota para exibir o formulário de upload de foto (página separada)
+  // Deve vir antes da rota /campanha/:id para evitar conflito de roteamento
+  router.get('/campanha/:id/adicionar-foto', isAdmin, async (req, res) => {
+      const { id } = req.params;
+      try {
+          const rows = await executeQuery('SELECT id, titulo FROM home WHERE id = $1', [id]);
+          if (!rows || rows.length === 0) {
+              req.flash('error_msg', 'Campanha não encontrada.');
+              return res.redirect('/');
+          }
+          const item = rows[0];
+          res.render('campanha_add_foto', { item, success_msg: req.flash('success'), error_msg: req.flash('error') });
+      } catch (error) {
+          console.error(`Erro ao carregar formulário de adicionar foto para campanha ${id}:`, error);
+          req.flash('error_msg', 'Erro ao carregar o formulário.');
+          res.redirect(`/campanha/${id}`);
+      }
+  });
+
   // Rota para exibir uma campanha específica (Detalhes / Página Filho)
   router.get('/campanha/:id', async (req, res) => {
       const { id } = req.params;
@@ -144,6 +174,23 @@
           
           // Busca fotos adicionais da campanha
           const fotos = await executeQuery('SELECT * FROM campanha_fotos WHERE campanha_id = $1 ORDER BY id DESC', [id]);
+
+          // Busca comentários relacionados às fotos (se houver)
+          if (fotos && fotos.length > 0) {
+              const fotoIds = fotos.map(f => f.id);
+              try {
+                  const commentsRows = await executeQuery('SELECT * FROM campanha_foto_comments WHERE foto_id = ANY($1::int[]) ORDER BY created_at ASC', [fotoIds]);
+                  const grouped = {};
+                  (commentsRows || []).forEach(c => {
+                      if (!grouped[c.foto_id]) grouped[c.foto_id] = [];
+                      grouped[c.foto_id].push(c);
+                  });
+                  fotos.forEach(f => { f.comments = grouped[f.id] || []; });
+              } catch (cErr) {
+                  console.error('Erro ao buscar comentários das fotos:', cErr);
+                  fotos.forEach(f => { f.comments = []; });
+              }
+          }
   
           if (newsItems && newsItems.length > 0) {
               res.render('view_campanha', {
@@ -244,7 +291,8 @@
 
           // 5. Salvar no banco (caminho relativo para acesso via URL /uploads/campanha/...)
           const dbPath = `${folderName}/${newFilename}`;
-          await insert_campanha_foto(id, dbPath);
+          const descricao = req.body.descricao ? String(req.body.descricao).trim() : null;
+          await insert_campanha_foto(id, dbPath, descricao);
 
           req.flash('success_msg', 'Foto adicionada com sucesso!');
           res.redirect(`/campanha/${id}`);
@@ -278,6 +326,38 @@
       }
   });
 
+  // Rota para adicionar comentário a uma foto de campanha (público)
+  router.post('/campanha/foto/:id/comment', async (req, res) => {
+      const { id } = req.params; // foto id
+      const nome = req.body.nome ? String(req.body.nome).trim() : 'Anônimo';
+      const comentario = req.body.comentario ? String(req.body.comentario).trim() : '';
+
+      if (!comentario) {
+          req.flash('error_msg', 'Comentário vazio.');
+          // tenta redirecionar para a campanha pai
+          const [fotoRow] = await executeQuery('SELECT campanha_id FROM campanha_fotos WHERE id = $1', [id]);
+          return res.redirect(fotoRow ? `/campanha/${fotoRow.campanha_id}` : '/');
+      }
+
+      try {
+          // Valida existência da foto e obtém campanha_id para redirecionamento
+          const [fotoRow] = await executeQuery('SELECT campanha_id FROM campanha_fotos WHERE id = $1', [id]);
+          if (!fotoRow) {
+              req.flash('error_msg', 'Foto não encontrada.');
+              return res.redirect('/');
+          }
+
+          await insert_campanha_foto_comment(id, nome, comentario);
+          req.flash('success_msg', 'Comentário adicionado.');
+          res.redirect(`/campanha/${fotoRow.campanha_id}`);
+      } catch (error) {
+          console.error('Erro ao inserir comentário:', error);
+          req.flash('error_msg', 'Erro ao salvar comentário.');
+          const [fotoRow] = await executeQuery('SELECT campanha_id FROM campanha_fotos WHERE id = $1', [id]);
+          res.redirect(fotoRow ? `/campanha/${fotoRow.campanha_id}` : '/');
+      }
+  });
+
   // Rota para deletar "Notícias" da home
   router.post('/delete/campanha/:id/:arq', isAdmin, async (req, res) => {
       const { id, arq } = req.params;
@@ -306,7 +386,7 @@
                   console.error(`homeRoutes: Erro ao deletar arquivo de notícia ${filePath} (não é ENOENT):`, fileError);
               }
           }
-          res.redirect('/');
+          res.redirect('/#eventos');
       } catch (error) {
           console.error(`homeRoutes DELETE /delete/home: Erro ao deletar notícia da home com ID: ${id}:`, error);
           res.status(500).render('error', { error: 'Erro ao deletar a notícia. Tente novamente.' });

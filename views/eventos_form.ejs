@@ -1,0 +1,48 @@
+<%- include("_header") -%>
+
+<main class="main-content">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <h2 class="mb-4">Criar Evento</h2>
+
+        <% if (typeof error_msg !== 'undefined' && error_msg.length) { %>
+          <div class="alert alert-danger"><%= error_msg %></div>
+        <% } %>
+        <% if (typeof success_msg !== 'undefined' && success_msg.length) { %>
+          <div class="alert alert-success"><%= success_msg %></div>
+        <% } %>
+
+        <form action="/eventos/form" method="post" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="titulo" class="form-label">Título</label>
+            <input type="text" id="titulo" name="titulo" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="data" class="form-label">Data do Evento</label>
+            <input type="date" id="data" name="data" class="form-control">
+          </div>
+
+          <div class="mb-3">
+            <label for="arquivo" class="form-label">Imagem (obrigatória)</label>
+            <input type="file" id="arquivo" name="arquivo" accept="image/*" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="descricao" class="form-label">Descrição</label>
+            <textarea id="descricao" name="descricao" rows="6" class="form-control"></textarea>
+          </div>
+
+          <div class="d-flex justify-content-between">
+            <a href="/eventos" class="button btn-secondary">Cancelar</a>
+            <button type="submit" class="button">Criar Evento</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include("_footer") -%>

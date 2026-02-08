@@ -1,33 +1,22 @@
   <%-include("_header")-%>
-  
+
   <main class="main-content">
-  
-     
+
+
      <% if (typeof errorLoadingData !== 'undefined' && errorLoadingData) { %>
          <div class="alert alert-danger" role="alert">
              Ocorreu um erro ao carregar alguns dados da página. Por favor, tente novamente mais tarde.
          </div>
      <% } %>
- 
+
      <% if (success_msg) { %>
          <div class="alert alert-success alert-dismissible fade show" role="alert">
-             <%= success_msg %> 
-             
+             <%= success_msg %>
+
      <% } %>
-     
+
          </div>
 
-        <!-- QR CODE PORTAL DA TRANSPARENCIA -->
-         <div class="container">
-            <fieldset style="border: 1px solid var(--border-color);  border-radius: 5px; max-width: 300px; margin: 0px auto; ">
-                <legend style="padding: 0 10px; font-weight: bold; color: var(--heading-color);">Acesse nosso Portal da Transparência</legend>
-                <img src="/static/css/imagem/transparencia.png" alt="QR Code para o Portal da Transparência" style="width: 150px; height: 150px;">
-                <p style="margin-top: 10px; color: var(--text-color);">Escaneie o QR Code ou visite <a href="https://amoranimal.ong.br/transparencia" target="_blank" style="color: var(--brand-teal); text-decoration: underline;">amoranimal.ong.br/transparencia</a></p>
-            </fieldset>
-         </div>
-    
- 
-  
       <!-- ==========================================================================
           1. Hero Section (Destaque Principal)
           ========================================================================== -->
@@ -41,7 +30,235 @@
               <a href="/adocao" class="button" style="background-color: transparent; border: 2px solid var(--hc-button-text); color: var(--hc-button-text); padding: 10px 23px; font-size: 1.1em;">Adote um Amigo</a>
           </div>
       </section>
-  
+
+         <!-- ==========================================================================
+             Eventos (Carousel)
+             ========================================================================== -->
+         <section id="eventos" class="py-5">
+             <div class="container">
+                                 <div class="d-flex align-items-center justify-content-between mb-3">
+                                     <h2 class="mb-0">Eventos</h2>
+                                     <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                                         <a href="/eventos/form" class="button btn-sm">+ Adicionar novo evento</a>
+                                     <% } %>
+                                 </div>
+                <% const eventsList = (typeof modelEventos !== 'undefined' && modelEventos.length) ? modelEventos : ((typeof model1 !== 'undefined' && model1.length) ? model1 : []); %>
+                <% if (eventsList && eventsList.length > 0) { %>
+                <div class="event-card card border-0 shadow-sm">
+                    <div id="eventCarousel" class="event-carousel" style="position:relative; overflow:hidden;">
+                        <% const isEventosSource = (typeof modelEventos !== 'undefined' && modelEventos.length);
+                           eventsList.slice(0,8).forEach(function(event, idx) { %>
+                            <div class="event-slide" data-index="<%= idx %>" style="display:<%= idx===0 ? 'block' : 'none' %>; text-align:center;">
+                                <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                                    <% 
+                                       const deleteAction = isEventosSource 
+                                           ? `/eventos/delete/${event.id}/${event.arquivo || 'sem_arquivo'}` 
+                                           : `/delete/campanha/${event.id}/${event.arquivo || 'sem_arquivo'}`;
+                                    %>
+                                    <form action="<%= deleteAction %>" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este item?');" style="position: absolute; top: 10px; right: 10px; z-index: 100;">
+                                        <button type="submit" class="btn btn-danger btn-sm" style="width: 30px; height: 30px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;" title="Excluir">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                <% } %>
+                                                                <% const imgSrc = isEventosSource ? ('/uploads/eventos/' + (event.arquivo || 'placeholder-event.jpg')) : ('/uploads/home/' + (event.arquivo || 'placeholder-event.jpg')); %>
+                                                                <% if (isEventosSource) { %>
+                                                                    <a href="/eventos/<%= event.id %>">
+                                                                        <img class="event-image" loading="lazy" src="<%= imgSrc %>" alt="<%= event.titulo %>">
+                                                                    </a>
+                                                                <% } else { %>
+                                                                    <a href="/campanha/<%= event.id %>">
+                                                                        <img class="event-image" src="<%= imgSrc %>" alt="<%= event.titulo %>">
+                                                                    </a>
+                                                                <% } %>
+                                <div class="mt-3">
+                                    <h5 class="mb-1"><%= event.titulo %></h5>
+                                    <p class="text-muted small event-caption" data-index="<%= idx %>"><%= isEventosSource ? (event.descricao ? event.descricao.substring(0,200) : '') : (event.mensagem ? event.mensagem.substring(0,200) : '') %></p>
+                                </div>
+                            </div>
+                        <% }); %>
+                        <button id="eventPrev" class="carousel-control-prev-custom" aria-label="Anterior">❮</button>
+                        <button id="eventNext" class="carousel-control-next-custom" aria-label="Próximo">❯</button>
+                    </div>
+                    <div class="d-flex justify-content-center py-3">
+                        <div id="eventIndicators" style="display:flex; gap:6px; align-items:center;"></div>
+                    </div>
+                </div>
+                <% } else { %>
+                    <p class="text-center text-muted">Nenhum evento cadastrado no momento.</p>
+                <% } %>
+             </div>
+         </section>
+
+<style>
+    /* Events carousel numeric indicators styled to match app */
+    .carousel-control-prev-custom, .carousel-control-next-custom {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0,0,0,0.5);
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        font-size: 18px;
+        cursor: pointer;
+        z-index: 10;
+        transition: background 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .carousel-control-prev-custom:hover, .carousel-control-next-custom:hover { background: rgba(0,0,0,0.8); }
+    .carousel-control-prev-custom { left: 10px; }
+    .carousel-control-next-custom { right: 10px; }
+
+    .event-indicator {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        width:32px;
+        height:32px;
+        border-radius:50%;
+        background:#f0f0f0;
+        color:var(--text-color,#333);
+        border:1px solid rgba(0,0,0,0.06);
+        font-weight:600;
+        cursor:pointer;
+        margin: 0 6px;
+        padding:0;
+    }
+    .event-indicator.active { background: var(--brand-teal,#2aa89a); color: #fff; border-color: rgba(0,0,0,0.08); }
+    .event-indicator:focus { outline:3px solid rgba(42,168,154,0.15); }
+    /* Standardize event carousel images and center layout */
+    .event-card { display:flex; flex-direction:column; align-items:center; gap:12px; }
+    .event-card .event-slide { max-width: 760px; width:100%; margin: 0 auto; position:relative; overflow:visible; }
+    .event-card .event-slide img.event-image {
+        width: 100% !important;
+        height: 400px !important;
+        object-fit: cover;
+        border-radius: 6px;
+        display: block;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        transition: transform .28s ease, box-shadow .28s ease, opacity .35s ease, filter .35s ease;
+        opacity: 0;
+        filter: blur(6px) saturate(.95) grayscale(0.02);
+    }
+    .event-card .event-slide img.event-image.loaded { opacity: 1; filter: none; }
+    .event-card .event-slide img.event-image:hover { transform: scale(1.01); }
+    .event-card .event-slide .mt-3 { position:absolute; bottom:0; left:0; right:0; background: rgba(0,0,0,0.7); color:#fff; padding:15px; border-bottom-left-radius:6px; border-bottom-right-radius:6px; text-align:left; max-width:100%; transform:none; }
+    .event-card .event-slide .mt-3 h5 { color: #fff; margin-bottom: 5px; }
+    .event-card .event-slide .mt-3 p { color: #ddd !important; margin-bottom: 0; }
+    .event-card > div[style] { display:flex; justify-content:center; align-items:center; }
+    @media (max-width: 768px) {
+        .event-card .event-slide img.event-image { height: 250px !important; }
+        .event-card { padding: 0; }
+    }
+</style>
+
+<script>
+    (function(){
+        const carousel = document.getElementById('eventCarousel');
+        if (!carousel) return;
+        const slides = Array.from(carousel.querySelectorAll('.event-slide'));
+        const prevBtn = document.getElementById('eventPrev');
+        const nextBtn = document.getElementById('eventNext');
+        const indicators = document.getElementById('eventIndicators');
+        let idx = 0;
+        let intervalId = null;
+        const delay = 4000;
+
+        function buildIndicators(){
+            if(!indicators) return;
+            indicators.innerHTML = '';
+            slides.forEach((s,i)=>{
+                const btn = document.createElement('button');
+                btn.className = 'event-indicator';
+                btn.setAttribute('aria-label', `Ir para evento ${i+1}`);
+                btn.textContent = String(i+1);
+                btn.addEventListener('click', ()=> { show(i); stopAutoplay(); });
+                indicators.appendChild(btn);
+            });
+        }
+
+        function show(n){
+            if(!slides.length) return;
+            idx = (n + slides.length) % slides.length;
+            slides.forEach((s,i)=> s.style.display = i===idx ? 'block' : 'none');
+            // update indicators (toggle active class)
+            if(indicators){
+                Array.from(indicators.children).forEach((d,i)=> d.classList.toggle('active', i===idx));
+            }
+        }
+
+        function next(){ show(idx+1); }
+        function prev(){ show(idx-1); }
+
+        // autoplay controls
+        function startAutoplay(){ if(intervalId) return; intervalId = setInterval(next, delay); }
+        function stopAutoplay(){ if(intervalId){ clearInterval(intervalId); intervalId = null; } }
+
+        buildIndicators(); show(0);
+
+        prevBtn?.addEventListener('click', ()=>{ prev(); stopAutoplay(); });
+        nextBtn?.addEventListener('click', ()=>{ next(); stopAutoplay(); });
+
+        // Wheel navigation while hovering the carousel
+        let lastWheel = 0;
+        carousel.addEventListener('wheel', (e)=>{
+            // only when hovering and small throttle
+            const now = Date.now();
+            if(now - lastWheel < 300) return e.preventDefault();
+            lastWheel = now;
+            if (e.deltaY > 0) { next(); } else { prev(); }
+            e.preventDefault();
+        }, { passive: false });
+
+        // Pause on hover, resume when leaving (but only if in viewport)
+        let inView = false;
+        carousel.addEventListener('mouseenter', ()=> stopAutoplay());
+        carousel.addEventListener('mouseleave', ()=> { if(inView) startAutoplay(); });
+
+        // Start autoplay when section becomes visible (scroll into view)
+        const target = document.getElementById('eventos') || carousel;
+        const io = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting && entry.intersectionRatio > 0.4){
+                    inView = true;
+                    startAutoplay();
+                } else {
+                    inView = false;
+                    stopAutoplay();
+                }
+            });
+        }, { threshold: [0.25, 0.4, 0.75] });
+        io.observe(target);
+
+        // keyboard nav
+        document.addEventListener('keydown', e=>{ if(document.activeElement && ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return; if(e.key==='ArrowLeft') prev(); if(e.key==='ArrowRight') next(); });
+    })();
+</script>
+
+<script>
+    // Image load handling: fade-in loaded images and remove blur
+    (function(){
+        const imgs = document.querySelectorAll('.event-image');
+        imgs.forEach(img => {
+            if (img.complete) {
+                img.classList.add('loaded');
+                return;
+            }
+            img.addEventListener('load', ()=> img.classList.add('loaded'));
+            img.addEventListener('error', ()=> img.classList.add('loaded'));
+        });
+    })();
+</script>
+</script>
+
+
+
+
       <!-- ==========================================================================
           2. Sobre Nós (Resumido)
           ========================================================================== -->
@@ -52,19 +269,30 @@
                       <h2>Nossa Missão</h2>
                       <p>A ONG Amor Animal é dedicada ao resgate, reabilitação e realocação de animais em situação de vulnerabilidade. Movidos pela compaixão, trabalhamos incansavelmente para oferecer uma segunda chance a cada um deles, promovendo a posse responsável e o bem-estar animal em nossa comunidade.</p>
                          <div class="col-md-5 text-center">
-                     <span>Equipe ONG Amor Animal</span>                     
-                  </div>               
+                             <!-- QR CODE PORTAL DA TRANSPARENCIA -->
+           <!-- <div class="container"> -->
+              <fieldset style="border: 1px solid var(--border-color);  border-radius: 5px; max-width: 300px; margin: 0px auto; ">
+                  <legend style="padding: 0 10px; font-weight: bold; color: var(--heading-color);">Acesse nosso Portal da Transparência</legend>
+                  <img src="/static/css/imagem/transparencia.png" alt="QR Code para o Portal da Transparência" style="width: 150px; height: 150px;">
+                  <p style="margin-top: 10px; color: var(--text-color);">Escaneie o QR Code ou visite <a href="https://amoranimal.ong.br/transparencia" target="_blank" style="color: var(--brand-teal); text-decoration: underline;">amoranimal.ong.br/transparencia</a></p>
+              </fieldset>
+           <!-- </div> -->
+                     <span>Equipe ONG Amor Animal</span>
+                  </div>
+                  
                       <div class="text-center">
                         <a href="/sobre" class="button"" >Saiba Mais Sobre Nós</a>
                       </div>
-                     
+
+
                   </div>
-               
+
               </div>
-              
+
           </div>
+         
       </section>
-  
+
       <!-- ==========================================================================
           3. Adoção em Destaque
           ========================================================================== -->
@@ -83,10 +311,10 @@
                       <div class="card-body text-center">
                           <%# Se o nome não existir, exibe a espécie com a primeira letra maiúscula. %>
                           <h5 class="card-title"><%= adocao.nome || (adocao.especie ? adocao.especie.charAt(0).toUpperCase() + adocao.especie.slice(1) : 'Pet para adoção') %></h5>
-                          
+
                           <%# Exibe a idade como vem do banco (ex: "1 ano e 2 meses") ou um texto padrão. %>
                           <p class="text-muted small"><%= adocao.especie %> - <%= adocao.idade || 'Idade não informada' %></p>
-                          
+
                           <%# O link "Conhecer" agora funciona mesmo sem nome e tem um texto alternativo. %>
                           <a href="/adocao/<%= adocao.id %>" class="button btn-sm">Conhecer <%= adocao.nome ? adocao.nome.split(' ')[0] : 'o pet' %></a>
                       </div>
@@ -99,10 +327,12 @@
               <% } else { %>
               <p class="text-center text-muted">Nenhum pet disponível para adoção no momento. Volte em breve!</p>
               <% } %>
-           
+
           </div>
       </section>
-  
+
+
+
       <!-- ==========================================================================
           5. Nossos Números / Impacto
           ========================================================================== -->
@@ -117,13 +347,13 @@
                               <h3 class="card-title display-4 fw-bold"><%= model15 %></h3>
                               <p class="text-muted">Voluntários</p>
                               <a href="/doacao/voluntario">Seja um.</a><br><br>
-                             
-                              
+
+
                           </div>
                       </div>
                   </div>
 
-                 
+
              <div class="row text-center gy-4 justify-content-center">
                   <div class="col-lg-3 col-md-6">
                       <div class="card card-impact h-100" style="border: none; background: transparent;">
@@ -135,7 +365,7 @@
                           </div>
                       </div>
                   </div>
-                  
+
                   <div class="col-lg-3 col-md-6">
                       <div class="card card-impact h-100" style="border: none; background: transparent;">
                           <div class="card-body">
@@ -176,14 +406,14 @@
                           </div>
                       </div>
                   </div>
-              
+
                   <div class="col-lg-3 col-md-6">
                      <div class="card card-impact h-100" style="border: none; background: transparent;">
                          <div class="card-body d-flex flex-column text-center">
                              <i class="fas fa-syringe fa-3x mb-3" style="color: var(--heading-color);"></i>
                              <h3 class="card-title h4 fw-bold">Castrações Anuais</h3>
 *                             <p class="text-muted mt-n2 mb-3">Progresso do ano atual</p>
- 
+
                              <%
                              const annualCounts = {};
                              if (typeof model8 !== 'undefined' && model8.length > 0) {
@@ -194,18 +424,18 @@
                                      }
                                  });
                              }
- 
+
                              const sortedYears = Object.keys(annualCounts).map(Number).sort((a, b) => b - a);
                              const currentYear = sortedYears.length > 0 ? sortedYears[0] : new Date().getFullYear();
                              const previousYear = sortedYears.length > 1 ? sortedYears[1] : currentYear - 1;
- 
+
                              const currentYearCount = annualCounts[currentYear] || 0;
                              const previousYearCount = annualCounts[previousYear] || 0;
- 
+
                              let comparisonText = `Total em ${previousYear}: ${previousYearCount}`;
                              let comparisonColor = 'text-muted';
                              let icon = '';
- 
+
                              if (previousYearCount > 0) {
                                  const percentageChange = ((currentYearCount - previousYearCount) / previousYearCount) * 100;
                                  if (percentageChange > 0) {
@@ -225,7 +455,7 @@
                                  comparisonText = "Sem dados para comparar";
                              }
                              %>
- 
+
                              <div class="my-auto">
                                  <div class="display-4 fw-bold" style="color: var(--heading-color);"><%= currentYearCount %></div>
                                  <div class="fw-bold <%= comparisonColor %>"><%- comparisonText %></div>
@@ -235,7 +465,7 @@
                          </div>
                      </div>
                  </div>
-  
+
                  <div class="col-lg-3 col-md-6">
                      <div class="card card-impact h-100" style="border: none; background: transparent;">
                          <div class="card-body">
@@ -260,7 +490,7 @@
                                              <th>Ações</th>
                                              <% if (user) { %>
                                                  <th>Excluir</th>
-                                             <% } %>    
+                                             <% } %>
                                              <th>Detalhes</th>
                                          </tr>
                                      </thead>
@@ -273,7 +503,7 @@
                                                      <td><%= castracao.especie %></td>
                                                      <td><%= castracao.clinica %></td>
                                                      <td><%= castracao.origem ? new Date(castracao.origem).toLocaleDateString('pt-BR') : 'N/A' %></td>
-                                                     <% 
+                                                     <%
                                                          const rawStatus = (castracao && castracao.status) ? String(castracao.status).trim().toUpperCase() : 'PENDENTE';
                                                          const isPending = rawStatus === 'PENDENTE';
                                                      %>
@@ -298,20 +528,20 @@
                                                             </form>
                                                         <% } %>
                                                      </td>
-                                                                                                    
+
                                                     <td>
                                                         <a href="/castracao/<%= castracao.id %>" class="btn btn-info btn-sm">Detalhes</a>
                                                     </td>
                                                 </tr>
 
-                                             <% }); %>            
-                                         <% } else { %>              
+                                             <% }); %>
+                                         <% } else { %>
                                              <tr><td colspan="6" class="text-center text-muted">Nenhum ticket de castração para exibir no momento.</td></tr>
                                          <% } %>
                                      </tbody>
                                  </table>
-                                 
-                    
+
+
                      </div>
                  </div>
                   <style>
@@ -322,7 +552,7 @@
              </div> <!-- Fechamento do .row principal da seção de impacto -->
           </div>
       </section>
-  
+
       <!-- ==========================================================================
           6. Histórias de Adotados
           ========================================================================== -->
@@ -333,8 +563,8 @@
               <div class="adotados-cards-container">
                   <% model6.slice(0, 3).forEach(adotado => { %>
                   <div class="adotado-card card">
-                      <img src="/uploads/adotado/<%= adotado.arquivo || 'placeholder-pet-story.jpg' %>" 
-                           alt="Foto de <%= adotado.pet %>, adotado por <%= adotado.tutor %>" 
+                      <img src="/uploads/adotado/<%= adotado.arquivo || 'placeholder-pet-story.jpg' %>"
+                           alt="Foto de <%= adotado.pet %>, adotado por <%= adotado.tutor %>"
                            class="card-img-top adotado-card-img">
                       <div class="card-body">
                           <h5 class="card-title"><%= adotado.pet %></h5>
@@ -355,24 +585,24 @@
                   <div class="text-center mt-3"><a href="/adotado/form" class="button">Adicionar História</a></div>
               <% } %>
               <% } %>
-             
+
           </div>
       </section>
- 
+
        <!-- ==========================================================================
           7. Procura-se
           ========================================================================== -->
-  
+
           <section id="procura_se" class="py-5 bg-light"> <!-- Adicionado bg-light para alternar cor -->
               <div class="container">
                   <h2 class="text-center mb-4">Procura-se!</h2>
-                 
+
                   <% if (typeof model10 !== 'undefined' && model10.length > 0) { %>
                   <div class="procura-se-cards-container">
-                      <% model10.slice(0, 3).forEach(procura_se => { %> 
+                      <% model10.slice(0, 3).forEach(procura_se => { %>
                       <div class="procura-se-card card">
-                          <img src="/uploads/procura_se/<%= procura_se.arquivo || 'placeholder-procura-se.jpg' %>" 
-                               alt="Foto de <%= procura_se.nomePet %>, animal desaparecido" 
+                          <img src="/uploads/procura_se/<%= procura_se.arquivo || 'placeholder-procura-se.jpg' %>"
+                               alt="Foto de <%= procura_se.nomePet %>, animal desaparecido"
                                class="card-img-top procura-se-card-img">
                           <div class="card-body text-center">
                               <h5 class="card-title"><%= procura_se.nomePet %></h5>
@@ -391,19 +621,19 @@
                   <% } %>
               </div>
           </section>
- 
+
           <!-- ==========================================================================
           8. Parcerias
           ========================================================================== -->
-      
-          
+
+
          <section id="parcerias" class="py-5"> <!-- Removido bg-light para alternar cor -->
              <div class="container">
                  <div class="d-flex justify-content-between align-items-center mb-4">
                      <h2 class="text-center flex-grow-1 mb-0">Nossos Parceiros</h2> <!-- flex-grow-1 e mb-0 para centralizar melhor com o botão -->
-                   
+
                  </div>
-                 
+
                  <% if (typeof model12 !== 'undefined' && model12.length > 0) { %>
                  <div class="parcerias-scroll-container">
                      <div class="scroll-content">
@@ -440,10 +670,10 @@
                  <% } %>
              </div>
          </section>
- 
+
           <!-- ==========================================================================
           9. Como Ajudar / Chamada Final
-          ========================================================================== --> 
+          ========================================================================== -->
           <section id="como-ajudar-final" class="py-5 bg-light">
              <div class="container text-center">
                  <h2 class="mb-4">Faça Parte da Mudança</h2>
@@ -457,8 +687,7 @@
                  </div>
              </div>
          </section>
-  
+
   </main>
- 
+
   <%- include("_footer") -%>
- 

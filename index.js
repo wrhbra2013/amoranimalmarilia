@@ -110,6 +110,7 @@ app.use((req, res, next) => {
  const transparenciaRoutes = require('./routes/transparenciaRoutes');
  const relatorioRoutes = require('./routes/relatorioRoutes');
  const errorRoutes = require('./routes/errorRoutes'); // Se for uma página de erro específica
+const eventosRoutes = require('./routes/eventosRoutes');
 
  
  // Montagem das Rotas
@@ -131,6 +132,7 @@ app.use((req, res, next) => {
  app.use('/admin', adminRoutes);
  app.use('/transparencia', transparenciaRoutes);
  app.use('/relatorio', relatorioRoutes);
+app.use('/eventos', eventosRoutes);
  
  
  // Rotas para consentimento de cookies
@@ -141,8 +143,10 @@ app.use((req, res, next) => {
 app.post('/accept-cookies', (req, res) => { // Esta rota deve vir ANTES do 404
     // Permite receber { level: 'essential' | 'all' } do cliente
     const level = req.body && req.body.level ? String(req.body.level) : 'essential';
-    // Define valor do cookie (httpOnly) para uso em servidor; não expor dados sensíveis
-    res.cookie('cookie_consent', level, { httpOnly: true, sameSite: 'Lax' });
+    // Armazena o consentimento na sessão atual (req.session) em vez de cookie persistente
+    if (req.session) {
+        req.session.cookieConsent = level;
+    }
     res.sendStatus(200);
 });
  
