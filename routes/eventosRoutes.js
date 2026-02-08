@@ -61,13 +61,13 @@ router.post('/form', isAdmin, uploadEventos.single('arquivo'), async (req, res) 
     }
 });
 
-// POST /eventos/delete/:id/:arquivo - Deleta um evento
-router.post('/delete/:id/:arquivo', isAdmin, async (req, res) => {
-    const { id, arquivo } = req.params;
+// POST /eventos/delete/:id - Deleta um evento
+router.post('/delete/:id', isAdmin, async (req, res) => {
+    const { id } = req.params;
     try {
         // Busca o caminho real do arquivo no banco antes de deletar
         const rows = await executeQuery('SELECT arquivo FROM eventos WHERE id = $1', [id]);
-        const arquivoDb = rows.length > 0 ? rows[0].arquivo : arquivo;
+        const arquivoDb = rows.length > 0 ? rows[0].arquivo : null;
 
         // Deleta do banco de dados
         await executeQuery('DELETE FROM eventos WHERE id = $1', [id]);
@@ -75,13 +75,15 @@ router.post('/delete/:id/:arquivo', isAdmin, async (req, res) => {
         // Deleta o arquivo físico ou a pasta do evento
         const uploadsDir = path.join(__dirname, '..', '..', 'amoranimal_uploads', 'eventos');
         
-        if (arquivoDb && arquivoDb.includes('/')) {
-            // Se tem barra, está numa subpasta -> remove a pasta inteira do evento
-            const folderName = path.dirname(arquivoDb);
-            await fs.rm(path.join(uploadsDir, folderName), { recursive: true, force: true }).catch(() => {});
-        } else {
-            // Legado (na raiz) -> remove apenas o arquivo
-            await fs.unlink(path.join(uploadsDir, path.basename(arquivoDb))).catch(() => {});
+        if (arquivoDb) {
+            if (arquivoDb.includes('/')) {
+                // Se tem barra, está numa subpasta -> remove a pasta inteira do evento
+                const folderName = path.dirname(arquivoDb);
+                await fs.rm(path.join(uploadsDir, folderName), { recursive: true, force: true }).catch(() => {});
+            } else {
+                // Legado (na raiz) -> remove apenas o arquivo
+                await fs.unlink(path.join(uploadsDir, path.basename(arquivoDb))).catch(() => {});
+            }
         }
 
         req.flash('success', 'Evento removido com sucesso.');

@@ -28,14 +28,18 @@
                         </form>
                       <% } %>
                       <img class="featured-image" loading="lazy" src="/uploads/eventos/<%= f.arquivo %>" alt="Foto <%= i+1 %>">
-                      <% if (f.descricao) { %>
-                        <div class="evt-caption"><%= f.descricao %></div>
-                      <% } %>
+                      <div class="evt-caption-data d-none"><%= f.descricao || '' %></div>
                     </div>
                   <% }); %>
                   <button id="evtPrev" class="evt-nav-btn prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
                   <button id="evtNext" class="evt-nav-btn next" aria-label="Próximo"><i class="fas fa-chevron-right"></i></button>
                 </div>
+                
+                <!-- Descrição fora do card -->
+                <div id="evtDescription" class="text-center mt-2 px-3 text-muted fst-italic" style="min-height: 1.5em;">
+                  <%= fotos[0] ? fotos[0].descricao : '' %>
+                </div>
+
                 <div id="evtCount" class="text-center text-muted small mt-2">1 / <%= fotos.length %></div>
               </div>
 
@@ -169,17 +173,6 @@
   .evt-nav-btn.prev { left: 10px; }
   .evt-nav-btn.next { right: 10px; }
 
-  /* Legenda Overlay */
-  .evt-caption {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-    color: white;
-    padding: 30px 15px 15px;
-    text-align: center;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-  }
-
   /* Botão de Deletar */
   .evt-delete-btn { position: absolute; top: 10px; right: 10px; z-index: 20; }
 
@@ -214,6 +207,7 @@
     const prev = document.getElementById('evtPrev');
     const next = document.getElementById('evtNext');
     const count = document.getElementById('evtCount');
+    const descContainer = document.getElementById('evtDescription');
     let idx = 0;
 
     function show(n){
@@ -222,7 +216,14 @@
       
       // Atualiza slides (usando classes para transição CSS)
       slides.forEach((s,i) => {
-        if (i === idx) s.classList.add('active');
+        if (i === idx) {
+          s.classList.add('active');
+          // Atualiza a descrição externa
+          if (descContainer) {
+            const captionData = s.querySelector('.evt-caption-data');
+            descContainer.textContent = captionData ? captionData.textContent : '';
+          }
+        }
         else s.classList.remove('active');
       });
 
