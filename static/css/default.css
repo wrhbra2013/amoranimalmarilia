@@ -730,14 +730,44 @@ ul.list-checked li::before {
    text-align: left;
    color: white; /* Ensure text is white on dark background */
  }
- .cookie-consent-banner button { /* Style for the accept button */
-   padding: 8px 15px;
-   cursor: pointer;
-   background-color: var(--button-bg); /* Green, consider a variable */
-   color: var(--button-text);
-   border: none;
-   border-radius: 4px;
- }
+  .cookie-consent-banner button { /* Style for the accept button */
+    padding: 8px 15px;
+    cursor: pointer;
+    background-color: var(--button-bg); /* Green, consider a variable */
+    color: var(--button-text);
+    border: none;
+    border-radius: 4px;
+  }
+  
+  /* Responsive adjustments for cookie banner */
+  @media (max-width: 768px) {
+    .cookie-consent-banner {
+      padding: 10px 15px;
+      gap: 10px;
+    }
+    .cookie-consent-banner p {
+      font-size: 0.9em;
+    }
+    .cookie-consent-banner button {
+      padding: 6px 10px;
+      font-size: 0.85em;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .cookie-consent-banner {
+      padding: 8px 12px;
+      gap: 8px;
+    }
+    .cookie-consent-banner p {
+      font-size: 0.85em;
+      margin-bottom: 8px;
+    }
+    .cookie-consent-banner button {
+      padding: 5px 8px;
+      font-size: 0.8em;
+    }
+  }
  
  /* ==========================================================================
     6. Images & Fixed Height Image Containers
