@@ -232,87 +232,123 @@
  
      };
  
-     const years = Object.keys(groupedByYearAndMonth).sort((a, b) => {
-      if (a === "Dados Sem Agrupamento por Ano") return 1;
-      if (b === "Dados Sem Agrupamento por Ano") return -1;
-      return a.localeCompare(b); // Ordena anos
-     });
- 
-     years.forEach(year => {
-      content.push({
-       text: sanitizeTextForPdf(`Ano: ${year}`),
-       style: 'yearHeader'
-      });
- 
-      const monthsOfYear = groupedByYearAndMonth[year];
-      const sortedMonthNames = Object.keys(monthsOfYear).sort((a, b) => {
-       // Ordena os meses pelo monthNum armazenado
-       if (monthsOfYear[a].monthNum === 0) return 1; // "Mês Não Especificado" ao final
-       if (monthsOfYear[b].monthNum === 0) return -1;
-       return monthsOfYear[a].monthNum - monthsOfYear[b].monthNum;
-      });
- 
-      sortedMonthNames.forEach(monthName => {
+// Adiciona cabeçalhos da tabela no início (acima do primeiro ano)
+      if (tableHeaders.length > 0) {
        content.push({
-        text: sanitizeTextForPdf(`Mês: ${monthName}`),
-        style: 'monthHeader'
-       });
- 
-       const monthData = monthsOfYear[monthName].data;
-       if (monthData.length === 0) {
-        content.push({
-         text: sanitizeTextForPdf(`Nenhum dado encontrado para ${monthName} de ${year}.`),
-         style: 'subHeader',
-         margin: [0, 5, 0, 10]
-        });
-        return;
-       }
- 
-       const tableBody = [];
-       tableBody.push(tableHeaders.map(header => ({
-        text: sanitizeTextForPdf(header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())),
-        text: abbreviatedHeaders[header.toLowerCase()] || sanitizeTextForPdf(header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())),
-        style: 'tableHeader',
-        alignment: 'center'
-       })));
- 
-       monthData.forEach(dataRow => {
-        const rowContent = tableHeaders.map(header => ({
-         text: dataRow[header] !== undefined ? dataRow[header] : '',
-         style: 'tableCell'
-        }));
-        tableBody.push(rowContent); // Adiciona a linha de dados
-       });
- 
-       if (tableBody.length > 1) { // Só adiciona a tabela se houver dados (além do cabeçalho)
-        content.push({
-         table: {
-          headerRows: 1,
+        table: {
           widths: columnWidths,
-          body: tableBody
-         },
-         layout: {
-          hLineWidth: (i, node) => (i === 0 || i === node.table.body.length || i === 1) ? 0.5 : 0.5,
-          vLineWidth: () => 0.5,
-          hLineColor: () => '#333333',
-          vLineColor: () => '#cccccc',
-          paddingLeft: () => 3,
-          paddingRight: () => 3,
-          paddingTop: () => 2,
-          paddingBottom: () => 2
+          body: [
+           tableHeaders.map(header => ({
+            text: abbreviatedHeaders[header.toLowerCase()] || sanitizeTextForPdf(header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())),
+            style: 'tableHeader',
+            alignment: 'center'
+           }))
+          ]
+        },
+        layout: {
+         hLineWidth: () => 0.8,
+         vLineWidth: () => 0.8,
+         hLineColor: () => '#0066CC',
+         vLineColor: () => '#0066CC',
+         paddingLeft: () => 4,
+         paddingRight: () => 4,
+         paddingTop: () => 3,
+         paddingBottom: () => 3,
+         fillColor: () => '#E8F4FD'
+        }
+       });
+      }
+
+      const years = Object.keys(groupedByYearAndMonth).sort((a, b) => {
+       if (a === "Dados Sem Agrupamento por Ano") return 1;
+       if (b === "Dados Sem Agrupamento por Ano") return -1;
+       return a.localeCompare(b); // Ordena anos
+      });
+
+       let isFirstYear = true;
+       years.forEach(year => {
+        if (!isFirstYear) {
+         content.push({
+          text: sanitizeTextForPdf(`Ano: ${year}`),
+          style: 'yearMonthHeader'
+         });
+        }
+
+        const monthsOfYear = groupedByYearAndMonth[year];
+        const sortedMonthNames = Object.keys(monthsOfYear).sort((a, b) => {
+         // Ordena os meses pelo monthNum armazenado
+         if (monthsOfYear[a].monthNum === 0) return 1; // "Mês Não Especificado" ao final
+         if (monthsOfYear[b].monthNum === 0) return -1;
+         return monthsOfYear[a].monthNum - monthsOfYear[b].monthNum;
+        });
+
+        sortedMonthNames.forEach(monthName => {
+         if (isFirstYear) {
+          content.push({
+           text: sanitizeTextForPdf(`Ano: ${year} - Mês: ${monthName}`),
+           style: 'yearMonthHeader'
+          });
+         } else {
+          content.push({
+           text: sanitizeTextForPdf(`Mês: ${monthName}`),
+           style: 'yearMonthHeader'
+          });
+         }
+
+         const monthData = monthsOfYear[monthName].data;
+         if (monthData.length === 0) {
+          content.push({
+           text: sanitizeTextForPdf(`Nenhum dado encontrado para ${monthName} de ${year}.`),
+           style: 'subHeader',
+           margin: [0, 5, 0, 10]
+          });
+          return;
+         }
+
+         const tableBody = [];
+
+         monthData.forEach(dataRow => {
+          const rowContent = tableHeaders.map(header => ({
+           text: dataRow[header] !== undefined ? dataRow[header] : '',
+           style: 'tableCell'
+          }));
+          tableBody.push(rowContent); // Adiciona a linha de dados
+         });
+
+         if (tableBody.length > 0) { // Só adiciona a tabela se houver dados
+          content.push({
+           table: {
+            headerRows: 0, // Sem cabeçalhos repetidos
+            widths: columnWidths,
+            body: tableBody
+           },
+layout: {
+            hLineWidth: (i, node) => (i === 0 || i === node.table.body.length) ? 0.8 : 0.3,
+            vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length) ? 0.8 : 0.3,
+            hLineColor: (i, node) => (i === 0 || i === node.table.body.length) ? '#0066CC' : '#E0E0E0',
+            vLineColor: (i, node) => (i === 0 || i === node.table.widths.length) ? '#0066CC' : '#E0E0E0',
+            paddingLeft: () => 4,
+            paddingRight: () => 4,
+            paddingTop: () => 3,
+            paddingBottom: () => 3,
+            fillColor: (rowIndex, node) => {
+              return rowIndex % 2 === 0 ? '#F8F8F8' : '#FFFFFF';
+            }
+           }
+          });
+          content.push({
+           text: ' ',
+           margin: [0, 10]
+          }); // Espaço entre tabelas de meses
          }
         });
+        
+        isFirstYear = false;
         content.push({
          text: ' ',
-         margin: [0, 10]
-        }); // Espaço entre tabelas de meses
-       }
-      });
-      content.push({
-       text: ' ',
-       margin: [0, 15]
-      }); // Espaço maior entre anos
-     });
+         margin: [0, 15]
+        }); // Espaço maior entre anos
+       });
     }
  
    const logoPath = path.join(__dirname, '..', 'static', 'css','imagem', 'ong.jpg');
@@ -345,7 +381,7 @@
          }],
          margin: [0, 5, 0, 0]
         }, {
-         text: 'Rua Alcides Caliman, 401\nJd. Bandeirantes\nMarília - SP\nhttps://amoranimalmarilia.ong.br',
+         text: 'Rua Alcides Caliman, 701\nJd. Bandeirantes\nMarília - SP\nhttps://amoranimalmarilia.ong.br',
          style: 'addressHeader',
          alignment: 'right',
          margin: [0, 5, 5, 0]
@@ -405,24 +441,31 @@
        alignment: 'center',
        margin: [0, 0, 0, 5]
       },
-      yearHeader: {
-       fontSize: 14,
-       bold: true,
-       margin: [0, 15, 0, 5],
-       color: '#222222'
-      },
-      monthHeader: {
-       fontSize: 12,
-       bold: true,
-       margin: [0, 10, 0, 5],
-       color: '#444444'
-      },
-      tableHeader: {
-       bold: true,
-       fontSize: 7,
-       fillColor: '#E0E0E0',
-       alignment: 'center'
-      },
+yearHeader: {
+        fontSize: 14,
+        bold: true,
+        margin: [0, 15, 0, 5],
+        color: '#222222'
+       },
+       monthHeader: {
+        fontSize: 12,
+        bold: true,
+        margin: [0, 10, 0, 5],
+        color: '#444444'
+       },
+       yearMonthHeader: {
+        fontSize: 6,
+        bold: true,
+        margin: [0, 10, 0, 5],
+        color: '#0066CC'
+       },
+tableHeader: {
+        bold: true,
+        fontSize: 7,
+        fillColor: '#E8F4FD',
+        color: '#0066CC',
+        alignment: 'center'
+       },
       tableCell: {
        fontSize: 6,
        alignment: 'left'
