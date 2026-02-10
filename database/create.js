@@ -84,8 +84,16 @@ const { pool } = require('./database');
           status VARCHAR(50) DEFAULT 'PENDENTE',
           atendido_em TIMESTAMP NULL
       );`;
-  await executeDDL(ddl, 'castracao');
- }
+   await executeDDL(ddl, 'castracao');
+   
+   // Adiciona a coluna 'tipo' se não existir
+   try {
+       await pool.query(`ALTER TABLE castracao ADD COLUMN IF NOT EXISTS tipo VARCHAR(50) DEFAULT 'padrao';`);
+       console.log("Coluna 'tipo' adicionada ou já existe na tabela castracao");
+   } catch (error) {
+       console.log("Erro ao adicionar coluna 'tipo' (pode já existir):", error.message);
+   }
+  }
  
  async function create_procura_se() {
      const ddl = `CREATE TABLE IF NOT EXISTS procura_se (

@@ -1,4 +1,4 @@
-﻿﻿﻿﻿const { pool } = require('./database');
+﻿﻿﻿const { pool } = require('./database');
  
  
  async function executeInsert(sql, values, tableName) {
@@ -65,18 +65,18 @@
      return executeInsert(insertSQL, values, 'adotado');
  }
  
- async function insert_castracao(ticket, nome, contato, whatsapp, arquivo, idade, especie, porte, clinica, agenda) {
-     const insertSQL = `INSERT INTO castracao (
-         ticket, nome, contato, whatsapp, arquivo, idade, especie, porte, clinica, agenda
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`;
-     // Assumindo que 'arquivo' é um Buffer ou null. 'idade' deve ser um número.
-     // 'ticket' agora é um parâmetro, conforme definido em create.js
-     const values = [
-         ticket, nome, contato, whatsapp, arquivo, parseInt(idade, 10),
-         especie, porte, clinica, agenda
-     ];
-     return executeInsert(insertSQL, values, 'castracao');
- }
+ async function insert_castracao(ticket, nome, contato, whatsapp, arquivo, idade, especie, porte, clinica, agenda, tipo = 'padrao') {
+      const insertSQL = `INSERT INTO castracao (
+          ticket, nome, contato, whatsapp, arquivo, idade, especie, porte, clinica, agenda, tipo
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);`;
+      // Assumindo que 'arquivo' é um Buffer ou null. 'idade' deve ser um número.
+      // 'ticket' agora é um parâmetro, conforme definido em create.js
+      const values = [
+          ticket, nome, contato, whatsapp, arquivo, parseInt(idade, 10),
+          especie, porte, clinica, agenda, tipo
+      ];
+      return executeInsert(insertSQL, values, 'castracao');
+  }
  
  async function insert_procura_se(arquivo, nomePet, idadePet, especie, porte, caracteristicas, local, tutor, contato, whatsapp) {
      const insertSQL = `INSERT INTO procura_se (

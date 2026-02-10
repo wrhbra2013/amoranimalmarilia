@@ -1011,10 +1011,9 @@ ul.list-checked li::before {
       position: absolute;
       bottom: 10px;
       left: 10px;
-      background-color: rgba(0, 0, 0, 0.6);
-      color: white;
-      padding: 5px 10px;
-      border-radius: 4px;
+      color: #ffffff;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
  }
  .photobanner-control { /* Prev/Next buttons */
       position: absolute;
@@ -1277,3 +1276,30 @@ body.high-contrast .news-carousel-dots .dot {
 body.high-contrast .news-carousel-dots .dot.active {
   background-color: var(--hc-link-color, #000); /* Ou uma cor de destaque */
 }
+
+/* Estilos para validação de telefone */
+.phone-error {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.phone-error:focus {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+/* Estilo para inputs de telefone */
+.phone-input {
+  transition: all 0.3s ease;
+}
+
+.phone-input:valid {
+  border-color: #28a745;
+}
+
+.phone-input:focus {
+  outline: none;
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 0.2rem rgba(49, 120, 198, 0.25);
+}
+

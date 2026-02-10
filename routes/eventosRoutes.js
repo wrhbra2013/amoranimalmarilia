@@ -114,6 +114,26 @@ router.post('/foto/delete/:id', isAdmin, async (req, res) => {
     }
 });
 
+// Rota para deletar comentário de evento
+router.post('/comment/delete/:id', isAdmin, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const rows = await executeQuery('SELECT evento_id FROM evento_comments WHERE id = $1', [id]);
+        if (!rows || rows.length === 0) {
+             req.flash('error', 'Comentário não encontrado.');
+             return res.redirect('/');
+        }
+        const eventoId = rows[0].evento_id;
+        await executeQuery('DELETE FROM evento_comments WHERE id = $1', [id]);
+        req.flash('success', 'Comentário removido.');
+        res.redirect(`/eventos/${eventoId}`);
+    } catch (error) {
+        console.error('Erro ao deletar comentário de evento:', error);
+        req.flash('error', 'Erro ao remover comentário.');
+        res.redirect('/');
+    }
+});
+
 // Rota para exibir formulário dedicado para adicionar foto a um evento (admin)
 router.get('/:id/adicionar-foto', isAdmin, async (req, res) => {
     const { id } = req.params;
@@ -144,7 +164,7 @@ router.get('/:id', async (req, res) => {
         const fotos = await executeQuery('SELECT * FROM evento_fotos WHERE evento_id = $1 ORDER BY id DESC', [id]);
         const comments = await executeQuery('SELECT * FROM evento_comments WHERE evento_id = $1 ORDER BY created_at DESC', [id]);
 
-        res.render('eventos_view', { evento, fotos, comments, success_msg: req.flash('success'), error_msg: req.flash('error'), isAdmin: req.isAdmin || false });
+        res.render('eventos_view', { evento, eventos: [evento], fotos, comments, success_msg: req.flash('success'), error_msg: req.flash('error'), isAdmin: req.isAdmin || false });
     } catch (error) {
         console.error('Erro ao carregar evento:', error);
         res.status(500).render('error', { error: 'Erro ao carregar o evento.' });

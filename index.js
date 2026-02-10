@@ -61,7 +61,7 @@ app.use((req, res, next) => {
         req.isAdmin = false;
         if (res.locals) { // Garante que res.locals exista
             res.locals.isAdmin = false;
-            res.locals.user = null;
+            res.locals.user = undefined;
         }
         // console.log(`[${req.method} ${req.path}] MIDDLEWARE - Sem usuário na sessão. isAdmin=false`); // LOG ADICIONADO
     }

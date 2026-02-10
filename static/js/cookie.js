@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const openPrefBtn = document.getElementById('open-preferences-btn');
 
     // Se os elementos não existirem na página, encerra a execução
-    if (!cookieBanner || !acceptCookieBtn) return;
+    if (!cookieBanner || !acceptEssentialBtn || !acceptAllBtn) return;
 
     // Verifica se o usuário já deixou uma preferência (localStorage)
     const stored = localStorage.getItem('cookiePreference');
@@ -41,24 +41,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function setupBannerContent(banner) {
-    let textP = banner.querySelector('p');
-    if (!textP) {
-        textP = document.createElement('p');
-        banner.insertBefore(textP, banner.firstChild);
-    }
-    textP.innerHTML = ' Estamos comprometidos com a sua segurança. Esta é a nossa <a href="/privacy/policy" style="color: inherit; text-decoration: underline;">Política de Privacidade</a>.';
-    textP.style.margin = '0';
-}
+
 
 function showBanner(banner) {
     banner.style.display = 'block';
-    banner.style.padding = '14px 10px';
-    banner.style.position = 'fixed';
-    banner.style.bottom = '20px';
-    banner.style.left = '20px';
-    banner.style.right = '20px';
-    banner.style.zIndex = '9999';
-    banner.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)';
-    banner.style.borderRadius = '8px';
 }

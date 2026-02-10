@@ -7,12 +7,7 @@ function clearImage() {
     frame.src = "";
 }
 
-function phoneFormat(phone) {
-    return phone.replace(/\D/g, '')
-                .replace(/^(\d{2})(\d)/, '($1) $2')
-                .replace(/(\d{5})(\d)/, '$1-$2')
-                .replace(/(-\d{4})\d+?$/, '$1');
-}
+
 
 document.addEventListener('DOMContentLoaded', function() {
     // Evita aplicar em páginas de transparência onde PDFs são comuns
