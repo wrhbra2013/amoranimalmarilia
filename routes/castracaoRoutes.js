@@ -20,31 +20,139 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET /castracao/mutirao - Renderiza o formulário para mutirão de castração
+// GET /castracao/mutirao - Lista calendário de mutirões disponíveis
 router.get('/mutirao', async (req, res) => {
     try {
-        const clinicas = await executeQuery("SELECT nome FROM clinicas ORDER BY nome;");
-        const formData = req.flash('formData')[0] || {};
+        const mutiroes = await executeQuery('SELECT * FROM calendario_mutirao WHERE data_evento >= CURRENT_DATE ORDER BY data_evento;');
+        res.render('lista_mutirao', { 
+            mutiroes: mutiroes,
+            error: req.flash('error'),
+            success: req.flash('success')
+        });
+    } catch (error) {
+        console.error("[castracaoRoutes GET /mutirao] Erro ao buscar mutirões:", error.message);
+        res.status(500).render('lista_mutirao', { 
+            mutiroes: [],
+            error: 'Não foi possível carregar a lista de mutirões. Tente novamente mais tarde.'
+        });
+    }
+});
 
-        if (req.query.new_clinic_name) {
-            formData.clinica = req.query.new_clinic_name;
+// GET /castracao/mutirao/inscrever/:id - Formulário de inscrição para mutirão específico
+router.get('/mutirao/inscrever/:id', async (req, res) => {
+    try {
+        const mutiraoId = req.params.id;
+        const [mutirao] = await executeQuery('SELECT * FROM calendario_mutirao WHERE id = $1', [mutiraoId]);
+        
+        if (!mutirao) {
+            req.flash('error', 'Mutirão não encontrado.');
+            return res.redirect('/castracao/mutirao');
         }
         
+        const formData = req.flash('formData')[0] || {};
+        formData.clinica = mutirao.clinica;
+        formData.agenda = mutirao.data_evento ? (new Date(mutirao.data_evento)).toISOString().slice(0,10) : formData.agenda;
+        formData.vagas_calendario = mutirao.vagas;
+        formData.mutirao_id = mutirao.id;
+        
         res.render('castracao_simplificada', { 
-            clinicas: clinicas, 
+            clinicas: [{nome: mutirao.clinica}], 
             error: req.flash('error'),
             formData: formData,
             tipoFormulario: 'mutirao',
-            titulo: 'Mutirão de Castração'
+            titulo: 'Inscrever-se no Mutirão de Castração',
+            mutirao: mutirao
         });
     } catch (error) {
-        console.error("[castracaoRoutes GET /mutirao] Erro ao buscar clínicas:", error.message);
-        res.status(500).render('castracao_simplificada', { 
-            error: 'Não foi possível carregar a lista de clínicas. Tente novamente mais tarde.',
-            clinicas: [],
-            tipoFormulario: 'mutirao',
-            titulo: 'Mutirão de Castração'
-        });
+        console.error("[castracaoRoutes GET /mutirao/inscrever] Erro ao carregar formulário:", error.message);
+        req.flash('error', 'Não foi possível carregar o formulário. Tente novamente.');
+        res.redirect('/castracao/mutirao');
+    }
+});
+
+// POST /castracao/mutirao/create - Inscrever no mutirão (usa calendario_mutirao)
+router.post('/mutirao/create', async (req, res) => {
+    try {
+        const { calendario_id, mutirao_id, tutor_nome, tutor_contato, vagas_solicitadas, animais_json } = req.body;
+        // animais_json deve ser JSON string
+        let animais = null;
+        if (animais_json) {
+            try { animais = JSON.parse(animais_json); } catch (e) { console.warn('animais_json parse error', e); }
+        }
+
+        // Usa mutirao_id (de calendario_mutirao) ou calendario_id como fallback
+        const mutiraoRef = mutirao_id || calendario_id;
+        
+        const insertSql = `INSERT INTO mutirao_castracao (calendario_id, tutor_nome, tutor_contato, vagas_solicitadas, animais) VALUES ($1,$2,$3,$4,$5)`;
+        await pool.query(insertSql, [mutiraoRef || null, tutor_nome, tutor_contato, parseInt(vagas_solicitadas || 1, 10), animais]);
+        req.flash('success', 'Inscrição para mutirão enviada com sucesso.');
+        res.redirect('/castracao');
+    } catch (error) {
+        console.error('[castracaoRoutes POST /mutirao/create] Erro ao criar inscrição de mutirão:', error);
+        req.flash('error', 'Erro ao enviar inscrição. Tente novamente.');
+        res.redirect('/castracao/mutirao');
+    }
+});
+
+// --- Calendário de Castração (Admin) ---
+// GET /castracao/calendario - lista e formulário de criação (admin)
+router.get('/calendario', isAdmin, async (req, res) => {
+    try {
+        const calendario = await executeQuery('SELECT * FROM calendario_castracao ORDER BY data_evento;');
+        res.render('calendario_castracao', { calendario: calendario, error: req.flash('error'), success: req.flash('success') });
+    } catch (error) {
+        console.error('[castracaoRoutes GET /calendario] Erro ao buscar calendario:', error);
+        res.status(500).render('calendario_castracao', { calendario: [], error: 'Erro ao carregar calendário.' });
+    }
+});
+
+// POST /castracao/calendario - cria nova data de castração (admin)
+router.post('/calendario', isAdmin, async (req, res) => {
+    try {
+        const { data_evento, clinica, vagas } = req.body;
+        if (!data_evento || !clinica) {
+            req.flash('error', 'Data e clínica são obrigatórias.');
+            return res.redirect('/castracao/calendario');
+        }
+        const insertSql = `INSERT INTO calendario_castracao (data_evento, clinica, vagas, criado_por) VALUES ($1,$2,$3,$4)`;
+        await pool.query(insertSql, [data_evento, clinica, parseInt(vagas || 0, 10), req.user ? req.user.usuario || req.user.nome : null]);
+        req.flash('success', 'Data de calendário criada com sucesso.');
+        res.redirect('/castracao/calendario');
+    } catch (error) {
+        console.error('[castracaoRoutes POST /calendario] Erro ao criar calendario:', error);
+        req.flash('error', 'Erro ao criar data de calendário.');
+        res.redirect('/castracao/calendario');
+    }
+});
+
+// --- Calendário de Mutirão (Admin) ---
+// GET /castracao/calendario-mutirao - lista e formulário de criação (admin)
+router.get('/calendario-mutirao', isAdmin, async (req, res) => {
+    try {
+        const calendario = await executeQuery('SELECT * FROM calendario_mutirao ORDER BY data_evento;');
+        res.render('calendario_mutirao', { calendario: calendario, error: req.flash('error'), success: req.flash('success') });
+    } catch (error) {
+        console.error('[castracaoRoutes GET /calendario-mutirao] Erro ao buscar calendario:', error);
+        res.status(500).render('calendario_mutirao', { calendario: [], error: 'Erro ao carregar calendário de mutirão.' });
+    }
+});
+
+// POST /castracao/calendario-mutirao - cria nova data de mutirão (admin)
+router.post('/calendario-mutirao', isAdmin, async (req, res) => {
+    try {
+        const { data_evento, clinica, vagas } = req.body;
+        if (!data_evento || !clinica) {
+            req.flash('error', 'Data e clínica são obrigatórias.');
+            return res.redirect('/castracao/calendario-mutirao');
+        }
+        const insertSql = `INSERT INTO calendario_mutirao (data_evento, clinica, vagas, criado_por) VALUES ($1,$2,$3,$4)`;
+        await pool.query(insertSql, [data_evento, clinica, parseInt(vagas || 0, 10), req.user ? req.user.usuario || req.user.nome : null]);
+        req.flash('success', 'Data de mutirão criada com sucesso.');
+        res.redirect('/castracao/calendario-mutirao');
+    } catch (error) {
+        console.error('[castracaoRoutes POST /calendario-mutirao] Erro ao criar calendario:', error);
+        req.flash('error', 'Erro ao criar data de mutirão.');
+        res.redirect('/castracao/calendario-mutirao');
     }
 });
 

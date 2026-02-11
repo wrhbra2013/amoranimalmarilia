@@ -63,10 +63,7 @@
                           <a href="<%= linkUrl %>" class="d-block w-100 h-100">
                             <img class="featured-image" loading="lazy" src="<%= imgSrc %>" alt="<%= event.titulo %>">
                           </a>
-                          <div class="evt-caption-data d-none">
-                            <strong><%= event.titulo %></strong><br>
-                            <%= isEventosSource ? (event.descricao ? event.descricao.substring(0,200) : '') : (event.mensagem ? event.mensagem.substring(0,200) : '') %>
-                          </div>
+                          
                         </div>
                       <% }); %>
                       <button id="evtPrev" class="evt-nav-btn prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>

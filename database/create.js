@@ -217,6 +217,45 @@ async function create_eventos() {
     await executeDDL(ddl, 'eventos');
 }
 
+async function create_calendario_castracao() {
+    const ddl = `CREATE TABLE IF NOT EXISTS calendario_castracao (
+        id SERIAL PRIMARY KEY,
+        data_evento DATE NOT NULL,
+        clinica VARCHAR(255) NOT NULL,
+        vagas INT DEFAULT 0,
+        criado_por VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );`;
+    await executeDDL(ddl, 'calendario_castracao');
+}
+
+async function create_mutirao_castracao() {
+    const ddl = `CREATE TABLE IF NOT EXISTS mutirao_castracao (
+        id SERIAL PRIMARY KEY,
+        origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        calendario_id INT,
+        tutor_nome VARCHAR(255),
+        tutor_contato VARCHAR(100),
+        vagas_solicitadas INT DEFAULT 1,
+        animais JSONB, -- [{"genero":"F","nome":"...","idade":"...","peso":"...","vacinado":true,"medicamentos":"..."}, ...]
+        status VARCHAR(50) DEFAULT 'PENDENTE',
+        FOREIGN KEY (calendario_id) REFERENCES calendario_castracao(id) ON DELETE SET NULL
+    );`;
+    await executeDDL(ddl, 'mutirao_castracao');
+}
+
+async function create_calendario_mutirao() {
+    const ddl = `CREATE TABLE IF NOT EXISTS calendario_mutirao (
+        id SERIAL PRIMARY KEY,
+        data_evento DATE NOT NULL,
+        clinica VARCHAR(255) NOT NULL,
+        vagas INT DEFAULT 0,
+        criado_por VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );`;
+    await executeDDL(ddl, 'calendario_mutirao');
+}
+
 async function create_evento_fotos() {
     const ddl = `CREATE TABLE IF NOT EXISTS evento_fotos (
         id SERIAL PRIMARY KEY,
@@ -494,6 +533,9 @@ async function migrateCastracaoAtendidoColumn() {
     await create_campanha_fotos();
     await migrateCampanhaFotosDescricaoColumn();
     await create_campanha_foto_comments();
+        await create_calendario_castracao();
+        await create_mutirao_castracao();
+        await create_calendario_mutirao();
       await create_transparencia();
       await create_solicitacao_acesso();
       await migrateSolicitacaoAcessoCpfColumn(); // Garante que a coluna CPF exista
@@ -518,6 +560,7 @@ async function migrateCastracaoAtendidoColumn() {
      create_interesse_voluntario,
      create_transparencia,
      create_solicitacao_acesso,
+     create_calendario_mutirao,
      initializeDatabaseTables
  };
  

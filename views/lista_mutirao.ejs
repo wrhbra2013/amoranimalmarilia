@@ -1,0 +1,62 @@
+<%- include("_header") -%>
+
+<main class="container mt-4">
+  <h1>Calendário de Mutirões de Castração</h1>
+  <p class="text-muted">Participe dos nossos mutirões de castração com condições especiais.</p>
+
+  <% if (error && error.length) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
+  <% if (success && success.length) { %>
+    <div class="alert alert-success"><%= success %></div>
+  <% } %>
+
+  <section>
+    <% if (mutiroes && mutiroes.length > 0) { %>
+      <div class="row">
+        <% mutiroes.forEach(function(mutirao){ %>
+          <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">
+                  <i class="bi bi-calendar-event text-primary me-2"></i>
+                  <%= mutirao.data_evento ? new Date(mutirao.data_evento).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'}) : 'Data a definir' %>
+                </h5>
+                <h6 class="card-subtitle mb-2 text-muted">
+                  <i class="bi bi-geo-alt me-1"></i><%= mutirao.clinica %>
+                </h6>
+                <p class="card-text">
+                  <span class="badge bg-success">
+                    <i class="bi bi-people-fill me-1"></i><%= mutirao.vagas %> vagas disponíveis
+                  </span>
+                </p>
+                <p class="text-muted small">
+                  <i class="bi bi-clock me-1"></i>
+                  Criado em: <%= mutirao.created_at ? new Date(mutirao.created_at).toLocaleDateString('pt-BR') : '' %>
+                </p>
+                <a href="/castracao/mutirao/inscrever/<%= mutirao.id %>" class="btn btn-primary w-100">
+                  <i class="bi bi-pencil-square me-2"></i>Inscrever-se
+                </a>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <div class="text-center py-5">
+        <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
+        <h3 class="text-muted mt-3">Nenhum mutirão disponível</h3>
+        <p class="text-muted">No momento não há mutirões agendados. Fique atento para novas datas!</p>
+      </div>
+    <% } %>
+  </section>
+
+  <div class="text-center mt-4">
+    <a href="/castracao" class="btn btn-secondary">
+      <i class="bi bi-arrow-left me-2"></i>Voltar para Castração
+    </a>
+  </div>
+
+</main>
+
+<%- include("_footer") -%>
