@@ -1,6 +1,7 @@
 <%- include("_header") -%>
 
 <main class="container mt-4">
+  <% if (user){ %>
   <h1>Calendário de Mutirão</h1>
   <p class="text-muted">Criar, listar e gerenciar datas disponíveis para mutirões de castração.</p>
 
@@ -10,7 +11,7 @@
   <% if (success && success.length) { %>
     <div class="alert alert-success"><%= success %></div>
   <% } %>
-
+ 
   <section class="card mb-4 p-3">
     <form action="/castracao/calendario-mutirao" method="POST" class="row g-2">
       <div class="col-md-3">
@@ -19,32 +20,65 @@
       </div>
       <div class="col-md-5">
         <label class="form-label">Clínica</label>
-        <input type="text" name="clinica" class="form-control" placeholder="Nome da clínica" required>
+        <select name="clinica" class="form-select" required>
+          <option value="">Selecione uma clínica...</option>
+          <% if (typeof clinicas !== 'undefined' && clinicas.length > 0) { %>
+            <% clinicas.forEach(function(clinica) { %>
+              <option value="<%= clinica.nome %>"><%= clinica.nome %></option>
+            <% }); %>
+          <% } %>
+        </select>
       </div>
       <div class="col-md-2">
         <label class="form-label">Vagas</label>
-        <input type="number" name="vagas" class="form-control" value="10" min="0">
+        <input type="number" name="vagas" class="form-control" value="10" min="0" title="0 = vagas ilimitadas">
+        <small class="text-muted">0 = ilimitadas</small>
       </div>
       <div class="col-md-2 d-flex align-items-end">
         <button class="btn btn-primary w-100" type="submit">Adicionar Data</button>
       </div>
     </form>
   </section>
-
+  <% } %>
   <section>
     <h3>Datas de Mutirão Agendadas</h3>
     <% if (calendario && calendario.length > 0) { %>
       <table class="table table-striped">
         <thead>
-          <tr><th>Data</th><th>Clínica</th><th>Vagas</th><th>Criado em</th></tr>
+          <tr><th>Data</th><th>Clínica</th><th>Vagas</th><th>Disponíveis</th><th>Ações</th><th>Criado em</th><th></th><th></th></tr>
         </thead>
         <tbody>
           <% calendario.forEach(function(c){ %>
             <tr>
               <td><%= c.data_evento ? new Date(c.data_evento).toLocaleDateString('pt-BR') : '' %></td>
               <td><%= c.clinica %></td>
-              <td><%= c.vagas %></td>
-              <td><%= c.created_at ? new Date(c.created_at).toLocaleString('pt-BR') : '' %></td>
+              <td><%= c.vagas === 0 ? 'Ilimitadas' : c.vagas %></td>
+              <td>
+                <span class="badge <%= c.vagas_disponiveis !== null && c.vagas_disponiveis <= 3 ? 'bg-warning' : 'bg-success' %>">
+                  <%= c.vagas_disponiveis !== undefined ? (c.vagas_disponiveis === null ? 'Ilimitadas' : c.vagas_disponiveis) : (c.vagas === 0 ? 'Ilimitadas' : c.vagas) %>
+                </span>
+              </td>
+              <td>
+                <a href="/castracao/mutirao-inscricao/<%= c.id %>" class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-user-plus"></i> Inscrever
+                </a>
+                </td>
+                 <td><%= c.created_at ? new Date(c.created_at).toLocaleString('pt-BR') : '' %></td>
+                <td>
+                <% if (user) { %>
+                  <a href="/castracao/calendario-mutirao/relatorio/<%= c.id %>" class="btn btn-sm btn-info ms-1" title="Gerar Relatório">
+                    <i class="fas fa-file-pdf">Inventario</i>
+                  </a>
+                  </td>
+                 <td>
+                  <form action="/castracao/calendario-mutirao/delete/<%= c.id %>" method="POST" class="d-inline" 
+                        onsubmit="return confirm('Tem certeza que deseja excluir este mutirão e todas as inscrições relacionadas?')">
+                    <button type="submit" class="btn btn-sm btn-danger ms-1" title="Excluir Mutirão">
+                      <i class="fas fa-trash">Excluir</i>
+                    </button>
+                  </form>
+                <% } %>
+              </td>             
             </tr>
           <% }); %>
         </tbody>

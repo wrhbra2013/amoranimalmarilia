@@ -138,6 +138,34 @@ async function create_clinicas() {
     );`;
     await executeDDL(ddl, 'clinicas');
 }
+
+async function create_mutirao_inscricao() {
+    const ddl = `CREATE TABLE IF NOT EXISTS mutirao_inscricao (
+        id SERIAL PRIMARY KEY,
+        calendario_mutirao_id INTEGER REFERENCES calendario_mutirao(id),
+        nome_responsavel VARCHAR(255) NOT NULL,
+        localidade VARCHAR(255),
+        contato VARCHAR(50),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );`;
+    await executeDDL(ddl, 'mutirao_inscricao');
+}
+
+async function create_mutirao_pet() {
+    const ddl = `CREATE TABLE IF NOT EXISTS mutirao_pet (
+        id SERIAL PRIMARY KEY,
+        mutirao_inscricao_id INTEGER REFERENCES mutirao_inscricao(id) ON DELETE CASCADE,
+        nome VARCHAR(255) NOT NULL,
+        especie VARCHAR(20) CHECK (especie IN ('gato', 'cachorro')),
+        sexo VARCHAR(10) CHECK (sexo IN ('macho', 'femea')),
+        idade VARCHAR(50),
+        peso VARCHAR(20),
+        vacinado BOOLEAN DEFAULT FALSE,
+        medicamento VARCHAR(255),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );`;
+    await executeDDL(ddl, 'mutirao_pet');
+}
  
 async function create_voluntario() {
     const ddl = `CREATE TABLE IF NOT EXISTS voluntario (
@@ -521,8 +549,10 @@ async function migrateCastracaoAtendidoColumn() {
     // Garante que, em bases legadas, a coluna 'atendido_em' exista
     await migrateCastracaoAtendidoColumn();
       await create_procura_se();
-     await create_clinicas();
-      await create_parceria();
+      await create_clinicas();
+      await create_mutirao_inscricao();
+      await create_mutirao_pet();
+       await create_parceria();
       await create_voluntario();
       await create_interesse_voluntario();
       await create_coleta();
@@ -554,6 +584,8 @@ async function migrateCastracaoAtendidoColumn() {
      create_adotado,
      create_castracao,
      create_clinicas,
+     create_mutirao_inscricao,
+     create_mutirao_pet,
      create_procura_se,
      create_parceria,
      create_login,

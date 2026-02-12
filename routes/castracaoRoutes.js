@@ -127,13 +127,30 @@ router.post('/calendario', isAdmin, async (req, res) => {
 
 // --- Calendário de Mutirão (Admin) ---
 // GET /castracao/calendario-mutirao - lista e formulário de criação (admin)
-router.get('/calendario-mutirao', isAdmin, async (req, res) => {
+router.get('/calendario-mutirao', async (req, res) => {
     try {
         const calendario = await executeQuery('SELECT * FROM calendario_mutirao ORDER BY data_evento;');
-        res.render('calendario_mutirao', { calendario: calendario, error: req.flash('error'), success: req.flash('success') });
+        const clinicas = await executeQuery("SELECT nome FROM clinicas ORDER BY nome;");
+        
+        // Calcular vagas disponíveis para cada mutirão
+        for (let mutirao of calendario) {
+            if (mutirao.vagas !== 0) {
+                const vagasUsadas = await executeQuery(`
+                    SELECT COUNT(mp.id) as total 
+                    FROM mutirao_inscricao mi 
+                    JOIN mutirao_pet mp ON mi.id = mp.mutirao_inscricao_id 
+                    WHERE mi.calendario_mutirao_id = $1
+                `, [mutirao.id]);
+                mutirao.vagas_disponiveis = mutirao.vagas - (parseInt(vagasUsadas[0]?.total) || 0);
+            } else {
+                mutirao.vagas_disponiveis = null; // Ilimitado
+            }
+        }
+        
+        res.render('calendario_mutirao', { calendario: calendario, clinicas: clinicas, error: req.flash('error'), success: req.flash('success') });
     } catch (error) {
         console.error('[castracaoRoutes GET /calendario-mutirao] Erro ao buscar calendario:', error);
-        res.status(500).render('calendario_mutirao', { calendario: [], error: 'Erro ao carregar calendário de mutirão.' });
+        res.status(500).render('calendario_mutirao', { calendario: [], clinicas: [], error: 'Erro ao carregar calendário de mutirão.' });
     }
 });
 
@@ -153,6 +170,160 @@ router.post('/calendario-mutirao', isAdmin, async (req, res) => {
         console.error('[castracaoRoutes POST /calendario-mutirao] Erro ao criar calendario:', error);
         req.flash('error', 'Erro ao criar data de mutirão.');
         res.redirect('/castracao/calendario-mutirao');
+    }
+});
+
+// GET /castracao/mutirao-inscricao/:id - Renderiza formulário de inscrição
+router.get('/mutirao-inscricao/:id', async (req, res) => {
+    try {
+        const mutiraoId = req.params.id;
+        
+        // Buscar dados do mutirão
+        const mutiraoResult = await executeQuery('SELECT * FROM calendario_mutirao WHERE id = $1', [mutiraoId]);
+        
+        if (!mutiraoResult || mutiraoResult.length === 0) {
+            req.flash('error', 'Mutirão não encontrado.');
+            return res.redirect('/castracao/calendario-mutirao');
+        }
+        
+        const mutirao = mutiraoResult[0];
+        
+        // Verificar se ainda há vagas disponíveis
+        if (mutirao.vagas !== 0) {
+            const vagasUsadas = await executeQuery(`
+                SELECT COUNT(mp.id) as total 
+                FROM mutirao_inscricao mi 
+                JOIN mutirao_pet mp ON mi.id = mp.mutirao_inscricao_id 
+                WHERE mi.calendario_mutirao_id = $1
+            `, [mutiraoId]);
+            
+            const vagasDisponiveis = mutirao.vagas - (parseInt(vagasUsadas[0]?.total) || 0);
+            
+            if (vagasDisponiveis <= 0) {
+                req.flash('error', 'Não há vagas disponíveis para este mutirão.');
+                return res.redirect('/castracao/calendario-mutirao');
+            }
+            
+            mutirao.vagas_disponiveis = vagasDisponiveis;
+        } else {
+            mutirao.vagas_disponiveis = null; // Ilimitado
+        }
+        
+        res.render('mutirao_inscricao', { 
+            mutirao: mutirao, 
+            error: req.flash('error'), 
+            success: req.flash('success') 
+        });
+        
+    } catch (error) {
+        console.error('[castracaoRoutes GET /mutirao-inscricao] Erro:', error);
+        req.flash('error', 'Erro ao carregar formulário de inscrição.');
+        res.redirect('/castracao/calendario-mutirao');
+    }
+});
+
+// POST /castracao/mutirao-inscricao - Processa inscrição
+router.post('/mutirao-inscricao', async (req, res) => {
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
+        const { 
+            calendario_mutirao_id, 
+            nome_responsavel, 
+            localidade, 
+            contato,
+            pet_nome,
+            pet_especie,
+            pet_sexo,
+            pet_idade,
+            pet_peso,
+            pet_vacinado,
+            pet_tem_medicamento,
+            pet_medicamento
+        } = req.body;
+        
+        if (!calendario_mutirao_id || !nome_responsavel || !contato) {
+            throw new Error('Dados obrigatórios não preenchidos.');
+        }
+        
+        // Verificar se há pets cadastrados
+        const nomesPets = Array.isArray(pet_nome) ? pet_nome.filter(nome => nome && nome.trim() !== '') : [pet_nome];
+        
+        if (!pet_nome || !nomesPets || nomesPets.length === 0) {
+            throw new Error('É necessário cadastrar pelo menos um pet para realizar a inscrição.');
+        }
+        
+        // Verificar se há vagas disponíveis
+        const mutiraoResult = await client.query('SELECT vagas FROM calendario_mutirao WHERE id = $1', [calendario_mutirao_id]);
+        const mutirao = mutiraoResult.rows[0];
+        
+        if (mutirao.vagas !== 0) {
+            const vagasUsadas = await client.query(`
+                SELECT COUNT(mp.id) as total 
+                FROM mutirao_inscricao mi 
+                JOIN mutirao_pet mp ON mi.id = mp.mutirao_inscricao_id 
+                WHERE mi.calendario_mutirao_id = $1
+            `, [calendario_mutirao_id]);
+            
+            const vagasDisponiveis = mutirao.vagas - parseInt(vagasUsadas.rows[0].total);
+            const totalPets = nomesPets.length;
+            
+            if (vagasDisponiveis < totalPets) {
+                throw new Error(`Não há vagas suficientes. Disponíveis: ${vagasDisponiveis}, Solicitadas: ${totalPets}`);
+            }
+        }
+        
+        // Inserir inscrição do responsável
+        const inscricaoResult = await client.query(`
+            INSERT INTO mutirao_inscricao (calendario_mutirao_id, nome_responsavel, localidade, contato) 
+            VALUES ($1, $2, $3, $4) RETURNING id
+        `, [calendario_mutirao_id, nome_responsavel, localidade, contato]);
+        
+        const inscricaoId = inscricaoResult.rows[0].id;
+        
+        // Inserir pets - usar apenas pets com nomes válidos
+        const petsValidos = nomesPets;
+        const totalPetsInserir = petsValidos.length;
+        
+        for (let i = 0; i < totalPetsInserir; i++) {
+            const petNomeValido = petsValidos[i];
+            const arrayIndex = Array.isArray(pet_nome) ? pet_nome.indexOf(petNomeValido) : 0;
+            
+            const temMedicamento = Array.isArray(pet_tem_medicamento) ? pet_tem_medicamento[arrayIndex] : pet_tem_medicamento;
+            const medicamento = temMedicamento === 'sim' ? 
+                (Array.isArray(pet_medicamento) ? pet_medicamento[arrayIndex] : pet_medicamento) : null;
+            
+            await client.query(`
+                INSERT INTO mutirao_pet (
+                    mutirao_inscricao_id, nome, especie, sexo, idade, peso, 
+                    vacinado, medicamento
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            `, [
+                inscricaoId,
+                petNomeValido,
+                Array.isArray(pet_especie) ? pet_especie[arrayIndex] : pet_especie,
+                Array.isArray(pet_sexo) ? pet_sexo[arrayIndex] : pet_sexo,
+                Array.isArray(pet_idade) ? pet_idade[arrayIndex] : pet_idade,
+                Array.isArray(pet_peso) ? pet_peso[arrayIndex] : pet_peso,
+                Array.isArray(pet_vacinado) ? pet_vacinado[arrayIndex] === 'true' : pet_vacinado === 'true',
+                medicamento
+            ]);
+        }
+        
+        await client.query('COMMIT');
+        
+        req.flash('success', `Inscrição realizada com sucesso! ${totalPetsInserir} pet(s) inscrito(s).`);
+        res.redirect('/castracao/calendario-mutirao');
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('[castracaoRoutes POST /mutirao-inscricao] Erro:', error);
+        req.flash('error', error.message || 'Erro ao realizar inscrição.');
+        res.redirect(`/castracao/mutirao-inscricao/${req.body.calendario_mutirao_id}`);
+    } finally {
+        client.release();
     }
 });
 
@@ -493,5 +664,369 @@ router.post('/simplificado', uploadCastracao.single('arquivo'), async (req, res)
   
 
 
-  module.exports = router;
+  // GET /castracao/calendario-mutirao/relatorio/:id - Gera relatório PDF de tutores e pets de um mutirão (admin)
+router.get('/calendario-mutirao/relatorio/:id', isAdmin, async (req, res) => {
+    const mutiraoId = req.params.id;
+    const PdfPrinter = require('pdfmake');
+    const path = require('path');
+    const fs = require('fs');
+    
+    try {
+        // Buscar dados do mutirão
+        const mutiraoResult = await executeQuery('SELECT * FROM calendario_mutirao WHERE id = $1', [mutiraoId]);
+        if (mutiraoResult.length === 0) {
+            req.flash('error', 'Mutirão não encontrado.');
+            return res.redirect('/castracao/calendario-mutirao');
+        }
+        
+        const mutirao = mutiraoResult[0];
+        
+        // Buscar inscrições com pets
+        const inscricoesResult = await executeQuery(`
+            SELECT 
+                mi.id as inscricao_id,
+                mi.nome_responsavel,
+                mi.localidade,
+                mi.contato,
+                mi.created_at as data_inscricao,
+                TO_CHAR(mi.created_at, 'DD/MM/YYYY HH24:MI:SS') AS data_formatada,
+                mp.id as pet_id,
+                mp.nome as pet_nome,
+                mp.especie,
+                mp.sexo,
+                mp.idade,
+                mp.peso,
+                mp.vacinado,
+                mp.medicamento
+            FROM mutirao_inscricao mi
+            LEFT JOIN mutirao_pet mp ON mi.id = mp.mutirao_inscricao_id
+            WHERE mi.calendario_mutirao_id = $1
+            ORDER BY mi.nome_responsavel, mp.nome
+        `, [mutiraoId]);
+        
+        if (inscricoesResult.length === 0) {
+            req.flash('error', 'Nenhuma inscrição encontrada para este mutirão.');
+            return res.redirect('/castracao/calendario-mutirao');
+        }
+        
+        // Função para sanitizar texto para o PDF (igual ao relatorioRoutes)
+        function sanitizeTextForPdf(text) {
+            if (text === null || text === undefined) {
+                return '';
+            }
+            let str = String(text);
+            str = str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+            str = str.replace(/^\s+|\s+$/g, '').replace(/ +/g, ' ');
+            return str;
+        }
+        
+        // Configuração do PDF (igual ao relatorioRoutes)
+        const fontDescriptors = {
+            Roboto: {
+                normal: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Regular.ttf'),
+                bold: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Medium.ttf'),
+                italics: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Italic.ttf'),
+                bolditalics: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-MediumItalic.ttf')
+            }
+        };
+        
+        Object.values(fontDescriptors.Roboto).forEach(fontPath => {
+            if (!fs.existsSync(fontPath)) {
+                console.warn(`[PDF Font Warning] Arquivo de fonte não encontrado: ${fontPath}.`);
+            }
+        });
+        
+        const printer = new PdfPrinter(fontDescriptors);
+        const time = new Date().toLocaleDateString('pt-BR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        const content = [];
+        
+        // Informações do mutirão no formato do relatorioRoutes
+        content.push({
+            text: sanitizeTextForPdf(`Mutirão: ${mutirao.clinica} - ${new Date(mutirao.data_evento).toLocaleDateString('pt-BR')}`),
+            style: 'subHeader',
+            alignment: 'center',
+            margin: [0, 0, 0, 10]
+        });
+        
+        // Cabeçalhos da tabela (formato relatorioRoutes)
+        const tableHeaders = ['Responsável', 'Localidade', 'Contato', 'Data Inscrição', 'Pet', 'Espécie', 'Sexo', 'Idade', 'Peso', 'Vacinado', 'Medicamento'];
+        const columnWidths = ['auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', '*'];
+        
+        // Adicionar cabeçalhos da tabela
+        content.push({
+            table: {
+                widths: columnWidths,
+                body: [
+                    tableHeaders.map(header => ({
+                        text: sanitizeTextForPdf(header),
+                        style: 'tableHeader',
+                        alignment: 'center'
+                    }))
+                ]
+            },
+            layout: {
+                hLineWidth: () => 0.8,
+                vLineWidth: () => 0.8,
+                hLineColor: () => '#0066CC',
+                vLineColor: () => '#0066CC',
+                paddingLeft: () => 4,
+                paddingRight: () => 4,
+                paddingTop: () => 3,
+                paddingBottom: () => 3,
+                fillColor: () => '#E8F4FD'
+            }
+        });
+        
+        // Dados da tabela
+        const tableBody = [];
+        
+        // Agrupar dados por inscrição/pet
+        inscricoesResult.forEach(row => {
+            if (row.pet_id) { // Apenas linhas com pet
+                const rowData = [
+                    sanitizeTextForPdf(row.nome_responsavel),
+                    sanitizeTextForPdf(row.localidade || 'Não informada'),
+                    sanitizeTextForPdf(row.contato),
+                    sanitizeTextForPdf(row.data_formatada),
+                    sanitizeTextForPdf(row.pet_nome),
+                    sanitizeTextForPdf(row.especie),
+                    sanitizeTextForPdf(row.sexo),
+                    sanitizeTextForPdf(row.idade || 'Não informada'),
+                    sanitizeTextForPdf(row.peso || 'Não informado'),
+                    sanitizeTextForPdf(row.vacinado ? 'Sim' : 'Não'),
+                    sanitizeTextForPdf(row.medicamento || 'Nenhum')
+                ];
+                
+                tableBody.push(rowData.map(cell => ({
+                    text: cell,
+                    style: 'tableCell'
+                })));
+            }
+        });
+        
+        // Adicionar tabela com dados
+        if (tableBody.length > 0) {
+            content.push({
+                table: {
+                    headerRows: 0,
+                    widths: columnWidths,
+                    body: tableBody
+                },
+                layout: {
+                    hLineWidth: (i, node) => (i === 0 || i === node.table.body.length) ? 0.8 : 0.3,
+                    vLineWidth: (i, node) => (i === 0 || i === node.table.widths.length) ? 0.8 : 0.3,
+                    hLineColor: (i, node) => (i === 0 || i === node.table.body.length) ? '#0066CC' : '#E0E0E0',
+                    vLineColor: (i, node) => (i === 0 || i === node.table.widths.length) ? '#0066CC' : '#E0E0E0',
+                    paddingLeft: () => 4,
+                    paddingRight: () => 4,
+                    paddingTop: () => 3,
+                    paddingBottom: () => 3,
+                    fillColor: (rowIndex, node) => {
+                        return rowIndex % 2 === 0 ? '#F8F8F8' : '#FFFFFF';
+                    }
+                }
+            });
+        }
+        
+        // Resumo final
+        const totalPets = tableBody.length;
+        const responsaveisUnicos = [...new Set(inscricoesResult.filter(row => row.pet_id).map(row => row.nome_responsavel))].length;
+        
+        content.push({
+            text: ' ',
+            margin: [0, 10]
+        });
+        
+        content.push({
+            text: sanitizeTextForPdf(`Total: ${responsaveisUnicos} responsável(is) com ${totalPets} pet(s) inscritos`),
+            style: 'subHeader',
+            alignment: 'center'
+        });
+        
+        // Logo do sistema (caminho igual ao relatorioRoutes)
+        const logoPath = path.join(__dirname, '..', 'static', 'css', 'imagem', 'ong.jpg');
+        
+        const docDefinition = {
+            header: (currentPage, pageCount, pageSize) => {
+                return {
+                    margin: [20, 10, 20, 0],
+                    table: {
+                        widths: [70, '*', 140],
+                        body: [
+                            [{
+                                image: logoPath,
+                                width: 60,
+                                alignment: 'center',
+                                margin: [0, 2, 0, 2]
+                            }, {
+                                stack: [{
+                                    text: 'ONG Amor Animal Marilia',
+                                    style: 'headerTitle',
+                                    alignment: 'center'
+                                }, {
+                                    text: sanitizeTextForPdf(`Relatório: Mutirão de Castração`),
+                                    style: 'headerSubtitle',
+                                    alignment: 'center'
+                                }, {
+                                    text: sanitizeTextForPdf(`Gerado em: ${time}`),
+                                    style: 'headerDate',
+                                    alignment: 'center'
+                                }],
+                                margin: [0, 5, 0, 0]
+                            }, {
+                                text: 'Rua Alcides Caliman, 701\nJd. Bandeirantes\nMarília - SP\nhttps://amoranimal.ong.br',
+                                style: 'addressHeader',
+                                alignment: 'right',
+                                margin: [0, 5, 5, 0]
+                            }]
+                        ]
+                    },
+                    layout: {
+                        hLineWidth: function(i, node) {
+                            return 0.5;
+                        },
+                        vLineWidth: function(i, node) {
+                            return 0.5;
+                        },
+                        hLineColor: function(i, node) {
+                            return '#cccccc';
+                        },
+                        vLineColor: function(i, node) {
+                            return '#cccccc';
+                        }
+                    }
+                };
+            },
+            content: content,
+            pageSize: 'A4',
+            pageOrientation: 'portrait',
+            pageMargins: [20, 80, 20, 50],
+            styles: {
+                addressHeader: {
+                    fontSize: 8,
+                    color: '#555555'
+                },
+                headerTitle: {
+                    fontSize: 12,
+                    bold: true,
+                    color: '#333333',
+                    margin: [0, 0, 0, 2]
+                },
+                headerSubtitle: {
+                    fontSize: 10,
+                    bold: true,
+                    color: '#333333',
+                    margin: [0, 0, 0, 2]
+                },
+                headerDate: {
+                    fontSize: 8,
+                    color: '#555555'
+                },
+                mainHeader: {
+                    fontSize: 16,
+                    bold: true,
+                    alignment: 'center',
+                    margin: [0, 0, 0, 5],
+                    color: '#333333'
+                },
+                subHeader: {
+                    fontSize: 10,
+                    alignment: 'center',
+                    margin: [0, 0, 0, 5],
+                    bold: true,
+                    color: '#0066CC'
+                },
+                yearMonthHeader: {
+                    fontSize: 6,
+                    bold: true,
+                    margin: [0, 10, 0, 5],
+                    color: '#0066CC'
+                },
+                tableHeader: {
+                    bold: true,
+                    fontSize: 7,
+                    fillColor: '#E8F4FD',
+                    color: '#0066CC',
+                    alignment: 'center'
+                },
+                tableCell: {
+                    fontSize: 6,
+                    alignment: 'left'
+                },
+                footerStyle: {
+                    fontSize: 8,
+                    alignment: 'center',
+                    margin: [0, 20, 0, 0]
+                }
+            },
+            defaultStyle: {
+                font: 'Roboto'
+            },
+            footer: (currentPage, pageCount) => ({
+                text: sanitizeTextForPdf(`Página ${currentPage.toString()} de ${pageCount.toString()}`),
+                style: 'footerStyle'
+            })
+        };
+        
+        const pdfDoc = printer.createPdfKitDocument(docDefinition);
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=relatorio_mutirao_${mutiraoId}_${Date.now()}.pdf`);
+        
+        pdfDoc.pipe(res);
+        pdfDoc.end();
+        
+    } catch (error) {
+        console.error(`[castracaoRoutes GET /calendario-mutirao/relatorio/${mutiraoId}] Erro:`, error);
+        req.flash('error', 'Erro ao gerar relatório: ' + error.message);
+        res.redirect('/castracao/calendario-mutirao');
+    }
+});
+
+// DELETE /castracao/calendario-mutirao/delete/:id - Exclui um mutirão (admin)
+router.post('/calendario-mutirao/delete/:id', isAdmin, async (req, res) => {
+    const client = await pool.connect();
+    const mutiraoId = req.params.id;
+    
+    try {
+        await client.query('BEGIN');
+        
+        // Verificar se o mutirão existe
+        const mutiraoResult = await client.query('SELECT * FROM calendario_mutirao WHERE id = $1', [mutiraoId]);
+        if (mutiraoResult.rowCount === 0) {
+            await client.query('ROLLBACK');
+            req.flash('error', 'Mutirão não encontrado.');
+            return res.redirect('/castracao/calendario-mutirao');
+        }
+        
+        // Excluir inscrições relacionadas (CASCADE delete deve cuidar disso, mas vamos garantir)
+        await client.query('DELETE FROM mutirao_inscricao WHERE calendario_mutirao_id = $1', [mutiraoId]);
+        
+        // Excluir o mutirão
+        await client.query('DELETE FROM calendario_mutirao WHERE id = $1', [mutiraoId]);
+        
+        await client.query('COMMIT');
+        
+        req.flash('success', 'Mutirão excluído com sucesso, incluindo todas as inscrições relacionadas.');
+        res.redirect('/castracao/calendario-mutirao');
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error(`[castracaoRoutes DELETE /calendario-mutirao/delete/${mutiraoId}] Erro:`, error);
+        req.flash('error', 'Erro ao excluir mutirão: ' + error.message);
+        res.redirect('/castracao/calendario-mutirao');
+    } finally {
+        client.release();
+    }
+});
+
+module.exports = router;
  
