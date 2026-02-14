@@ -11,7 +11,7 @@
   <% if (success && success.length) { %>
     <div class="alert alert-success"><%= success %></div>
   <% } %>
- 
+
   <section class="card mb-4 p-3">
     <form action="/castracao/calendario-mutirao" method="POST" class="row g-2">
       <div class="col-md-3">
@@ -67,18 +67,18 @@
                 <td>
                 <% if (user) { %>
                   <a href="/castracao/calendario-mutirao/relatorio/<%= c.id %>" class="btn btn-sm btn-info ms-1" title="Gerar Relatório">
-                    <i class="fas fa-file-pdf">Inventario</i>
+                    <i class="fas fa-file-pdf">Relatorio</i>
                   </a>
                   </td>
                  <td>
-                  <form action="/castracao/calendario-mutirao/delete/<%= c.id %>" method="POST" class="d-inline" 
+                  <form action="/castracao/calendario-mutirao/delete/<%= c.id %>" method="POST" class="d-inline"
                         onsubmit="return confirm('Tem certeza que deseja excluir este mutirão e todas as inscrições relacionadas?')">
                     <button type="submit" class="btn btn-sm btn-danger ms-1" title="Excluir Mutirão">
                       <i class="fas fa-trash">Excluir</i>
                     </button>
                   </form>
                 <% } %>
-              </td>             
+              </td>
             </tr>
           <% }); %>
         </tbody>

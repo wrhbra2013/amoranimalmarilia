@@ -34,11 +34,15 @@
 
         // Busca eventos recentes (tabela `eventos`) para exibir no carrossel da home
         let eventos = [];
+        let eventosCount = 0;
         try {
             eventos = await executeQuery('SELECT * FROM eventos ORDER BY origem DESC LIMIT 6');
+            const countResult = await executeQuery('SELECT COUNT(*) as count FROM eventos');
+            eventosCount = countResult.length > 0 ? parseInt(countResult[0].count, 10) : 0;
         } catch (evErr) {
             console.error('Erro ao buscar eventos para home:', evErr);
             eventos = [];
+            eventosCount = 0;
         }
  
          // Função auxiliar para extrair a contagem de forma segura
@@ -73,10 +77,11 @@
              parceriaCount: extractCountValue(data.parceriaCount),
              voluntario: data.voluntario || [],
              voluntarioCount: extractCountValue(data.voluntarioCount),
-            coleta: data.coleta || [],
-            coletaCount: extractCountValue(data.coletaCount),
-            eventos: eventos || [],
-             errorLoadingData: false // Agora será um número
+             coleta: data.coleta || [],
+             coletaCount: extractCountValue(data.coletaCount),
+             eventos: eventos || [],
+             eventosCount: eventosCount || 0,
+              errorLoadingData: false // Agora será um número
          };
      } catch (error) {
          // Este catch é para erros na chamada executeAllQueries em si.
@@ -124,6 +129,7 @@
             model16: homePageData.coleta,
             model17: homePageData.coletaCount,
             modelEventos: homePageData.eventos,
+            modelEventosCount: homePageData.eventosCount,
              success_msg: req.flash('success'),
              error_msg: req.flash('error') // Adicionando para consistência
          });

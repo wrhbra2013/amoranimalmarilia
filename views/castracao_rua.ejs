@@ -1,0 +1,361 @@
+<%- include("_header") -%>
+
+<main class="container mt-4 mb-5">
+    <section class="card shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h1 class="h4 mb-0"><i class="fas fa-paw me-2"></i>Pets de Rua - Castração</h1>
+        </div>
+        <fieldset class="card-body">
+            <legend class="card-title h5">Informações Importantes</legend>
+            <p class="card-text">
+                <p>Este formulário é para castração de animais de rua/protetores.</p>
+                <p>Levar a partir das 08h30 da manhã e buscar à tarde ou no horário combinado na clínica!</p>
+                <p>Fazer jejum com a ração a partir das 23h do dia anterior.</p>
+                <p>Tomar água à vontade.</p>
+                <p>Gatos levar na caixa de transporte e cães na coleira.</p>
+            </p>
+        </fieldset>
+    </section>
+
+    <% if (error && error.length) { %>
+        <div class="alert alert-danger mt-3"><%= error %></div>
+    <% } %>
+    <% if (success && success.length) { %>
+        <div class="alert alert-success mt-3"><%= success %></div>
+    <% } %>
+
+    <section class="card shadow-sm mt-3">
+        <div class="card-body">
+            <form action="/castracao/form" method="POST" id="formInscricao">
+                <input type="hidden" name="tipo_castracao" value="pets_rua">
+                
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <h4>Dados do Responsável</h4>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Nome do Protetor/Tutor *</label>
+                        <input type="text" name="nome" class="form-control" placeholder="Nome completo do protetor ou tutor" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Telefone *</label>
+                        <input type="tel" name="contato" id="contato" class="form-control phone-input" placeholder="Telefone com DDD" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Disponível no WhatsApp?</label>
+                        <select name="whatsapp" id="whatsapp" class="form-select">
+                            <option value="" selected disabled>Selecione...</option>
+                            <option value="sim">Sim</option>
+                            <option value="nao">Não</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <h4>Dados dos Pets</h4>
+                        <p class="text-muted">Cada pet cadastrado será agendado para castração.</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <h5>Adicionar Novo Pet</h5>
+                    </div>
+                </div>
+
+                <div class="pet-card border rounded p-3 mb-3" id="petForm">
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <label class="form-label">Nome do Pet *</label>
+                            <input type="text" name="pet_nome" id="petNome" class="form-control" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Espécie e Sexo *</label>
+                            <select name="pet_especie" id="petEspecie" class="form-select" required>
+                                <option value="">Selecione...</option>
+                                <option value="gato">Gato (Macho)</option>
+                                <option value="gata">Gata (Fêmea)</option>
+                                <option value="cachorro">Cachorro/Cachorra</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Porte *</label>
+                            <select name="pet_porte" id="petPorte" class="form-select" required>
+                                <option value="">Selecione...</option>
+                                <option value="pequeno">Pequeno</option>
+                                <option value="medio">Médio</option>
+                                <option value="grande">Grande</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Idade Aproximada (anos)</label>
+                            <input type="number" name="pet_idade" id="petIdade" class="form-control" placeholder="Ex: 2" min="0">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Localidade</label>
+                            <input type="text" name="pet_localidade" id="petLocalidade" class="form-control" placeholder="Bairro">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="petsDataContainer"></div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <h5>Pets Cadastrados (<span id="petCount">0</span>)</h5>
+                        <div id="petsTableContainer" class="table-responsive border rounded" style="max-height: 300px; overflow-y: auto;">
+                            <div id="petsSummary" class="p-3 text-muted text-center">
+                                <i class="fas fa-paw fa-2x mb-2"></i>
+                                <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-4">
+                    <div class="col-md-6">
+                        <label for="clinica" class="form-label fw-bold">Clínica *</label>
+                        <select class="form-select" id="clinica" name="clinica" required>
+                            <option value="" selected disabled>Selecione uma clínica...</option>
+                            <% if (typeof clinicas !== 'undefined' && clinicas.length > 0) { %>
+                                <% clinicas.forEach(function(clinica) { %>
+                                    <option value="<%= clinica.nome %>"><%= clinica.nome %></option>
+                                <% }); %>
+                            <% } %>
+                            <% if(user) { %>
+                            <option value="__nova_clinica__">Cadastrar nova clínica...</option>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="agenda" class="form-label fw-bold">Dia Preferencial para Agendamento *</label>
+                        <select name="agenda" id="agenda" class="form-select" required>
+                            <option value="" selected disabled>Selecione...</option>
+                            <option value="segunda-feira">Segunda-feira</option>
+                            <option value="terça-feira">Terça-feira</option>
+                            <option value="quarta-feira">Quarta-feira</option>
+                            <option value="quinta-feira">Quinta-feira</option>
+                            <option value="sexta-feira">Sexta-feira</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-primary" id="btnAddPet">
+                            <i class="fas fa-plus"></i> Adicionar Pet
+                        </button>
+                        <button type="button" class="btn btn-outline-danger ms-2" id="btnClearForm" style="display: none;">
+                            <i class="fas fa-times"></i> Limpar Formulário
+                        </button>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <a href="/castracao" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-info" id="btnSubmit">
+                            <i class="fas fa-check"></i> Solicitar Agendamento
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <div class="text-center mt-4 mb-3">
+        <a href="/castracao/lista" class="btn btn-outline-secondary">
+            <i class="fas fa-list"></i> Ver Lista de Agendamentos
+        </a>
+    </div>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const petsCadastrados = [];
+    
+    atualizarResumo();
+    
+    document.getElementById('clinica').addEventListener('change', function() {
+        if (this.value === '__nova_clinica__') {
+            window.location.href = '/clinicas/form';
+        }
+    });
+
+    document.getElementById('btnAddPet').addEventListener('click', function() {
+        const nome = document.getElementById('petNome').value.trim();
+        const especie = document.getElementById('petEspecie').value;
+        const porte = document.getElementById('petPorte').value;
+        
+        if (!nome || !especie || !porte) {
+            alert('Por favor, preencha os campos obrigatórios do pet (Nome, Espécie e Porte).');
+            return;
+        }
+        
+        const pet = {
+            nome: nome,
+            especie: especie,
+            porte: porte,
+            idade: document.getElementById('petIdade').value || 'Não informada',
+            localidadede: document.getElementById('petLocalidade').value || ''
+        };
+        
+        petsCadastrados.push(pet);
+        atualizarResumo();
+        limparFormulario();
+        document.getElementById('btnClearForm').style.display = 'inline-block';
+    });
+
+    function removerPet(index) {
+        if (confirm(`Tem certeza que deseja remover ${petsCadastrados[index].nome}?`)) {
+            petsCadastrados.splice(index, 1);
+            atualizarResumo();
+            
+            if (petsCadastrados.length === 0) {
+                document.getElementById('btnClearForm').style.display = 'none';
+            }
+        }
+    }
+
+    document.getElementById('btnClearForm').addEventListener('click', function() {
+        limparFormulario();
+        document.getElementById('btnClearForm').style.display = 'none';
+    });
+
+    function limparFormulario() {
+        document.getElementById('petNome').value = '';
+        document.getElementById('petEspecie').value = '';
+        document.getElementById('petPorte').value = '';
+        document.getElementById('petIdade').value = '';
+        document.getElementById('petLocalidade').value = '';
+    }
+
+    function atualizarResumo() {
+        const petsTableContainer = document.getElementById('petsTableContainer');
+        const petCountSpan = document.getElementById('petCount');
+        const btnSubmit = document.getElementById('btnSubmit');
+        
+        petCountSpan.textContent = petsCadastrados.length;
+        
+        if (petsCadastrados.length === 0) {
+            btnSubmit.disabled = true;
+            btnSubmit.classList.remove('btn-info');
+            btnSubmit.classList.add('btn-secondary');
+            btnSubmit.innerHTML = '<i class="fas fa-paw"></i> Adicione um pet primeiro';
+        } else {
+            btnSubmit.disabled = false;
+            btnSubmit.classList.remove('btn-secondary');
+            btnSubmit.classList.add('btn-info');
+            btnSubmit.innerHTML = '<i class="fas fa-check"></i> Solicitar Agendamento';
+        }
+        
+        if (petsCadastrados.length === 0) {
+            petsTableContainer.innerHTML = `
+                <div class="p-3 text-muted text-center">
+                    <i class="fas fa-paw fa-2x mb-2"></i>
+                    <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const especieLabels = {
+            'gato': 'Gato (Macho)',
+            'gata': 'Gata (Fêmea)',
+            'cachorro': 'Cachorro/Cachorra'
+        };
+        
+        const porteLabels = {
+            'pequeno': 'Pequeno',
+            'medio': 'Médio',
+            'grande': 'Grande'
+        };
+        
+        let tableHTML = `
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light sticky-top">
+                    <tr>
+                        <th scope="col" width="40">#</th>
+                        <th scope="col">Nome</th>
+                        <th scope="col">Espécie</th>
+                        <th scope="col">Porte</th>
+                        <th scope="col">Idade</th>
+                        <th scope="col">Localidade</th>
+                        <th scope="col" width="80">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        petsCadastrados.forEach((pet, index) => {
+            const especieIcon = pet.especie === 'gato' || pet.especie === 'gata' 
+                ? '<i class="fas fa-cat"></i>' 
+                : '<i class="fas fa-dog"></i>';
+            
+            tableHTML += `
+                <tr>
+                    <th scope="row">${index + 1}</th>
+                    <td class="fw-bold">${pet.nome}</td>
+                    <td>${especieIcon} ${especieLabels[pet.especie] || pet.especie}</td>
+                    <td>${porteLabels[pet.porte] || pet.porte}</td>
+                    <td>${pet.idade} ano(s)</td>
+                    <td>${pet.localidade || '-'}</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-pet" data-index="${index}" title="Remover pet">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tableHTML += `
+                </tbody>
+            </table>
+        `;
+        
+        petsTableContainer.innerHTML = tableHTML;
+        
+        document.querySelectorAll('.btn-remove-pet').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const index = parseInt(this.dataset.index);
+                removerPet(index);
+            });
+        });
+    }
+
+    document.getElementById('formInscricao').addEventListener('submit', function(e) {
+        if (petsCadastrados.length === 0) {
+            e.preventDefault();
+            alert('É necessário adicionar pelo menos um pet para realizar o agendamento.');
+            return;
+        }
+        
+        const petsDataContainer = document.getElementById('petsDataContainer');
+        petsDataContainer.innerHTML = '';
+        
+        petsCadastrados.forEach((pet, index) => {
+            const campos = [
+                { name: 'pet_nome[]', value: pet.nome },
+                { name: 'pet_especie[]', value: pet.especie },
+                { name: 'pet_porte[]', value: pet.porte },
+                { name: 'pet_idade[]', value: pet.idade !== 'Não informada' ? pet.idade : '' },
+                { name: 'pet_localidade[]', value: pet.localidade }
+            ];
+            
+            campos.forEach(campo => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = campo.name;
+                input.value = campo.value;
+                petsDataContainer.appendChild(input);
+            });
+        });
+    });
+});
+</script>
+
+<%- include("_footer") -%>

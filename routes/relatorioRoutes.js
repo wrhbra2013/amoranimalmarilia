@@ -44,20 +44,37 @@
  
   const TABELAS_PERMITIDAS = ['adocao', 'adotante', 'adotado', 'castracao', 'procura_se', 'parceria', 'home', 'login', 'voluntario', 'interesse_voluntario', 'interessados_adocao', 'coleta', 'clinicas'];
   const TABELAS_COM_COLUNA_ORIGEM = ['adocao', 'adotante', 'adotado', 'castracao', 'procura_se', 'parceria', 'home', 'login', 'voluntario', 'coleta', 'interesse_voluntario'];
+
+  async function getAllTables() {
+    try {
+      const result = await pool.query(`
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_type = 'BASE TABLE'
+        ORDER BY table_name
+      `);
+      return result.rows.map(row => row.table_name);
+    } catch (error) {
+      console.error('[getAllTables] Erro ao buscar tabelas:', error.message);
+      return TABELAS_PERMITIDAS;
+    }
+  }
  
   async function fetchReportData(tabela) {
-   if (!TABELAS_PERMITIDAS.includes(tabela)) {
-    const error = new Error(`Nome de tabela inválido: ${tabela}`);
-    error.status = 400;
-    throw error;
-   }
- 
-   let sql;
-   let selectFields = "*";
- 
-   if (TABELAS_COM_COLUNA_ORIGEM.includes(tabela.toLowerCase())) {
- 
-    selectFields = `*,
+    const allTables = await getAllTables();
+    if (!allTables.includes(tabela)) {
+     const error = new Error(`Nome de tabela inválido: ${tabela}`);
+     error.status = 400;
+     throw error;
+    }
+  
+    let sql;
+    let selectFields = "*";
+  
+    if (TABELAS_COM_COLUNA_ORIGEM.includes(tabela.toLowerCase())) {
+  
+     selectFields = `*,
                              TO_CHAR(origem, 'DD/MM/YYYY HH24:MI:SS') AS data,
                              CAST(EXTRACT(YEAR FROM origem) AS INTEGER) AS ANO,
                              CAST(EXTRACT(MONTH FROM origem) AS INTEGER) AS MES_NUM,
@@ -76,16 +93,16 @@
                                  WHEN 12 THEN 'Dezembro'
                                  ELSE ''
                              END AS MES_NOME`;
-    sql = `SELECT ${selectFields} FROM ${tabela}`;
-   } else {
-    sql = `SELECT ${selectFields} FROM ${tabela};`;
-   }
- 
-   try {
-    //  Adapt to use a generalized query function from database.js
-    const result = await pool.query(sql);
-    return result.rows;
-   } catch (dbError) {
+     sql = `SELECT ${selectFields} FROM ${tabela}`;
+    } else {
+     sql = `SELECT ${selectFields} FROM ${tabela};`;
+    }
+  
+    try {
+     //  Adapt to use a generalized query function from database.js
+     const result = await pool.query(sql);
+     return result.rows;
+    } catch (dbError) {
     console.error(`[fetchReportData] Erro de banco de dados para '${tabela}':`, dbError.message);
     const errorToThrow = new Error(`Erro ao consultar dados da tabela '${tabela}': ${dbError.message}`);
     errorToThrow.status = dbError.status || 500;
@@ -94,40 +111,44 @@
   }
  
  
-  router.get('/', isAdmin, (req, res) => {
-   res.render('relatorio', {
-    tabelas: TABELAS_PERMITIDAS
-   });
+  router.get('/', isAdmin, async (req, res) => {
+    const allTables = await getAllTables();
+    res.render('relatorio', {
+      tabelas: TABELAS_PERMITIDAS,
+      todasTabelas: allTables
+    });
   });
  
   router.get('/:tabela', isAdmin, async (req, res) => {
-   const tabela = req.params.tabela;
-   try {
-    const data = await fetchReportData(tabela);
-    // MES_NOME será usado para exibição, MES_NUM para lógica interna se necessário.
-    const columnsToHideForHtml = ['origem', 'arquivo', 'ano', 'mes_num', 'mes_nome', 'isAdmin'];
+    const tabela = req.params.tabela;
+    const allTables = await getAllTables();
+    try {
+     const data = await fetchReportData(tabela);
+     // MES_NOME será usado para exibição, MES_NUM para lógica interna se necessário.
+     const columnsToHideForHtml = ['origem', 'arquivo', 'ano', 'mes_num', 'mes_nome', 'isAdmin'];
  
-    const sanitizedData = data.map(row => {
-     const sanitizedRow = {};
-     for (const key in row) {
-      if (!columnsToHideForHtml.includes(key)) {
-       sanitizedRow[key] = sanitizeTextForPdf(row[key]);
+     const sanitizedData = data.map(row => {
+      const sanitizedRow = {};
+      for (const key in row) {
+       if (!columnsToHideForHtml.includes(key)) {
+        sanitizedRow[key] = sanitizeTextForPdf(row[key]);
+       }
       }
-     }
-     return sanitizedRow;
-    });
-    res.render('relatorio', {
-     model: sanitizedData,
-     tabela: tabela,
-     tabelas: TABELAS_PERMITIDAS
-    });
-   } catch (error) {
-    console.error(`Erro GET /relatorio/${tabela}:`, error.message);
-    const statusCode = error.status || 500;
-    res.status(statusCode).render('error', {
-     error: error.message || 'Erro ao buscar dados para o relatório.'
-    });
-   }
+      return sanitizedRow;
+     });
+     res.render('relatorio', {
+      model: sanitizedData,
+      tabela: tabela,
+      tabelas: TABELAS_PERMITIDAS,
+      todasTabelas: allTables
+     });
+    } catch (error) {
+     console.error(`Erro GET /relatorio/${tabela}:`, error.message);
+     const statusCode = error.status || 500;
+     res.status(statusCode).render('error', {
+      error: error.message || 'Erro ao buscar dados para o relatório.'
+     });
+    }
   });
  
   router.post('/:tabela', isAdmin, async (req, res) => {
@@ -502,50 +523,52 @@ tableHeader: {
   });
  
   router.post('/delete/:tabela/:id', isAdmin, async (req, res) => {
-   const {
-    tabela,
-    id
-   } = req.params;
-   const client = await pool.connect(); // Obter um cliente do pool
- 
-    try {
-     if (!TABELAS_PERMITIDAS.includes(tabela)) {
-      throw new Error(`Tabela não permitida para exclusão: ${tabela}`);
+    const {
+     tabela,
+     id
+    } = req.params;
+    const client = await pool.connect(); // Obter um cliente do pool
+    const allTables = await getAllTables();
+  
+     try {
+      if (!allTables.includes(tabela)) {
+       throw new Error(`Tabela não permitida para exclusão: ${tabela}`);
+      }
+  
+      const deleteSql = `DELETE FROM ${tabela} WHERE id = $1`;
+      const result = await client.query(deleteSql, [id]);
+  
+      if (result.rowCount === 0) {
+       console.warn(`[relatorioRoutes DELETE] Nenhum registro encontrado na tabela '${tabela}' com ID: ${id} para deletar.`);
+       req.flash('error', `Nenhum registro encontrado na tabela '${tabela}' com ID: ${id} para deletar.`);
+      } else {
+       console.log(`[relatorioRoutes DELETE] Registro da tabela '${tabela}' com ID: ${id} deletado.`);
+       req.flash('success', `Registro da tabela '${tabela}' com ID: ${id} deletado com sucesso.`);
+      }
+      res.redirect(`/relatorio/${tabela}`);
+  
+     } catch (error) {
+      console.error(`[relatorioRoutes DELETE] Erro ao deletar registro da tabela '${tabela}' com ID: ${id}:`, error);
+      req.flash('error', `Erro ao deletar o registro da tabela '${tabela}'. Erro: ${error.message}`);
+      res.status(500).redirect(`/relatorio/${tabela}`);
+     } finally {
+      client.release(); // Liberar o cliente de volta para o pool
      }
+    });
  
-     const deleteSql = `DELETE FROM ${tabela} WHERE id = $1`;
-     const result = await client.query(deleteSql, [id]);
- 
-     if (result.rowCount === 0) {
-      console.warn(`[relatorioRoutes DELETE] Nenhum registro encontrado na tabela '${tabela}' com ID: ${id} para deletar.`);
-      req.flash('error', `Nenhum registro encontrado na tabela '${tabela}' com ID: ${id} para deletar.`);
-     } else {
-      console.log(`[relatorioRoutes DELETE] Registro da tabela '${tabela}' com ID: ${id} deletado.`);
-      req.flash('success', `Registro da tabela '${tabela}' com ID: ${id} deletado com sucesso.`);
-     }
-     res.redirect(`/relatorio/${tabela}`);
- 
-    } catch (error) {
-     console.error(`[relatorioRoutes DELETE] Erro ao deletar registro da tabela '${tabela}' com ID: ${id}:`, error);
-     req.flash('error', `Erro ao deletar o registro da tabela '${tabela}'. Erro: ${error.message}`);
-     res.status(500).redirect(`/relatorio/${tabela}`);
-    } finally {
-     client.release(); // Liberar o cliente de volta para o pool
-    }
-   });
-
-
-     router.post('/edit/:tabela/:id', isAdmin, async (req, res) => {
-      const {
-       tabela,
-       id
-      } = req.params;
-      const client = await pool.connect();
+  
+      router.post('/edit/:tabela/:id', isAdmin, async (req, res) => {
+       const {
+        tabela,
+        id
+       } = req.params;
+       const client = await pool.connect();
+       const allTables = await getAllTables();
    
-      try {
-       if (!TABELAS_PERMITIDAS.includes(tabela)) {
-        throw new Error(`Tabela não permitida para edição: ${tabela}`);
-       }
+       try {
+        if (!allTables.includes(tabela)) {
+         throw new Error(`Tabela não permitida para edição: ${tabela}`);
+        }
    
        const updates = req.body;
        const setClauses = [];

@@ -31,267 +31,120 @@
           </div>
       </section>
 
-         <!-- ==========================================================================
-             Eventos (Carousel)
-             ========================================================================== -->
-         <section id="eventos" class="py-5">
-             <div class="container">
-                                 <div class="d-flex align-items-center justify-content-between mb-3">
-                                     <h2 class="mb-0">Eventos</h2>
-                                     <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-                                         <a href="/eventos/form" class="button btn-sm">+ Adicionar novo evento</a>
-                                     <% } %>
-                                 </div>
-                <% const eventsList = (typeof modelEventos !== 'undefined' && modelEventos.length) ? modelEventos : ((typeof model1 !== 'undefined' && model1.length) ? model1 : []); %>
-                <% if (eventsList && eventsList.length > 0) { %>
-                  <div class="evt-carousel-wrapper">
-                    <div id="evtFeaturedInner" class="evt-carousel-inner">
-                      <% const isEventosSource = (typeof modelEventos !== 'undefined' && modelEventos.length);
-                         eventsList.slice(0,8).forEach(function(event, i) { 
-                           const imgSrc = isEventosSource ? ('/uploads/eventos/' + (event.arquivo || 'placeholder-event.jpg')) : ('/uploads/home/' + (event.arquivo || 'placeholder-event.jpg'));
-                           const linkUrl = isEventosSource ? `/eventos/${event.id}` : `/campanha/${event.id}`;
-                      %>
-                        <div class="evt-feature-slide <%= i===0 ? 'active' : '' %>" data-index="<%= i %>">
-                          <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-                            <% const deleteAction = isEventosSource ? `/eventos/delete/${event.id}` : `/delete/campanha/${event.id}/${event.arquivo || 'sem_arquivo'}`; %>
-                            <form action="<%= deleteAction %>" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este item?');" class="evt-delete-btn">
-                              <button type="submit" class="btn btn-danger btn-sm rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;" title="Excluir">
-                                <i class="fas fa-times"></i>
-                              </button>
-                            </form>
-                          <% } %>
-                          <a href="<%= linkUrl %>" class="d-block w-100 h-100">
-                            <img class="featured-image" loading="lazy" src="<%= imgSrc %>" alt="<%= event.titulo %>">
-                          </a>
-                          
-                        </div>
-                      <% }); %>
-                      <button id="evtPrev" class="evt-nav-btn prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
-                      <button id="evtNext" class="evt-nav-btn next" aria-label="Próximo"><i class="fas fa-chevron-right"></i></button>
-                    </div>
-                    
-                    <!-- Descrição fora do card -->
-                    <div id="evtDescription" class="text-center mt-3 px-4" style="min-height: 4em; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                      <% if(eventsList.length > 0) { const e = eventsList[0]; 
-                         const descText = isEventosSource ? (e.descricao || '') : (e.mensagem || '');
-                         const truncatedText = descText.substring(0,250);
-                      %>
-                        <h4 class="mb-2" style="color: var(--brand-teal); font-weight: 600; font-size: 1.2em; line-height: 1.4;">
-                          <%= e.titulo %>
-                        </h4>
-                        <p class="mb-0" style="color: var(--text-color); line-height: 1.6; font-size: 0.95em; word-wrap: break-word; overflow-wrap: break-word;">
-                          <span class="description-text"><%= truncatedText %></span>
-                          <% if(descText.length > 250) { %>
-                            <span class="read-more-btn" style="color: var(--brand-blue); font-weight: 500; cursor: pointer;">...ler mais</span>
-                            <span class="full-text" style="display: none;"><%= descText %></span>
-                          <% } %>
-                        </p>
+          <!-- ==========================================================================
+              Eventos (Carousel)
+              ========================================================================== -->
+          <section id="eventos" class="py-5">
+              <div class="container">
+                  <div class="d-flex align-items-center justify-content-between mb-4">
+                      <h2 class="mb-0">Eventos</h2>
+                      <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                          <a href="/eventos/form" class="button btn-sm">+ Adicionar novo evento</a>
                       <% } %>
-                    </div>
-
-                    <div id="evtCount" class="text-center text-muted small mt-2">1 / <%= eventsList.slice(0,8).length %></div>
                   </div>
 
-                  <!-- Miniaturas -->
-                  <div id="evtThumbs" class="mt-3 d-flex gap-2 overflow-auto pb-2 justify-content-center justify-content-md-start" style="display: flex; flex-direction: row;">
-                    <% eventsList.slice(0,8).forEach(function(event, i) { 
-                         const imgSrc = isEventosSource ? ('/uploads/eventos/' + (event.arquivo || 'placeholder-event.jpg')) : ('/uploads/home/' + (event.arquivo || 'placeholder-event.jpg'));
-                    %>
-                      <div class="evt-thumb <%= i===0 ? 'active' : '' %>" data-index="<%= i %>">
-                        <img src="<%= imgSrc %>" alt="thumb <%= i+1 %>">
+                  <% const eventsList = (typeof modelEventos !== 'undefined' && modelEventos.length) ? modelEventos : ((typeof model1 !== 'undefined' && model1.length) ? model1 : []); %>
+                  <% const totalEventos = typeof modelEventosCount !== 'undefined' ? modelEventosCount : eventsList.length; %>
+                  <% if (eventsList && eventsList.length > 0) { %>
+                      <div class="evt-cards-grid">
+                          <div class="text-center mb-4">
+                              <span class="badge bg-primary" style="font-size: 14px;">
+                                  <i class="fas fa-calendar-alt me-1"></i>Total de <%= totalEventos %> evento<%= totalEventos !== 1 ? 's' : '' %> cadastrado<%= totalEventos !== 1 ? 's' : '' %>
+                              </span>
+                          </div>
+                          <div class="row g-4">
+                              <% eventsList.slice(0, 6).forEach(function(event, i) {
+                                  const imgSrc = event.arquivo ? ('/uploads/eventos/' + event.arquivo) : ('/uploads/home/' + (event.arquivo || 'placeholder-event.jpg'));
+                                  const linkUrl = event.arquivo ? `/eventos/${event.id}` : `/campanha/${event.id}`;
+                                  const eventDate = event.data_evento ? new Date(event.data_evento).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+                              %>
+                                  <div class="col-12 col-sm-6 col-lg-4">
+                                      <a href="<%= linkUrl %>" class="evt-card-link">
+                                          <div class="evt-card">
+                                              <div class="evt-card-img-wrapper">
+                                                  <img src="<%= imgSrc %>" alt="<%= event.titulo %>">
+                                              </div>
+                                              <div class="evt-card-body">
+                                                  <h5 class="evt-card-title"><%= event.titulo %></h5>
+                                                  <% if (eventDate) { %>
+                                                      <span class="evt-card-date"><i class="fas fa-calendar-alt me-1"></i><%= eventDate %></span>
+                                                  <% } %>
+                                              </div>
+                                          </div>
+                                      </a>
+                                  </div>
+                              <% }); %>
+                          </div>
                       </div>
-                    <% }); %>
-                  </div>
-                <% } else { %>
-                    <p class="text-center text-muted">Nenhum evento cadastrado no momento.</p>
-                <% } %>
-             </div>
-         </section>
+                  <% } else { %>
+                      <p class="text-center text-muted">Nenhum evento cadastrado.</p>
+                  <% } %>
+              </div>
+          </section>
 
-<style>
-  /* Container do Carrossel */
-  .evt-carousel-inner {
-    position: relative;
-    width: 100%;
-    max-width: 1200px;
-    height: 600px;
-    margin: 0 auto;
-    background: #f8f9fa;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  }
+          <style>
+              .evt-cards-grid {
+                  max-width: 100%;
+              }
+              .evt-cards-grid .row {
+                  display: flex;
+                  flex-wrap: wrap;
+                  margin: 0 -15px;
+              }
+              .evt-cards-grid .row > div {
+                  padding: 0 15px;
+                  margin-bottom: 20px;
+              }
+              .evt-card-link {
+                  text-decoration: none;
+                  display: block;
+              }
+              .evt-card {
+                  background: transparent;
+                  border-radius: 12px;
+                  overflow: hidden;
+                  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                      transition: transform 0.3s ease, box-shadow 0.3s ease;
+                      height: 100%;
+                  }
+                  .evt-card:hover {
+                      transform: translateY(-5px);
+                      box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+                  }
+              .evt-card-img-wrapper {
+                  position: relative;
+                  width: 100%;
+                  height: 350px;
+                  overflow: hidden;
+              }
+              .evt-card-img-wrapper img {
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                  transition: transform 0.4s ease;
+              }
+              .evt-card:hover .evt-card-img-wrapper img {
+                  transform: scale(1.15);
+              }
+              .evt-card-body {
+                  padding: 15px;
+                  color: var(--text-color, #333);
+              }
+              .evt-card-title {
+                      margin: 0 0 8px 0;
+                      font-size: 1.1rem;
+                      font-weight: 600;
+                  }
+              .evt-card-date {
+                  font-size: 0.85rem;
+                  opacity: 0.8;
+              }
+              @media (max-width: 576px) {
+                  .evt-card-img-wrapper { height: 280px; }
+              }
+          </style>
 
-   /* Slides com Fade */
-   .evt-feature-slide {
-     position: absolute;
-     inset: 0;
-     opacity: 0;
-     transition: opacity 0.5s ease-in-out;
-     z-index: 1;
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
-   }
-   .evt-feature-slide.active { opacity: 1; z-index: 2; }
 
-  .featured-image { 
-    width: 50%; 
-    height: 50%; 
-    object-fit: contain; 
-    display: block; 
-    margin: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .featured-image:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-  }
-
-  /* Controles de Navegação */
-  .evt-nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(0,0,0,0.3);
-    color: white;
-    border: none;
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10;
-    transition: background 0.2s;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .evt-nav-btn:hover { background: rgba(0,0,0,0.7); }
-  .evt-nav-btn.prev { left: 10px; }
-  .evt-nav-btn.next { right: 10px; }
-
-  /* Botão de Deletar */
-  .evt-delete-btn { position: absolute; top: 10px; right: 10px; z-index: 20; }
-
-  /* Miniaturas */
-  .evt-thumb {
-    flex: 0 0 auto;
-    width: 100px; height: 70px;
-    border-radius: 6px;
-    overflow: hidden;
-    cursor: pointer;
-    opacity: 0.6;
-    transition: all 0.2s;
-    border: 2px solid transparent;
-  }
-  .evt-thumb.active { opacity: 1; border-color: var(--brand-teal, #2aa89a); transform: scale(1.05); }
-  .evt-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  
-  @media (max-width:768px){ 
-    .evt-carousel-inner { height: 400px; max-width: 100%; } 
-    .featured-image { max-width: 100%; max-height: 100%; }
-    .evt-thumb { width: 80px; height: 60px; }
-  }
-</style>
-
-<script>
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const slides = Array.from(document.querySelectorAll('.evt-feature-slide'));
-    const thumbs = Array.from(document.querySelectorAll('.evt-thumb'));
-    const prev = document.getElementById('evtPrev');
-    const next = document.getElementById('evtNext');
-    const count = document.getElementById('evtCount');
-    const descContainer = document.getElementById('evtDescription');
-    let idx = 0;
-    
-    // Adiciona evento de clique para "ler mais/ler menos" na descrição inicial
-    const readMoreBtn = descContainer?.querySelector('.read-more-btn');
-    if (readMoreBtn) {
-      readMoreBtn.addEventListener('click', () => {
-        const descText = descContainer.querySelector('.description-text');
-        const fullText = descContainer.querySelector('.full-text');
-        
-        if (fullText && descText) {
-          if (fullText.style.display === 'none') {
-            descText.style.display = 'none';
-            fullText.style.display = 'inline';
-            readMoreBtn.textContent = ' ler menos';
-          } else {
-            descText.style.display = 'inline';
-            fullText.style.display = 'none';
-            readMoreBtn.textContent = '...ler mais';
-          }
-        }
-      });
-    }
-
-     function show(n){
-       if(!slides.length) return;
-       idx = (n + slides.length) % slides.length;
-       
-       // Atualiza slides (usando classes para transição CSS)
-       slides.forEach((s,i) => {
-         if (i === idx) {
-           s.classList.add('active');
-         }
-         else s.classList.remove('active');
-       });
-
-       // Atualiza a descrição externa com formatação melhorada
-       if (descContainer && eventsList && eventsList.length > 0) {
-         const e = eventsList[idx];
-         const isEventosSource = (typeof modelEventos !== 'undefined' && modelEventos.length);
-         const descText = isEventosSource ? (e.descricao || '') : (e.mensagem || '');
-         
-         // Verifica se o texto atual está completo ou truncado
-         const currentText = descContainer.querySelector('p');
-         const isExpanded = currentText && currentText.textContent.includes(descText);
-         
-         let displayText, readMoreText;
-         if (isExpanded) {
-           displayText = descText.substring(0,250);
-           readMoreText = descText.length > 250 ? '<span class="read-more-btn" style="color: var(--brand-blue); font-weight: 500; cursor: pointer;">...ler mais</span>' : '';
-         } else {
-           displayText = descText;
-           readMoreText = descText.length > 250 ? '<span class="read-more-btn" style="color: var(--brand-blue); font-weight: 500; cursor: pointer;"> ler menos</span>' : '';
-         }
-         
-         descContainer.innerHTML = `
-           <h4 class="mb-2" style="color: var(--brand-teal); font-weight: 600; font-size: 1.2em; line-height: 1.4;">
-             ${e.titulo}
-           </h4>
-           <p class="mb-0" style="color: var(--text-color); line-height: 1.6; font-size: 0.95em; word-wrap: break-word; overflow-wrap: break-word;">
-             ${displayText}${readMoreText}
-           </p>
-         `;
-         
-         // Adiciona evento de clique no "ler mais/ler menos"
-         const readMoreBtn = descContainer.querySelector('.read-more-btn');
-         if (readMoreBtn) {
-           readMoreBtn.addEventListener('click', () => {
-             // Re-executa a função show com o mesmo índice para alternar
-             show(idx);
-           });
-         }
-       }
-
-       if(count) count.textContent = (idx+1) + ' / ' + slides.length;
-       
-       // Atualiza thumbs
-       thumbs.forEach((t,i)=> t.classList.toggle('active', i===idx));
-       const activeThumb = thumbs[idx];
-       if(activeThumb) activeThumb.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
-     }
-
-    prev?.addEventListener('click', ()=> show(idx-1));
-    next?.addEventListener('click', ()=> show(idx+1));
-    thumbs.forEach((t,i)=> t.addEventListener('click', ()=> show(i)));
-    
-    // Teclado
-    document.addEventListener('keydown', e=>{ if(e.key==='ArrowLeft') show(idx-1); if(e.key==='ArrowRight') show(idx+1); });
-  });
-</script>
-</script>
 
 
 
@@ -316,7 +169,7 @@
            <!-- </div> -->
                      <span>Equipe ONG Amor Animal</span>
                   </div>
-                  
+
                       <div class="text-center">
                         <a href="/sobre" class="button"" >Saiba Mais Sobre Nós</a>
                       </div>
@@ -327,7 +180,7 @@
               </div>
 
           </div>
-         
+
       </section>
 
       <!-- ==========================================================================
@@ -553,10 +406,10 @@
                                                              <form action="/castracao/updateStatus/<%= castracao.id %>" method="post">
                                                                  <button type="submit" class="btn btn-success btn-sm" title="Atender">Atender</button>
                                                              </form>
-                                                         <% } else { %>
-                                                             <span class="text-success">-</span>
-                                                         <% } %>
-                                                        <% if (user) { %>
+                                                          <% } else { %>
+                                                              <span class="text-success">-</span>
+                                                          <% } %>
+                                                         <% if (user) { %>
                                                             <form action="/castracao/delete/<%= castracao.id %>/<%= castracao.arquivo || 'sem_arquivo' %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento')">
                                                                 <button type="submit" class="btn btn-danger btn-sm" title="Excluir Agendamento">
                                                                     <i class="fas fa-trash-alt"></i>
@@ -581,12 +434,12 @@
 
                      </div>
                  </div>
-                  <style>
-                    .table-responsive { overflow-x: auto; }
-                  </style>
+                   <style>
+                     .table-responsive { overflow-x: auto; }
+                    </style>
 
 
-             </div> <!-- Fechamento do .row principal da seção de impacto -->
+              </div> <!-- Fechamento do .row principal da seção de impacto -->
           </div>
       </section>
 
