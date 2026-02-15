@@ -1,8 +1,20 @@
 // /home/wander/Public/amoranimalmarilia/routes/clinicasRoutes.js
 const express = require('express');
 const { pool } = require('../database/database');
+const { isAdmin } = require('../middleware/auth');
 
 const router = express.Router();
+
+// GET /clinicas - Lista todas as clínicas
+router.get('/', async (req, res) => {
+    try {
+        const clinicas = await pool.query('SELECT * FROM clinicas ORDER BY nome');
+        res.render('lista_clinicas', { clinicas: clinicas.rows });
+    } catch (error) {
+        console.error('[clinicasRoutes GET /] Erro:', error);
+        res.status(500).send('Erro ao carregar clínicas.');
+    }
+});
 
 // GET /clinicas/form - Renderiza o formulário para nova clínica
 router.get('/form', (req, res) => {
@@ -10,6 +22,19 @@ router.get('/form', (req, res) => {
         error: req.flash('error'),
         formData: req.flash('formData')[0] || {}
     });
+});
+
+// POST /clinicas/delete/:id - Exclui uma clínica
+router.post('/delete/:id', isAdmin, async (req, res) => {
+    try {
+        await pool.query('DELETE FROM clinicas WHERE id = $1', [req.params.id]);
+        req.flash('success', 'Clínica excluída com sucesso.');
+        res.redirect('/clinicas');
+    } catch (error) {
+        console.error('[clinicasRoutes POST /delete] Erro:', error);
+        req.flash('error', 'Erro ao excluir clínica.');
+        res.redirect('/clinicas');
+    }
 });
 
 // POST /clinicas/form - Processa o formulário de nova clínica

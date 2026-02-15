@@ -1323,7 +1323,11 @@ body.high-contrast .news-carousel-dots .dot.active {
   transition: all 0.3s ease;
 }
 
-.phone-input:valid {
+.phone-input.phone-error {
+  border-color: #dc3545;
+}
+
+.phone-input.phone-valid {
   border-color: #28a745;
 }
 

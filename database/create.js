@@ -143,8 +143,9 @@ async function create_mutirao_inscricao() {
     const ddl = `CREATE TABLE IF NOT EXISTS mutirao_inscricao (
         id SERIAL PRIMARY KEY,
         calendario_mutirao_id INTEGER REFERENCES calendario_mutirao(id),
+        ticket VARCHAR(50) UNIQUE NOT NULL,
         nome_responsavel VARCHAR(255) NOT NULL,
-        localidade VARCHAR(255),
+        localidades VARCHAR(255),
         contato VARCHAR(50),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );`;
@@ -282,6 +283,18 @@ async function create_calendario_mutirao() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`;
     await executeDDL(ddl, 'calendario_mutirao');
+}
+
+async function migrateCalendarioMutiraoEndereco() {
+    const checkColumn = `
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'calendario_mutirao' AND column_name = 'endereco'
+    `;
+    const result = await pool.query(checkColumn);
+    if (result.rows.length === 0) {
+        await executeDDL(`ALTER TABLE calendario_mutirao ADD COLUMN endereco TEXT`, 'calendario_mutirao');
+    }
 }
 
 async function create_evento_fotos() {
@@ -566,6 +579,7 @@ async function migrateCastracaoAtendidoColumn() {
         await create_calendario_castracao();
         await create_mutirao_castracao();
         await create_calendario_mutirao();
+        await migrateCalendarioMutiraoEndereco();
       await create_transparencia();
       await create_solicitacao_acesso();
       await migrateSolicitacaoAcessoCpfColumn(); // Garante que a coluna CPF exista

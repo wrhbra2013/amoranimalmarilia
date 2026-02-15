@@ -25,6 +25,9 @@
                 <h6 class="card-subtitle mb-2 text-muted">
                   <i class="bi bi-geo-alt me-1"></i><%= mutirao.clinica %>
                 </h6>
+                <% if (mutirao.endereco) { %>
+                  <p class="card-text small text-muted"><%= mutirao.endereco %></p>
+                <% } %>
                 <p class="card-text">
                   <span class="badge bg-success">
                     <i class="bi bi-people-fill me-1"></i><%= mutirao.vagas %> vagas disponíveis

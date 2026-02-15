@@ -1,4 +1,4 @@
-﻿ <%- include("_header") -%>
+ <%- include("_header") -%>
  
  <div class="container mt-4 mb-5">
    <div class="page-header mb-4 d-flex justify-content-between align-items-center">
@@ -45,11 +45,11 @@
                  <% if (user && user.isAdmin) { %>
                    <div>
                      <a href="/edit/adocao/<%= pet.id %>" class="btn btn-outline-secondary btn-sm me-1" title="Editar">
-                       <i class="fas fa-edit"></i>
+                       <i class="bi bi-pencil"></i>
                      </a>
                      <form action="/delete/adocao/<%= pet.id %>/<%= pet.arquivo %>" method="post" onsubmit="return confirm('Tem certeza que deseja remover este pet da lista de adoção?')" class="d-inline">
                        <button type="submit" class="btn btn-danger btn-sm" title="Remover">
-                         <i class="fas fa-trash-alt"></i>
+                         <i class="bi bi-trash"></i>
                        </button>
                      </form>
                    </div>
@@ -77,18 +77,9 @@
        <% } %>
      </div>
    <% } %>
- </div>
- 
- <style>
-   .adocao-card-img {
-     height: 250px;
-     object-fit: cover; /* Ensures the image covers the area, cropping if necessary */
-   }
-   .adocao-card .card-title a.stretched-link-hover:hover {
-     color: var(--bs-primary) !important; /* Or your preferred hover color */
-     text-decoration: underline !important;
-   }
- </style>
- 
- <%- include("_footer") -%>
+</div>
+  
+  <link rel="stylesheet" href="/static/css/adocao.css">
+  
+  <%- include("_footer") -%>
  

@@ -24,11 +24,11 @@
       <div class="row g-2 mb-4">
         <div class="col-md-4">
           <label class="form-label">Nome do Responsável *</label>
-          <input type="text" name="nome_responsavel" class="form-control" required>
+          <input type="text" name="nome_responsavel" id="nomeResponsavel" class="form-control">
         </div>
         <div class="col-md-4">
           <label class="form-label">Localidade</label>
-          <input type="text" name="localidade" class="form-control" placeholder="Bairro/Região">
+          <input type="text" name="localidades" class="form-control" placeholder="Bairro/Região">
         </div>
         <div class="col-md-4">
           <label class="form-label fw-bold">Contato *</label>
@@ -53,11 +53,11 @@
         <div class="row g-2">
           <div class="col-md-3">
             <label class="form-label">Nome do Pet *</label>
-            <input type="text" name="pet_nome" id="petNome" class="form-control" required>
+            <input type="text" id="petNome" class="form-control">
           </div>
           <div class="col-md-2">
             <label class="form-label">Espécie *</label>
-            <select name="pet_especie" id="petEspecie" class="form-select" required>
+            <select id="petEspecie" class="form-select">
               <option value="">Selecione...</option>
               <option value="gato">Gato</option>
               <option value="cachorro">Cachorro</option>
@@ -65,7 +65,7 @@
           </div>
           <div class="col-md-2">
             <label class="form-label">Sexo *</label>
-            <select name="pet_sexo" id="petSexo" class="form-select" required>
+            <select id="petSexo" class="form-select">
               <option value="">Selecione...</option>
               <option value="macho">Macho</option>
               <option value="femea">Fêmea</option>
@@ -73,29 +73,29 @@
           </div>
           <div class="col-md-2">
             <label class="form-label">Idade</label>
-            <input type="text" name="pet_idade" id="petIdade" class="form-control" placeholder="Ex: 2 anos">
+            <input type="text" id="petIdade" class="form-control" placeholder="Ex: 2 anos">
           </div>
           <div class="col-md-3">
             <label class="form-label">Peso</label>
-            <input type="text" name="pet_peso" id="petPeso" class="form-control" placeholder="Ex: 4kg">
+            <input type="text" id="petPeso" class="form-control" placeholder="Ex: 4kg">
           </div>
           <div class="col-md-2">
             <label class="form-label">Vacinado?</label>
-            <select name="pet_vacinado" id="petVacinado" class="form-select">
+            <select id="petVacinado" class="form-select">
               <option value="false">Não</option>
               <option value="true">Sim</option>
             </select>
           </div>
           <div class="col-md-3">
             <label class="form-label">Usa medicamento?</label>
-            <select name="pet_tem_medicamento" id="petTemMedicamento" class="form-select medicamento-select">
+            <select id="petTemMedicamento" class="form-select medicamento-select">
               <option value="nao">Não</option>
               <option value="sim">Sim</option>
             </select>
           </div>
           <div class="col-md-7 medicamento-field" style="display: none;">
             <label class="form-label">Qual medicamento?</label>
-            <input type="text" name="pet_medicamento" id="petMedicamento" class="form-control" placeholder="Descreva o medicamento">
+            <input type="text" id="petMedicamento" class="form-control" placeholder="Descreva o medicamento">
           </div>
         </div>
       </div>
@@ -111,31 +111,31 @@
        <div class="row mb-3">
          <div class="col-12">
            <h5>Pets Cadastrados (<span id="petCount">0</span>)</h5>
-           <div id="petsTableContainer" class="table-responsive border rounded" style="max-height: 300px; overflow-y: auto;">
-             <div id="petsSummary" class="p-3 text-muted text-center">
-               <i class="fas fa-paw fa-2x mb-2"></i>
-               <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
-             </div>
-           </div>
+            <div id="petsTableContainer" class="table-responsive border rounded" style="max-height: 300px; overflow-y: auto;">
+              <div id="petsSummary" class="p-3 text-muted text-center">
+                <i class="bi bi-paw" style="font-size: 2rem;"></i>
+                <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
+              </div>
+            </div>
          </div>
        </div>
 
-       <!-- Botões de ação -->
-       <div class="row mb-3">
-         <div class="col-md-6">
-           <button type="button" class="btn btn-outline-primary" id="btnAddPet">
-             <i class="fas fa-plus"></i> Adicionar Pet
-           </button>
-           <button type="button" class="btn btn-outline-danger ms-2" id="btnClearForm" style="display: none;">
-             <i class="fas fa-times"></i> Limpar Formulário
-           </button>
-         </div>
-         <div class="col-md-6 text-end">
-           <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit">
-             <i class="fas fa-check"></i> Realizar Inscrição
-           </button>
-         </div>
-       </div>
+        <!-- Botões de ação -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <button type="button" class="btn btn-outline-primary" id="btnAddPet">
+              <i class="bi bi-plus-lg"></i> Adicionar Pet
+            </button>
+            <button type="button" class="btn btn-outline-danger ms-2" id="btnClearForm" style="display: none;">
+              <i class="bi bi-x-lg"></i> Limpar Formulário
+            </button>
+          </div>
+          <div class="col-md-6 text-end">
+            <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit">
+              <i class="bi bi-check-lg"></i> Realizar Inscrição
+            </button>
+          </div>
+        </div>
     </form>
   </section>
 
@@ -144,6 +144,9 @@
       <h5>Informações do Mutirão</h5>
       <p><strong>Data:</strong> <%= mutirao.data_evento ? new Date(mutirao.data_evento).toLocaleDateString('pt-BR') : '' %></p>
       <p><strong>Clínica:</strong> <%= mutirao.clinica %></p>
+      <% if (mutirao.endereco) { %>
+        <p><strong>Endereço:</strong> <%= mutirao.endereco %></p>
+      <% } %>
       <p><strong>Vagas:</strong> <%= mutirao.vagas === 0 ? 'Ilimitadas' : mutirao.vagas %></p>
       <% if (mutirao.vagas_disponiveis !== null) { %>
         <p><strong>Vagas disponíveis:</strong> <span class="badge bg-info"><%= mutirao.vagas_disponiveis %></span></p>
@@ -154,259 +157,4 @@
 
 <%- include("_footer") -%>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const petsCadastrados = [];
-    
-    // Inicializar botão submit
-    atualizarResumo();
-    
-    // Adicionar campo de medicamento quando selecionado "Sim"
-    document.getElementById('petTemMedicamento').addEventListener('change', function(e) {
-        const medicamentoField = document.querySelector('.medicamento-field');
-        
-        if (e.target.value === 'sim') {
-            medicamentoField.style.display = 'block';
-            document.getElementById('petMedicamento').setAttribute('required', 'required');
-        } else {
-            medicamentoField.style.display = 'none';
-            document.getElementById('petMedicamento').removeAttribute('required');
-            document.getElementById('petMedicamento').value = '';
-        }
-    });
 
-    // Adicionar pet
-    document.getElementById('btnAddPet').addEventListener('click', function() {
-        // Validar campos obrigatórios
-        const nome = document.getElementById('petNome').value.trim();
-        const especie = document.getElementById('petEspecie').value;
-        const sexo = document.getElementById('petSexo').value;
-        
-        if (!nome || !especie || !sexo) {
-            alert('Por favor, preencha os campos obrigatórios do pet (Nome, Espécie e Sexo).');
-            return;
-        }
-        
-        // Coletar dados do pet
-        const pet = {
-            nome: nome,
-            especie: especie,
-            sexo: sexo,
-            idade: document.getElementById('petIdade').value || 'Não informado',
-            peso: document.getElementById('petPeso').value || 'Não informado',
-            vacinado: document.getElementById('petVacinado').value === 'true' ? 'Sim' : 'Não',
-            medicamento: document.getElementById('petTemMedicamento').value === 'sim' ? document.getElementById('petMedicamento').value : 'Não'
-        };
-        
-        // Adicionar à lista
-        petsCadastrados.push(pet);
-        
-        // Atualizar resumo
-        atualizarResumo();
-        
-        // Limpar formulário
-        limparFormulario();
-        
-        // Mostrar botão de limpar formulário
-        document.getElementById('btnClearForm').style.display = 'inline-block';
-    });
-
-    // Remover pet
-    function removerPet(index) {
-        if (confirm(`Tem certeza que deseja remover ${petsCadastrados[index].nome}?`)) {
-            petsCadastrados.splice(index, 1);
-            atualizarResumo();
-            
-            if (petsCadastrados.length === 0) {
-                document.getElementById('btnClearForm').style.display = 'none';
-            }
-        }
-    }
-
-    // Limpar formulário
-    document.getElementById('btnClearForm').addEventListener('click', function() {
-        limparFormulario();
-        document.getElementById('btnClearForm').style.display = 'none';
-    });
-
-    function limparFormulario() {
-        document.getElementById('petNome').value = '';
-        document.getElementById('petEspecie').value = '';
-        document.getElementById('petSexo').value = '';
-        document.getElementById('petIdade').value = '';
-        document.getElementById('petPeso').value = '';
-        document.getElementById('petVacinado').value = 'false';
-        document.getElementById('petTemMedicamento').value = 'nao';
-        document.querySelector('.medicamento-field').style.display = 'none';
-        document.getElementById('petMedicamento').value = '';
-    }
-
-    function atualizarResumo() {
-        const petsTableContainer = document.getElementById('petsTableContainer');
-        const petCountSpan = document.getElementById('petCount');
-        const btnSubmit = document.getElementById('btnSubmit');
-        
-        petCountSpan.textContent = petsCadastrados.length;
-        
-        // Atualizar estado do botão submit
-        if (petsCadastrados.length === 0) {
-            btnSubmit.disabled = true;
-            btnSubmit.classList.remove('btn-primary');
-            btnSubmit.classList.add('btn-secondary');
-            btnSubmit.innerHTML = '<i class="fas fa-paw"></i> Adicione um pet primeiro';
-        } else {
-            btnSubmit.disabled = false;
-            btnSubmit.classList.remove('btn-secondary');
-            btnSubmit.classList.add('btn-primary');
-            btnSubmit.innerHTML = '<i class="fas fa-check"></i> Realizar Inscrição';
-        }
-        
-        if (petsCadastrados.length === 0) {
-            petsTableContainer.innerHTML = `
-                <div class="p-3 text-muted text-center">
-                    <i class="fas fa-paw fa-2x mb-2"></i>
-                    <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
-                </div>
-            `;
-            return;
-        }
-        
-        let tableHTML = `
-            <table class="table table-sm table-hover mb-0">
-                <thead class="table-light sticky-top">
-                    <tr>
-                        <th scope="col" width="40">#</th>
-                        <th scope="col">Nome</th>
-                        <th scope="col">Espécie</th>
-                        <th scope="col">Sexo</th>
-                        <th scope="col">Idade</th>
-                        <th scope="col">Peso</th>
-                        <th scope="col">Vacinado</th>
-                        <th scope="col">Medicamento</th>
-                        <th scope="col" width="80">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        petsCadastrados.forEach((pet, index) => {
-            const medicamentoClass = pet.medicamento !== 'Não' ? 'text-warning' : '';
-            const medicamentoIcon = pet.medicamento !== 'Não' ? '<i class="fas fa-exclamation-triangle"></i>' : '';
-            const vacinadoBadge = pet.vacinado === 'Sim' 
-                ? '<span class="badge bg-success">Sim</span>' 
-                : '<span class="badge bg-danger">Não</span>';
-            const especieIcon = pet.especie === 'Gato' 
-                ? '<i class="fas fa-cat"></i>' 
-                : '<i class="fas fa-dog"></i>';
-            
-            tableHTML += `
-                <tr>
-                    <th scope="row">${index + 1}</th>
-                    <td class="fw-bold">${pet.nome}</td>
-                    <td>${especieIcon} ${pet.especie}</td>
-                    <td>${pet.sexo}</td>
-                    <td>${pet.idade}</td>
-                    <td>${pet.peso}</td>
-                    <td>${vacinadoBadge}</td>
-                    <td class="${medicamentoClass}">
-                        ${medicamentoIcon} ${pet.medicamento}
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-outline-danger btn-remove-pet" data-index="${index}" title="Remover pet">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
-        
-        tableHTML += `
-                </tbody>
-            </table>
-        `;
-        
-        petsTableContainer.innerHTML = tableHTML;
-        
-        // Adicionar eventos de remoção aos botões
-        document.querySelectorAll('.btn-remove-pet').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const index = parseInt(this.dataset.index);
-                removerPet(index);
-            });
-        });
-    }
-
-    // Validar e preparar dados para envio do formulário
-    document.getElementById('formInscricao').addEventListener('submit', function(e) {
-        console.log('[DEBUG] Formulário sendo submetido');
-        console.log('[DEBUG] Pets cadastrados:', petsCadastrados.length);
-        console.log('[DEBUG] Dados do responsável:', {
-            nome: document.querySelector('input[name="nome_responsavel"]').value,
-            contato: document.querySelector('input[name="contato"]').value
-        });
-        
-        if (petsCadastrados.length === 0) {
-            console.log('[DEBUG] Bloqueado: nenhum pet cadastrado');
-            e.preventDefault();
-            
-            // Destacar área de pets
-            const petsTableContainer = document.getElementById('petsTableContainer');
-            petsTableContainer.classList.add('border-danger');
-            petsTableContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Mostrar alerta mais amigável
-            const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-warning alert-dismissible fade show mt-2';
-            alertDiv.innerHTML = `
-                <i class="fas fa-exclamation-triangle"></i>
-                <strong>Atenção!</strong> É necessário adicionar pelo menos um pet para realizar a inscrição.
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            petsTableContainer.parentNode.insertBefore(alertDiv, petsTableContainer.nextSibling);
-            
-            // Remover destaque após 3 segundos
-            setTimeout(() => {
-                petsTableContainer.classList.remove('border-danger');
-            }, 3000);
-            
-            return;
-        }
-        
-        // Adicionar os pets como campos ocultos para envio
-        const petsDataContainer = document.getElementById('petsDataContainer');
-        petsDataContainer.innerHTML = '';
-        
-        console.log('[DEBUG] Criando campos ocultos para', petsCadastrados.length, 'pets');
-        
-        petsCadastrados.forEach((pet, index) => {
-            console.log('[DEBUG] Processando pet', index + 1, ':', pet);
-            
-            // Criar campos ocultos para cada pet
-            const campos = [
-                { name: 'pet_nome[]', value: pet.nome },
-                { name: 'pet_especie[]', value: pet.especie },
-                { name: 'pet_sexo[]', value: pet.sexo },
-                { name: 'pet_idade[]', value: pet.idade !== 'Não informado' ? pet.idade : '' },
-                { name: 'pet_peso[]', value: pet.peso !== 'Não informado' ? pet.peso : '' },
-                { name: 'pet_vacinado[]', value: pet.vacinado === 'Sim' ? 'true' : 'false' },
-                { name: 'pet_tem_medicamento[]', value: pet.medicamento !== 'Não' ? 'sim' : 'nao' },
-                { name: 'pet_medicamento[]', value: pet.medicamento !== 'Não' ? pet.medicamento : '' }
-            ];
-            
-            console.log(`[DEBUG] Criando campos para pet ${index + 1}:`, pet);
-            
-            campos.forEach(campo => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = campo.name;
-                input.value = campo.value;
-                petsDataContainer.appendChild(input);
-                console.log('[DEBUG] Campo criado:', campo.name, '=', campo.value);
-            });
-        });
-        
-        console.log('[DEBUG] Total de campos ocultos criados:', petsDataContainer.children.length);
-    });
-});
-</script>

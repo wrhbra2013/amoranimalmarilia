@@ -33,7 +33,7 @@
                                     <td><%= item.caracteristicas_desejadas || 'N/A' %></td>
                                     <td class="text-center">
                                         <form action="/interessados/delete/<%= item.id %>" method="POST" onsubmit="return confirm('Tem certeza que deseja remover este registro?');">
-                                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash me-1"></i>Excluir</button>
+                                            <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash me-1"></i>Excluir</button>
                                         </form>
                                     </td>
                                 </tr>

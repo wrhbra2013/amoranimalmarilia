@@ -60,11 +60,11 @@
                <div class="btn-group" role="group" aria-label="Ações da Parceria">
                  <% if (user) { %> <!-- Exemplo: Admin ou dono da proposta pode editar/excluir -->
                    <a href="/parceria/form/<%= parceria.id %>" class="btn btn-sm btn-outline-primary" title="Editar">
-                     <i class="fas fa-edit"></i>
+                     <i class="bi bi-pencil"></i>
                    </a>
                    <form action="/delete/parceria/<%= parceria.id %>" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir esta parceria?');">
                      <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
-                       <i class="fas fa-trash"></i>
+                       <i class="bi bi-trash"></i>
                      </button>
                    </form>
                  <% } %>

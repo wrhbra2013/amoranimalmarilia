@@ -98,48 +98,89 @@
      }
  }
  
- // Rota principal para '/' e '/home' (Dashboard Completo)
- router.get(['/', '/home'], checkCookieConsent, async (req, res) => {
-     try {
-         const homePageData = await getHomePageData();
-         
-         // Se houve um erro carregando os dados, você pode querer logar ou mostrar uma mensagem específica
-         if (homePageData.errorLoadingData) {
-             req.flash('error', 'Ocorreu um erro ao carregar alguns dados da página. Tente novamente mais tarde.');
-         }
- 
-         res.render('home', {
-             user: req.user,
-             isAdmin: req.isAdmin || false,
-             model1: homePageData.home,
-             model2: homePageData.adocao,
-             model3: homePageData.adocaoCount, // Será um número
-             model4: homePageData.adotante,
-             model5: homePageData.adotanteCount, // Será um número
-             model6: homePageData.adotado,
-             model7: homePageData.adotadoCount, // Será um número
-             model8: homePageData.castracao,
-             model9: homePageData.castracaoCount, // Será um número
-             model10: homePageData.procura_se,
-             model11: homePageData.procura_seCount, // Será um número
-             model12: homePageData.parceria,
-             model13: homePageData.parceriaCount, // Será um número
-             model14: homePageData.voluntario,
-             model15: homePageData.voluntarioCount, 
+// Rota principal para '/' e '/home' (Dashboard Completo)
+router.get(['/', '/home'], checkCookieConsent, async (req, res) => {
+    try {
+        const homePageData = await getHomePageData();
+        
+        // Se houve um erro carregando os dados, você pode querer logar ou mostrar uma mensagem específica
+        if (homePageData.errorLoadingData) {
+            req.flash('error', 'Ocorreu um erro ao carregar alguns dados da página. Tente novamente mais tarde.');
+        }
+
+        res.render('home', {
+            user: req.user,
+            isAdmin: req.isAdmin || false,
+            model1: homePageData.home,
+            model2: homePageData.adocao,
+            model3: homePageData.adocaoCount, // Será um número
+            model4: homePageData.adotante,
+            model5: homePageData.adotanteCount, // Será um número
+            model6: homePageData.adotado,
+            model7: homePageData.adotadoCount, // Será um número
+            model8: homePageData.castracao,
+            model9: homePageData.castracaoCount, // Será um número
+            model10: homePageData.procura_se,
+            model11: homePageData.procura_seCount, // Será um número
+            model12: homePageData.parceria,
+            model13: homePageData.parceriaCount, // Será um número
+            model14: homePageData.voluntario,
+            model15: homePageData.voluntarioCount, 
             model16: homePageData.coleta,
             model17: homePageData.coletaCount,
             modelEventos: homePageData.eventos,
             modelEventosCount: homePageData.eventosCount,
-             success_msg: req.flash('success'),
-             error_msg: req.flash('error') // Adicionando para consistência
-         });
-     } catch (error) {
-         // Este catch é mais para erros inesperados no próprio handler da rota.
-         console.error("homeRoutes GET /home: Erro ao carregar a página inicial:", error.message);
-         req.flash('error', 'Não foi possível carregar a página inicial.');
-         res.status(500).render('error', { error: error.message || 'Não foi possível carregar a página inicial.' });
-     }
- });
+            success_msg: req.flash('success'),
+            error_msg: req.flash('error') // Adicionando para consistência
+        });
+    } catch (error) {
+        // Este catch é mais para erros inesperados no próprio handler da rota.
+        console.error("homeRoutes GET /home: Erro ao carregar a página inicial:", error.message);
+        req.flash('error', 'Não foi possível carregar a página inicial.');
+        res.status(500).render('error', { error: error.message || 'Não foi possível carregar a página inicial.' });
+    }
+});
+
+// Rota para /dashboard (mesma página da home)
+router.get('/dashboard', checkCookieConsent, async (req, res) => {
+    try {
+        const homePageData = await getHomePageData();
+        
+        if (homePageData.errorLoadingData) {
+            req.flash('error', 'Ocorreu um erro ao carregar alguns dados da página.');
+        }
+
+        res.render('home', {
+            user: req.user,
+            isAdmin: req.isAdmin || false,
+            model1: homePageData.home,
+            model2: homePageData.adocao,
+            model3: homePageData.adocaoCount,
+            model4: homePageData.adotante,
+            model5: homePageData.adotanteCount,
+            model6: homePageData.adotado,
+            model7: homePageData.adotadoCount,
+            model8: homePageData.castracao,
+            model9: homePageData.castracaoCount,
+            model10: homePageData.procura_se,
+            model11: homePageData.procura_seCount,
+            model12: homePageData.parceria,
+            model13: homePageData.parceriaCount,
+            model14: homePageData.voluntario,
+            model15: homePageData.voluntarioCount,
+            model16: homePageData.coleta,
+            model17: homePageData.coletaCount,
+            modelEventos: homePageData.eventos,
+            modelEventosCount: homePageData.eventosCount,
+            success_msg: req.flash('success'),
+            error_msg: req.flash('error')
+        });
+    } catch (error) {
+        console.error("homeRoutes GET /dashboard: Erro ao carregar:", error.message);
+        req.flash('error', 'Não foi possível carregar o dashboard.');
+        res.status(500).render('error', { error: error.message });
+    }
+});
  
 //           res.status(500).render('error', { error: error.message || 'Não foi possível carregar a página inicial.' });
 //       }

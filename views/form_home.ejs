@@ -69,33 +69,6 @@
     </div>
 </div>
 
-<script>
-    const linkSelect = document.getElementById('link');
-    const outroLinkContainer = document.getElementById('outroLinkContainer');
-    const linkCustomizadoInput = document.getElementById('link_customizado');
-    const linkFinalInput = document.getElementById('link_final');
-
-    linkSelect.addEventListener('change', function() {
-        if (this.value === 'outro') {
-            outroLinkContainer.style.display = 'block';
-            linkCustomizadoInput.required = true;
-        } else {
-            outroLinkContainer.style.display = 'none';
-            linkCustomizadoInput.required = false;
-            linkCustomizadoInput.value = ''; // Clear custom link if another option is chosen
-        }
-    });
-
-    // Consolidate link before form submission
-    document.getElementById('form-home').addEventListener('submit', function() {
-        if (linkSelect.value === 'outro') {
-            linkFinalInput.value = linkCustomizadoInput.value;
-        } else {
-            linkFinalInput.value = linkSelect.value;
-        }
-    });
-
-    
-</script>
+<script src="/static/js/form_home.js"></script>
 
 <%-include ("_footer")-%>

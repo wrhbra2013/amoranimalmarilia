@@ -361,7 +361,7 @@
                          <div class="card-body">
                              <i class="fas fa-ticket-alt fa-3x mb-3" style="color: var(--heading-color);"></i> <!-- Ícone alterado para ticket -->
                               <div class="text-end mb-4">
-    <a href="/castracao/form" class="btn btn-primary">
+    <a href="/castracao/" class="btn btn-primary">
     <i class="fas fa-plus me-1"></i> Agendar Nova Castração
     </a>
     </div>
@@ -412,7 +412,7 @@
                                                          <% if (user) { %>
                                                             <form action="/castracao/delete/<%= castracao.id %>/<%= castracao.arquivo || 'sem_arquivo' %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento')">
                                                                 <button type="submit" class="btn btn-danger btn-sm" title="Excluir Agendamento">
-                                                                    <i class="fas fa-trash-alt"></i>
+                                                                    <i class="bi bi-trash"></i>
                                                                     <span class="visually-hidden">Excluir</span>
                                                                 </button>
                                                             </form>
@@ -541,7 +541,7 @@
                                      <div class="mt-2">
                                          <form action="/delete/parceria/<%= parceria.id %>/<%= parceria.arquivo %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta parceria?')">
                                          <button type="submit" class="btn btn-danger btn-sm" title="Excluir Parceria">
-                                             <i class="fas fa-trash-alt"></i>
+                                             <i class="bi bi-trash"></i>
                                              <span class="visually-hidden">Excluir</span>
                                          </button>
                                          </form>

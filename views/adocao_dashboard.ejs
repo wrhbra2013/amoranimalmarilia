@@ -1,29 +1,9 @@
 <%- include('partials/header') %>
 
-<!-- Garante que o CSS dos ícones seja carregado -->
+<link rel="stylesheet" href="/static/css/adocao_dashboard.css">
 <link rel="stylesheet" href="/static/css/imagem/bootstrap-icons.min.css">
 
 <div class="container mt-5">
-    <style>
-        .hover-shadow {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .hover-shadow:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
-        }
-        .dashboard-scroll-container {
-            display: flex;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            gap: 1.5rem;
-            padding: 1rem 0.5rem; /* Espaço para sombra e scroll */
-        }
-        .dashboard-card-item {
-            flex: 0 0 auto;
-            width: 280px;
-        }
-    </style>
     
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>

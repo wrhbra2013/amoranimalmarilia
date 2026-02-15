@@ -60,11 +60,11 @@ Clique em "Detalhes" para expandir e ver todas as informações do adotante.
 <td class="text-center action-buttons">
 <% if (typeof user !== 'undefined' && user && user.isAdmin) { %>
 <form action="/delete/adotante/<%= adotante._id %>" method="post" class="d-inline me-1" onsubmit="return confirm('Deseja realmente excluir este cadastro de adotante?')">
-<button type="submit" class="btn btn-danger btn-sm" title="Excluir Adotante"><i class="fas fa-trash"></i></button>
+<button type="submit" class="btn btn-danger btn-sm" title="Excluir Adotante"><i class="bi bi-trash"></i></button>
 </form>
 <% } %>
 <button type="button" class="toggle-details-btn btn btn-info btn-sm" data-target-details-id="details-<%= adotante._id %>" title="Ver Detalhes">
-    <i class="fas fa-eye"></i> Detalhes
+    <i class="bi bi-eye"></i> Detalhes
 </button>
 </td>
 

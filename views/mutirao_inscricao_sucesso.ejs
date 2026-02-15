@@ -1,0 +1,116 @@
+<%- include("_header") -%>
+
+<main class="container mt-4">
+    <div class="text-center mb-4">
+        <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+        <h1 class="mt-3">Castração Registrada!</h1>
+        <p class="lead">Sua inscrição foi realizada com sucesso.</p>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-ticket-perforated me-2"></i>Comprovante de Inscrição</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Ticket:</strong> <span class="text-danger fw-bold" style="font-size: 1.5rem;"><%= inscricao.ticket %></span></p>
+                    <p><strong>Responsável:</strong> <%= inscricao.nome_responsavel %></p>
+                    <p><strong>Contato:</strong> <%= inscricao.contato %></p>
+                    <% if (inscricao.localidades) { %>
+                        <p><strong>Localidade:</strong> <%= inscricao.localidades %></p>
+                    <% } %>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Data do Mutirão:</strong> <%= inscricao.data_evento ? new Date(inscricao.data_evento).toLocaleDateString('pt-BR') : 'A definir' %></p>
+                    <p><strong>Clínica:</strong> <%= inscricao.clinica %></p>
+                    <% if (inscricao.endereco) { %>
+                        <p><strong>Endereço:</strong> <%= inscricao.endereco %></p>
+                    <% } %>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <h5>Pets Cadastrados (<%= pets.length %>)</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nome</th>
+                            <th>Espécie</th>
+                            <th>Sexo</th>
+                            <th>Idade</th>
+                            <th>Peso</th>
+                            <th>Vacinado</th>
+                            <th>Usa Medicamento?</th>
+                            <th>Qual Medicamento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% pets.forEach((pet, index) => { %>
+                            <tr>
+                                <td><%= index + 1 %></td>
+                                <td><strong><%= pet.nome %></strong></td>
+                                <td><%= pet.especie === 'gato' ? 'Gato' : 'Cachorro' %></td>
+                                <td><%= pet.sexo === 'macho' ? 'Macho' : 'Fêmea' %></td>
+                                <td><%= pet.idade || '-' %></td>
+                                <td><%= pet.peso || '-' %></td>
+                                <td><%= pet.vacinado ? 'Sim' : 'Não' %></td>
+                                <td><%= pet.medicamento ? 'Sim' : 'Não' %></td>
+                                <td><%= pet.medicamento || '-' %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer text-center">
+            <a href="/castracao/mutirao-inscricao/comprovante/<%= inscricao.id %>" class="btn btn-primary btn-lg" target="_blank">
+                <i class="bi bi-file-earmark-pdf me-2"></i>Guardar Comprovante
+            </a>
+            <a href="/castracao/calendario-mutirao" class="btn btn-outline-secondary btn-lg ms-2">
+                <i class="bi bi-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>Importante:</strong> Guarde o comprovante (PDF) e apresente-no no dia do mutirão. Você também pode tirar um print desta tela.
+    </div>
+</main>
+
+<!-- Modal de Sucesso -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-check-circle-fill me-2"></i>Castração Registrada</h5>
+                
+            </div>
+            <div class="modal-body text-center">
+                <p class="lead">Sua inscrição foi realizada com sucesso!</p>
+                <p><strong>Ticket:</strong> <span class="text-danger fw-bold" style="font-size: 1.5rem;"><%= inscricao.ticket %></span></p>
+                <p class="text-muted"><%= pets.length %> pet(s) cadastrado(s)</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <a href="/castracao/mutirao-inscricao/comprovante/<%= inscricao.id %>" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-file-earmark-pdf me-2"></i>Guardar Comprovante
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar o modal automaticamente ao carregar a página
+    var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+    successModal.show();
+});
+</script>
+
+<%- include("_footer") -%>

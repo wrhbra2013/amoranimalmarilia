@@ -51,10 +51,10 @@
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-2">
                                                 <a href="/coleta/form/<%= coleta.id %>" class="btn btn-primary btn-sm" title="Editar">
-                                                    <i class="fas fa-edit"></i>
+                                                    <i class="bi bi-pencil"></i>
                                                 </a>
                                                 <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('<%= coleta.id %>')" title="Excluir">
-                                                    <i class="fas fa-trash">Delete</i>
+                                                    <i class="bi bi-trash">Delete</i>
                                                 </button>
                                             </div>
                                         </td>
@@ -77,17 +77,10 @@
                     </div>
                
             
-    </div>
+</div>
 
-    <script>
-        function confirmDelete(id) {
-            if (confirm('Tem certeza de que deseja excluir esta coleta? Esta ação não poderá ser desfeita.')) {
-                window.location.href = `/delete/coleta/${id}`;
-            }
-        }
-    </script>
+<script src="/static/js/coleta.js"></script>
 
-    
 
- </main>
+</main>
  <%- include("_footer")-%>

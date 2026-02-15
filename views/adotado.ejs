@@ -31,12 +31,12 @@
                 <% if (user && user.isAdmin) { %>
                   <div class="mt-auto d-flex justify-content-end pt-2">
                     <a href="/edit/adotado/<%= adotado.id %>" class="btn btn-outline-secondary btn-sm me-2" title="Editar História">
-                      <i class="fas fa-edit"></i>
+                      <i class="bi bi-pencil"></i>
                     </a>
                    
                     <form action="/adotado/delete/<%= adotado.id %>/<%= adotado.arquivo %>" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir esta história de adoção?');" class="d-inline">
                       <button type="submit" class="btn btn-outline-danger btn-sm" title="Excluir História">
-                        <i class="fas fa-trash-alt"></i>
+                        <i class="bi bi-trash"></i>
                       </button>
                     </form>
                   </div>
@@ -76,15 +76,6 @@
   </div>
 </div>
 
-<style>
-  .adotado-card-img {
-    height: 250px; /* Adjust as needed */
-    object-fit: cover;
-  }
-  .adotado-historia-texto {
-    font-size: 0.95rem;
-    line-height: 1.5;
-  }
-</style>
+<link rel="stylesheet" href="/static/css/adotado.css">
 
 <%- include("_footer") -%>

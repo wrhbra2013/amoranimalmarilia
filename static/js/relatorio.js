@@ -1,15 +1,32 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const tabelaSelector = document.getElementById('tabela'); // Usando o ID existente 'tabela'
+    const tabelaSelector = document.getElementById('tabela');
     if (tabelaSelector) {
         tabelaSelector.addEventListener('change', function() {
             const selectedTable = this.value;
             if (selectedTable) {
-                // Redireciona para a URL do relatório da tabela selecionada
                 window.location.href = '/relatorio/' + selectedTable;
             } else {
-                // Se "-- Escolha uma tabela --" for selecionado, pode redirecionar para uma página base
-                window.location.href = '/relatorio'; // Ou limpar a visualização atual
+                window.location.href = '/relatorio';
             }
         });
     }
+    
+    const reportOptions = document.querySelectorAll('.report-option');
+    reportOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 300);
+        });
+    });
+    
+    const tableRows = document.querySelectorAll('.table-modern tbody tr');
+    tableRows.forEach(row => {
+        row.setAttribute('tabindex', '0');
+        row.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.click();
+            }
+        });
+    });
 });

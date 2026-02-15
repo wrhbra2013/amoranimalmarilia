@@ -9,6 +9,29 @@
   const { pool } = require('../database/database');
   
 const router = express.Router();
+
+// Função para gerar ticket sequencial para castração
+async function generateCastracaoTicket(client, tipo = 'C') {
+    const year = new Date().getFullYear();
+    const prefix = `${tipo}${year}`;
+    
+    const result = await client.query(`
+        SELECT ticket FROM castracao 
+        WHERE ticket LIKE $1 
+        ORDER BY ticket DESC LIMIT 1
+    `, [prefix + '%']);
+    
+    let nextNumber = 1;
+    if (result.rows.length > 0) {
+        const lastTicket = result.rows[0].ticket;
+        const lastNumber = parseInt(lastTicket.replace(prefix, ''), 10);
+        if (!isNaN(lastNumber)) {
+            nextNumber = lastNumber + 1;
+        }
+    }
+    
+    return `${prefix}${String(nextNumber).padStart(4, '0')}`;
+}
    
 // GET /castracao - Exibe o dashboard de castração
 router.get('/', async (req, res) => {
@@ -112,7 +135,7 @@ router.post('/calendario', isAdmin, async (req, res) => {
 router.get('/calendario-mutirao', async (req, res) => {
     try {
         const calendario = await executeQuery('SELECT * FROM calendario_mutirao ORDER BY data_evento;');
-        const clinicas = await executeQuery("SELECT nome FROM clinicas ORDER BY nome;");
+        const clinicas = await executeQuery("SELECT id, nome, endereco FROM clinicas ORDER BY nome;");
         
         // Calcular vagas disponíveis para cada mutirão
         for (let mutirao of calendario) {
@@ -139,13 +162,13 @@ router.get('/calendario-mutirao', async (req, res) => {
 // POST /castracao/calendario-mutirao - cria nova data de mutirão (admin)
 router.post('/calendario-mutirao', isAdmin, async (req, res) => {
     try {
-        const { data_evento, clinica, vagas } = req.body;
+        const { data_evento, clinica, vagas, endereco } = req.body;
         if (!data_evento || !clinica) {
             req.flash('error', 'Data e clínica são obrigatórias.');
             return res.redirect('/castracao/calendario-mutirao');
         }
-        const insertSql = `INSERT INTO calendario_mutirao (data_evento, clinica, vagas, criado_por) VALUES ($1,$2,$3,$4)`;
-        await pool.query(insertSql, [data_evento, clinica, parseInt(vagas || 0, 10), req.user ? req.user.usuario || req.user.nome : null]);
+        const insertSql = `INSERT INTO calendario_mutirao (data_evento, clinica, vagas, endereco, criado_por) VALUES ($1,$2,$3,$4,$5)`;
+        await pool.query(insertSql, [data_evento, clinica, parseInt(vagas || 0, 10), endereco || null, req.user ? req.user.usuario || req.user.nome : null]);
         req.flash('success', 'Data de mutirão criada com sucesso.');
         res.redirect('/castracao/calendario-mutirao');
     } catch (error) {
@@ -204,6 +227,25 @@ router.get('/mutirao-inscricao/:id', async (req, res) => {
     }
 });
 
+// Função para gerar ticket sequencial (apenas números com 4 dígitos)
+async function generateSequentialTicket(client) {
+    const result = await client.query(`
+        SELECT ticket FROM mutirao_inscricao 
+        ORDER BY ticket DESC LIMIT 1
+    `);
+    
+    let nextNumber = 1;
+    if (result.rows.length > 0) {
+        const lastTicket = result.rows[0].ticket;
+        const lastNumber = parseInt(lastTicket, 10);
+        if (!isNaN(lastNumber)) {
+            nextNumber = lastNumber + 1;
+        }
+    }
+    
+    return String(nextNumber).padStart(4, '0');
+}
+
 // POST /castracao/mutirao-inscricao - Processa inscrição
 router.post('/mutirao-inscricao', async (req, res) => {
     const client = await pool.connect();
@@ -214,7 +256,7 @@ router.post('/mutirao-inscricao', async (req, res) => {
         const { 
             calendario_mutirao_id, 
             nome_responsavel, 
-            localidade, 
+            localidades, 
             contato,
             pet_nome,
             pet_especie,
@@ -226,14 +268,33 @@ router.post('/mutirao-inscricao', async (req, res) => {
             pet_medicamento
         } = req.body;
         
-        if (!calendario_mutirao_id || !nome_responsavel || !contato) {
-            throw new Error('Dados obrigatórios não preenchidos.');
+        // Debug: mostrar o que está chegando
+        console.log('[DEBUG] POST dados recebidos:', {
+            calendario_mutirao_id,
+            nome_responsavel,
+            contato,
+            pet_nome
+        });
+        
+        // Validar campos obrigatórios (limpando espaços)
+        const contatoLimpo = contato ? String(contato).trim() : '';
+        if (!calendario_mutirao_id || !nome_responsavel || !contatoLimpo) {
+            throw new Error('Dados obrigatórios não preenchidos. Contato: ' + contatoLimpo);
         }
         
-        // Verificar se há pets cadastrados
-        const nomesPets = Array.isArray(pet_nome) ? pet_nome.filter(nome => nome && nome.trim() !== '') : [pet_nome];
+        // Verificar se há pets cadastrados - trata tanto array quanto valor único
+        let nomesPets = [];
+        if (pet_nome) {
+            if (Array.isArray(pet_nome)) {
+                nomesPets = pet_nome.filter(nome => nome && String(nome).trim() !== '');
+            } else if (String(pet_nome).trim() !== '') {
+                nomesPets = [pet_nome];
+            }
+        }
         
-        if (!pet_nome || !nomesPets || nomesPets.length === 0) {
+        console.log('[DEBUG] pets validados:', nomesPets);
+        
+        if (!pet_nome || nomesPets.length === 0) {
             throw new Error('É necessário cadastrar pelo menos um pet para realizar a inscrição.');
         }
         
@@ -257,25 +318,51 @@ router.post('/mutirao-inscricao', async (req, res) => {
             }
         }
         
-        // Inserir inscrição do responsável
+        // Gerar ticket sequencial
+        const ticket = await generateSequentialTicket(client);
+        
+        // Inserir inscrição do responsável com ticket
         const inscricaoResult = await client.query(`
-            INSERT INTO mutirao_inscricao (calendario_mutirao_id, nome_responsavel, localidade, contato) 
-            VALUES ($1, $2, $3, $4) RETURNING id
-        `, [calendario_mutirao_id, nome_responsavel, localidade, contato]);
+            INSERT INTO mutirao_inscricao (calendario_mutirao_id, ticket, nome_responsavel, localidades, contato) 
+            VALUES ($1, $2, $3, $4, $5) RETURNING id
+        `, [calendario_mutirao_id, ticket, nome_responsavel, localidades, contato]);
         
         const inscricaoId = inscricaoResult.rows[0].id;
         
-        // Inserir pets - usar apenas pets com nomes válidos
-        const petsValidos = nomesPets;
-        const totalPetsInserir = petsValidos.length;
+        // Normalizar campos de pets para sempre serem arrays
+        const normalizeToArray = (value) => {
+            if (value === undefined || value === null) return [];
+            return Array.isArray(value) ? value : [value];
+        };
         
-        for (let i = 0; i < totalPetsInserir; i++) {
-            const petNomeValido = petsValidos[i];
-            const arrayIndex = Array.isArray(pet_nome) ? pet_nome.indexOf(petNomeValido) : 0;
-            
-            const temMedicamento = Array.isArray(pet_tem_medicamento) ? pet_tem_medicamento[arrayIndex] : pet_tem_medicamento;
-            const medicamento = temMedicamento === 'sim' ? 
-                (Array.isArray(pet_medicamento) ? pet_medicamento[arrayIndex] : pet_medicamento) : null;
+        const especieArray = normalizeToArray(pet_especie);
+        const sexoArray = normalizeToArray(pet_sexo);
+        const idadeArray = normalizeToArray(pet_idade);
+        const pesoArray = normalizeToArray(pet_peso);
+        const vacinadoArray = normalizeToArray(pet_vacinado);
+        const temMedicamentoArray = normalizeToArray(pet_tem_medicamento);
+        const medicamentoArray = normalizeToArray(pet_medicamento);
+        
+        // Criar arrays sincronizados apenas com pets válidos
+        const petsSincronizados = [];
+        for (let i = 0; i < nomesPets.length; i++) {
+            petsSincronizados.push({
+                nome: nomesPets[i],
+                especie: especieArray[i] || '',
+                sexo: sexoArray[i] || '',
+                idade: idadeArray[i] || '',
+                peso: pesoArray[i] || '',
+                vacinado: vacinadoArray[i] === 'true',
+                temMedicamento: temMedicamentoArray[i] === 'sim',
+                medicamento: temMedicamentoArray[i] === 'sim' ? (medicamentoArray[i] || '') : ''
+            });
+        }
+        
+        // Inserir pets
+        for (const pet of petsSincronizados) {
+            if (!pet.especie || !pet.sexo) {
+                throw new Error('Pet ' + pet.nome + ' está com espécie ou sexo vazio.');
+            }
             
             await client.query(`
                 INSERT INTO mutirao_pet (
@@ -284,20 +371,20 @@ router.post('/mutirao-inscricao', async (req, res) => {
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             `, [
                 inscricaoId,
-                petNomeValido,
-                Array.isArray(pet_especie) ? pet_especie[arrayIndex] : pet_especie,
-                Array.isArray(pet_sexo) ? pet_sexo[arrayIndex] : pet_sexo,
-                Array.isArray(pet_idade) ? pet_idade[arrayIndex] : pet_idade,
-                Array.isArray(pet_peso) ? pet_peso[arrayIndex] : pet_peso,
-                Array.isArray(pet_vacinado) ? pet_vacinado[arrayIndex] === 'true' : pet_vacinado === 'true',
-                medicamento
+                pet.nome,
+                pet.especie,
+                pet.sexo,
+                pet.idade,
+                pet.peso,
+                pet.vacinado,
+                pet.medicamento || null
             ]);
         }
         
         await client.query('COMMIT');
         
-        req.flash('success', `Inscrição realizada com sucesso! ${totalPetsInserir} pet(s) inscrito(s).`);
-        res.redirect('/castracao/calendario-mutirao');
+        // Redirecionar para página de sucesso com ticket
+        res.redirect(`/castracao/mutirao-inscricao/sucesso/${inscricaoId}`);
         
     } catch (error) {
         await client.query('ROLLBACK');
@@ -306,6 +393,321 @@ router.post('/mutirao-inscricao', async (req, res) => {
         res.redirect(`/castracao/mutirao-inscricao/${req.body.calendario_mutirao_id}`);
     } finally {
         client.release();
+    }
+});
+
+// GET /castracao/mutirao-inscricao/sucesso/:id - Página de sucesso com popup
+router.get('/mutirao-inscricao/sucesso/:id', async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        const inscricao = await executeQuery(`
+            SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco 
+            FROM mutirao_inscricao mi
+            JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
+            WHERE mi.id = $1
+        `, [id]);
+        
+        if (!inscricao || inscricao.length === 0) {
+            req.flash('error', 'Inscrição não encontrada.');
+            return res.redirect('/castracao/calendario-mutirao');
+        }
+        
+        const pets = await executeQuery(`
+            SELECT * FROM mutirao_pet WHERE mutirao_inscricao_id = $1
+        `, [id]);
+        
+        res.render('mutirao_inscricao_sucesso', {
+            inscricao: inscricao[0],
+            pets: pets,
+            success_msg: 'Castração Registrada com sucesso!'
+        });
+        
+    } catch (error) {
+        console.error('[castracaoRoutes GET /mutirao-inscricao/sucesso] Erro:', error);
+        req.flash('error', 'Erro ao carregar dados da inscrição.');
+        res.redirect('/castracao/calendario-mutirao');
+    }
+});
+
+// GET /castracao/mutirao-inscricao/comprovante/:id - Gera PDF do comprovante
+router.get('/mutirao-inscricao/comprovante/:id', async (req, res) => {
+    const { id } = req.params;
+    const PdfPrinter = require('pdfmake');
+    const path = require('path');
+    
+    try {
+        const inscricaoResult = await executeQuery(`
+            SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco 
+            FROM mutirao_inscricao mi
+            JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
+            WHERE mi.id = $1
+        `, [id]);
+        
+        if (!inscricaoResult || inscricaoResult.length === 0) {
+            req.flash('error', 'Inscrição não encontrada.');
+            return res.redirect('/castracao/calendario-mutirao');
+        }
+        
+        const inscricao = inscricaoResult[0];
+        const pets = await executeQuery(`
+            SELECT * FROM mutirao_pet WHERE mutirao_inscricao_id = $1
+        `, [id]);
+        
+        const fontDescriptors = {
+            Roboto: {
+                normal: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Regular.ttf'),
+                bold: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Medium.ttf'),
+                italics: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Italic.ttf'),
+                bolditalics: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-MediumItalic.ttf')
+            }
+        };
+        
+        const printer = new PdfPrinter(fontDescriptors);
+        
+        const content = [];
+        
+        // Cabeçalho
+        content.push({
+            text: 'COMPROVANTE DE INSCRIÇÃO - MUTIRÃO DE CASTRAÇÃO',
+            style: 'header',
+            alignment: 'center',
+            margin: [0, 0, 0, 10]
+        });
+        
+        // Ticket em destaque
+        content.push({
+            text: `TICKET: ${inscricao.ticket}`,
+            style: 'ticket',
+            alignment: 'center',
+            margin: [0, 10, 0, 20]
+        });
+        
+        // Dados do Responsável
+        content.push({
+            text: 'DADOS DO RESPONSÁVEL',
+            style: 'subHeader',
+            margin: [0, 0, 0, 5]
+        });
+        
+        content.push({
+            table: {
+                widths: ['*', '*'],
+                body: [
+                    [{ text: 'Nome:', style: 'label' }, { text: inscricao.nome_responsavel, style: 'value' }],
+                    [{ text: 'Localidade:', style: 'label' }, { text: inscricao.localidades || 'Não informada', style: 'value' }],
+                    [{ text: 'Contato:', style: 'label' }, { text: inscricao.contato, style: 'value' }]
+                ]
+            },
+            layout: 'lightHorizontalPadding',
+            margin: [0, 0, 0, 15]
+        });
+        
+        // Dados do Mutirão
+        content.push({
+            text: 'DADOS DO MUTIRÃO',
+            style: 'subHeader',
+            margin: [0, 0, 0, 5]
+        });
+        
+        content.push({
+            table: {
+                widths: ['*', '*'],
+                body: [
+                    [{ text: 'Data:', style: 'label' }, { text: inscricao.data_evento ? new Date(inscricao.data_evento).toLocaleDateString('pt-BR') : 'Não definida', style: 'value' }],
+                    [{ text: 'Clínica:', style: 'label' }, { text: inscricao.clinica, style: 'value' }],
+                    [{ text: 'Endereço:', style: 'label' }, { text: inscricao.endereco || 'Não informado', style: 'value' }]
+                ]
+            },
+            layout: 'lightHorizontalPadding',
+            margin: [0, 0, 0, 15]
+        });
+        
+        // Pets Cadastrados
+        content.push({
+            text: 'PETS CADASTRADOS',
+            style: 'subHeader',
+            margin: [0, 0, 0, 5]
+        });
+        
+        if (pets && pets.length > 0) {
+            const petsTableBody = [
+                [{ text: '#', style: 'tableHeader' }, { text: 'Nome', style: 'tableHeader' }, { text: 'Espécie', style: 'tableHeader' }, { text: 'Sexo', style: 'tableHeader' }, { text: 'Idade', style: 'tableHeader' }, { text: 'Peso', style: 'tableHeader' }, { text: 'Vacinado', style: 'tableHeader' }, { text: 'Usa Med?', style: 'tableHeader' }, { text: 'Medicamento', style: 'tableHeader' }]
+            ];
+            
+            pets.forEach((pet, index) => {
+                petsTableBody.push([
+                    { text: String(index + 1), style: 'tableCell' },
+                    { text: pet.nome, style: 'tableCell' },
+                    { text: pet.especie === 'gato' ? 'Gato' : 'Cachorro', style: 'tableCell' },
+                    { text: pet.sexo === 'macho' ? 'Macho' : 'Fêmea', style: 'tableCell' },
+                    { text: pet.idade || '-', style: 'tableCell' },
+                    { text: pet.peso || '-', style: 'tableCell' },
+                    { text: pet.vacinado ? 'Sim' : 'Não', style: 'tableCell' },
+                    { text: pet.medicamento ? 'Sim' : 'Não', style: 'tableCell' },
+                    { text: pet.medicamento || '-', style: 'tableCell' }
+                ]);
+            });
+            
+            content.push({
+                table: {
+                    widths: [25, '*', '*', '*', '*', '*', '*', '*', '*'],
+                    body: petsTableBody
+                },
+                layout: {
+                    hLineWidth: () => 0.5,
+                    vLineWidth: () => 0.5,
+                    hLineColor: () => '#cccccc',
+                    vLineColor: () => '#cccccc'
+                },
+                margin: [0, 0, 0, 20]
+            });
+        }
+        
+        // Rodapé
+        content.push({
+            text: 'Guarde este comprovante para apresentação no dia do mutirão.',
+            style: 'footer',
+            alignment: 'center',
+            margin: [0, 20, 0, 0]
+        });
+        
+        content.push({
+            text: `Emitido em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`,
+            style: 'footerSmall',
+            alignment: 'center'
+        });
+        
+        const logoPath = path.join(__dirname, '..', 'static', 'css', 'imagem', 'ong.jpg');
+        const emitDate = new Date().toLocaleDateString('pt-BR');
+        const emitTime = new Date().toLocaleTimeString('pt-BR');
+        
+        const docDefinition = {
+            content: content,
+            pageSize: 'A4',
+            pageOrientation: 'portrait',
+            pageMargins: [40, 80, 40, 50],
+            header: {
+                margin: [20, 10, 20, 0],
+                table: {
+                    widths: [70, '*', 140],
+                    body: [
+                        [{
+                            image: logoPath,
+                            width: 60,
+                            alignment: 'center',
+                            margin: [0, 2, 0, 2]
+                        }, {
+                            stack: [{
+                                text: 'ONG Amor Animal Marilia',
+                                style: 'headerTitle',
+                                alignment: 'center'
+                            }, {
+                                text: 'Comprovante de Inscrição - Mutirão de Castração',
+                                style: 'headerSubtitle',
+                                alignment: 'center'
+                            }, {
+                                text: `Emitido em: ${emitDate} às ${emitTime}`,
+                                style: 'headerDate',
+                                alignment: 'center'
+                            }],
+                            margin: [0, 5, 0, 0]
+                        }, {
+                            text: 'Rua Alcides Caliman, 701\nJd. Bandeirantes\nMarília - SP\nhttps://amoranimal.ong.br',
+                            style: 'addressHeader',
+                            alignment: 'right',
+                            margin: [0, 5, 5, 0]
+                        }]
+                    ]
+                },
+                layout: {
+                    hLineWidth: function() { return 0.5; },
+                    vLineWidth: function() { return 0.5; },
+                    hLineColor: function() { return '#cccccc'; },
+                    vLineColor: function() { return '#cccccc'; }
+                }
+            },
+            styles: {
+                header: {
+                    fontSize: 16,
+                    bold: true,
+                    color: '#333333'
+                },
+                ticket: {
+                    fontSize: 24,
+                    bold: true,
+                    color: '#cc0000',
+                    background: '#f5f5f5'
+                },
+                subHeader: {
+                    fontSize: 12,
+                    bold: true,
+                    color: '#0066CC',
+                    margin: [0, 10, 0, 5]
+                },
+                label: {
+                    fontSize: 10,
+                    bold: true,
+                    color: '#666666'
+                },
+                value: {
+                    fontSize: 10,
+                    color: '#333333'
+                },
+                tableHeader: {
+                    fontSize: 9,
+                    bold: true,
+                    color: '#ffffff',
+                    fillColor: '#0066CC'
+                },
+                tableCell: {
+                    fontSize: 9,
+                    color: '#333333'
+                },
+                footer: {
+                    fontSize: 10,
+                    italics: true,
+                    color: '#666666'
+                },
+                footerSmall: {
+                    fontSize: 8,
+                    color: '#999999'
+                },
+                addressHeader: {
+                    fontSize: 8,
+                    color: '#555555'
+                },
+                headerTitle: {
+                    fontSize: 12,
+                    bold: true,
+                    color: '#333333',
+                    margin: [0, 0, 0, 2]
+                },
+                headerSubtitle: {
+                    fontSize: 10,
+                    bold: true,
+                    color: '#333333',
+                    margin: [0, 0, 0, 2]
+                },
+                headerDate: {
+                    fontSize: 8,
+                    color: '#555555'
+                }
+            }
+        };
+        
+        const pdfDoc = printer.createPdfKitDocument(docDefinition);
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=comprovante_mutirao_${inscricao.ticket}.pdf`);
+        
+        pdfDoc.pipe(res);
+        pdfDoc.end();
+        
+    } catch (error) {
+        console.error('[castracaoRoutes GET /mutirao-inscricao/comprovante] Erro:', error);
+        req.flash('error', 'Erro ao gerar comprovante.');
+        res.redirect('/castracao/calendario-mutirao');
     }
 });
 
@@ -373,7 +775,7 @@ router.get('/lista', async (req, res) => {
   router.get('/form', async (req, res) => {
       try {
           // Busca a lista de clínicas do banco de dados para popular o dropdown no formulário.
-          const clinicas = await executeQuery("SELECT nome FROM clinicas ORDER BY nome;");
+        const clinicas = await executeQuery("SELECT id, nome, endereco FROM clinicas ORDER BY nome;");
           const formData = req.flash('formData')[0] || {};
 
           // Se uma nova clínica foi recém-criada, seu nome virá na query string.
@@ -399,6 +801,7 @@ router.get('/lista', async (req, res) => {
   
   // POST /castracao/form - Processa o formulário de novo registro de castração (suporta múltiplos pets e formulário com arquivo)
   router.post('/form', uploadCastracao.single('arquivo'), async (req, res) => {
+      const client = await pool.connect();
       const { 
           nome, contato, whatsapp, clinica, agenda, 
           tipo_castracao,
@@ -414,8 +817,9 @@ router.get('/lista', async (req, res) => {
           try {
               console.log(`[castracaoRoutes POST /form] Arquivo de castração salvo como: ${filename}`);
               const clinicaFinal = req.body.clinica;
-              const ticket = req.body.ticket || Math.floor(Math.random() * 10000);
               const tipo = tipo_castracao || 'baixo_custo';
+              const tipoPrefixo = tipo === 'mutirao' ? 'M' : 'C';
+              const ticket = req.body.ticket || await generateCastracaoTicket(client, tipoPrefixo);
 
               const castracaoData = {
                   ticket: ticket,
@@ -465,6 +869,8 @@ router.get('/lista', async (req, res) => {
               req.flash('error', errorMessage);
               req.flash('formData', req.body);
               res.redirect('/castracao/form');
+          } finally {
+              client.release();
           }
       } else {
           // Novo comportamento: múltiplos pets sem arquivo
@@ -477,14 +883,16 @@ router.get('/lista', async (req, res) => {
 
           try {
               const tipo = tipo_castracao || 'baixo_custo';
-              const ticketBase = Math.floor(Math.random() * 10000);
+              const tipoPrefixo = tipo === 'mutirao' ? 'M' : 'C';
+              const ticketBase = await generateCastracaoTicket(client, tipoPrefixo);
+              const baseNumber = parseInt(ticketBase.replace(tipoPrefixo, ''), 10);
               
               for (let i = 0; i < nomesPets.length; i++) {
                   const petNomeValido = nomesPets[i];
                   const arrayIndex = Array.isArray(pet_nome) ? pet_nome.indexOf(petNomeValido) : 0;
                   
                   const castracaoData = {
-                      ticket: ticketBase + i,
+                      ticket: `${tipoPrefixo}${String(baseNumber + i).padStart(4, '0')}`,
                       nome: nome,
                       contato: contato,
                       whatsapp: whatsapp,
@@ -526,6 +934,8 @@ router.get('/lista', async (req, res) => {
               req.flash('error', errorMessage);
               req.flash('formData', req.body);
               res.redirect('/castracao/baixo-custo');
+          } finally {
+              client.release();
           }
       }
   });

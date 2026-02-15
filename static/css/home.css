@@ -1,0 +1,61 @@
+.evt-cards-grid {
+    max-width: 100%;
+}
+.evt-cards-grid .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -15px;
+}
+.evt-cards-grid .row > div {
+    padding: 0 15px;
+    margin-bottom: 20px;
+}
+.evt-card-link {
+    text-decoration: none;
+    display: block;
+}
+.evt-card {
+    background: transparent;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+.evt-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+}
+.evt-card-img-wrapper {
+    position: relative;
+    width: 70%;
+    height: 50%;
+    overflow: hidden;
+}
+.evt-card-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+.evt-card:hover .evt-card-img-wrapper img {
+    transform: scale(1.15);
+}
+.evt-card-body {
+    padding: 15px;
+    color: var(--text-color, #333);
+}
+.evt-card-title {
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+.evt-card-date {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+@media (max-width: 576px) {
+    .evt-card-img-wrapper { height: 280px; }
+}
+
+.table-responsive { overflow-x: auto; }
