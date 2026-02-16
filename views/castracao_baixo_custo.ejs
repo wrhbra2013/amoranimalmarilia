@@ -3,7 +3,7 @@
 <main class="container mt-4 mb-5">
     <section class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-            <h1 class="h4 mb-0"><i class="fas fa-cut me-2"></i>Castração de Baixo Custo</h1>
+            <h1 class="h4 mb-0">Castração de Baixo Custo</h1>
         </div>
         <fieldset class="card-body">
             <legend class="card-title h5">IMPORTANTE</legend>
@@ -27,6 +27,9 @@
     <section class="card shadow-sm mt-3">
         <div class="card-body">
             <form action="/castracao/form" method="POST" id="formInscricao">
+                <input type="hidden" name="tipo_castracao" value="baixo_custo">
+                
+                <!-- Dados do Responsável -->
                 <div class="row mb-3">
                     <div class="col-12">
                         <h4>Dados do Responsável</h4>
@@ -52,7 +55,15 @@
                     </div>
                 </div>
 
-                <div class="row mb-3">
+                <div class="row g-2 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Localidade (Bairro)</label>
+                        <input type="text" name="locality" id="locality" class="form-control" placeholder="Bairro">
+                    </div>
+                </div>
+
+                <!-- Dados dos Pets -->
+                <div class="row mb-3 mt-4">
                     <div class="col-12">
                         <h4>Dados dos Pets</h4>
                         <p class="text-muted">Cada pet cadastrado será agendado para castração.</p>
@@ -93,27 +104,7 @@
                             <label class="form-label">Idade (anos)</label>
                             <input type="number" name="pet_idade" id="petIdade" class="form-control" placeholder="Ex: 2" min="0">
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Localidade</label>
-                            <input type="text" name="pet_localidade" id="petLocalidade" class="form-control" placeholder="Bairro">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="petsDataContainer"></div>
-
-                <div class="row mb-3">
-                    <div class="col-12">
-                        <h5>Pets Cadastrados (<span id="petCount">0</span>)</h5>
-                        <div id="petsTableContainer" class="table-responsive border rounded" style="max-height: 300px; overflow-y: auto;">
-                            <div id="petsSummary" class="p-3 text-muted text-center">
-                                <i class="fas fa-paw fa-2x mb-2"></i>
-                                <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+                        <!-- Clínica e Dia Preferencial -->
                 <div class="row g-2 mb-4">
                     <div class="col-md-6">
                         <label for="clinica" class="form-label fw-bold">Clínica *</label>
@@ -140,23 +131,46 @@
                             <option value="sexta-feira">Sexta-feira</option>
                         </select>
                     </div>
+                        
+                    </div>
                 </div>
 
+                
+                </div>
+
+                <!-- Pets Cadastrados (Tabela) -->
                 <div class="row mb-3">
+                    <div class="col-12">
+                        <h5>Pets Cadastrados (<span id="petCount">0</span>)</h5>
+                        <div id="petsTableContainer" class="table-responsive border rounded" style="max-height: 300px; overflow-y: auto;">
+                            <div id="petsSummary" class="p-3 text-muted text-center">
+                                <i class="bi bi-paw" style="font-size: 2rem;"></i>
+                                <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="petsDataContainer"></div>
+
+                <!-- Botões -->
+                <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-primary w-100" id="btnAddPet">
+                                <i class="bi bi-plus-circle"></i> Adicionar
+                            </button>
+                        </div>
+                <div class="row mb-3 mt-4 pt-3 border-top">
                     <div class="col-md-6">
-                        <button type="button" class="btn btn-outline-primary" id="btnAddPet">
-                            <i class="fas fa-plus"></i> Adicionar Pet
-                        </button>
-                        <button type="button" class="btn btn-outline-danger ms-2" id="btnClearForm" style="display: none;">
-                            <i class="fas fa-times"></i> Limpar Formulário
+                        <button type="button" class="btn btn-outline-danger" id="btnClearForm" style="display: none;">
+                            <i class="bi bi-x-circle"></i> Limpar Formulário
                         </button>
                     </div>
                     <div class="col-md-6 text-end">
                         <a href="/castracao" class="btn btn-outline-secondary me-2">
-                            <i class="fas fa-times"></i> Cancelar
+                            <i class="bi bi-x-lg"></i> Cancelar
                         </a>
                         <button type="submit" class="btn btn-primary" id="btnSubmit">
-                            <i class="fas fa-check"></i> Solicitar Agendamento
+                            <i class="bi bi-check-lg"></i> Solicitar Agendamento
                         </button>
                     </div>
                 </div>
@@ -166,7 +180,7 @@
 
     <div class="text-center mt-4 mb-3">
         <a href="/castracao/lista" class="btn btn-outline-secondary">
-            <i class="fas fa-list"></i> Ver Lista de Agendamentos
+            <i class="bi bi-card-list"></i> Ver Lista de Agendamentos
         </a>
     </div>
 </main>

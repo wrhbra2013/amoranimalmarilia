@@ -52,27 +52,25 @@
                                   <i class="fas fa-calendar-alt me-1"></i>Total de <%= totalEventos %> evento<%= totalEventos !== 1 ? 's' : '' %> cadastrado<%= totalEventos !== 1 ? 's' : '' %>
                               </span>
                           </div>
-                          <div class="row g-4">
+                          <div class="evt-cards-scroll">
                               <% eventsList.slice(0, 6).forEach(function(event, i) {
                                   const imgSrc = event.arquivo ? ('/uploads/eventos/' + event.arquivo) : ('/uploads/home/' + (event.arquivo || 'placeholder-event.jpg'));
                                   const linkUrl = event.arquivo ? `/eventos/${event.id}` : `/campanha/${event.id}`;
                                   const eventDate = event.data_evento ? new Date(event.data_evento).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
                               %>
-                                  <div class="col-12 col-sm-6 col-lg-4">
-                                      <a href="<%= linkUrl %>" class="evt-card-link">
-                                          <div class="evt-card">
-                                              <div class="evt-card-img-wrapper">
-                                                  <img src="<%= imgSrc %>" alt="<%= event.titulo %>">
-                                              </div>
-                                              <div class="evt-card-body">
-                                                  <h5 class="evt-card-title"><%= event.titulo %></h5>
-                                                  <% if (eventDate) { %>
-                                                      <span class="evt-card-date"><i class="fas fa-calendar-alt me-1"></i><%= eventDate %></span>
-                                                  <% } %>
-                                              </div>
+                                  <a href="<%= linkUrl %>" class="evt-card-link">
+                                      <div class="evt-card">
+                                          <div class="evt-card-img-wrapper">
+                                              <img src="<%= imgSrc %>" alt="<%= event.titulo %>">
                                           </div>
-                                      </a>
-                                  </div>
+                                          <div class="evt-card-body">
+                                              <h5 class="evt-card-title"><%= event.titulo %></h5>
+                                              <% if (eventDate) { %>
+                                                  <span class="evt-card-date"><i class="fas fa-calendar-alt me-1"></i><%= eventDate %></span>
+                                              <% } %>
+                                          </div>
+                                      </div>
+                                  </a>
                               <% }); %>
                           </div>
                       </div>
@@ -86,18 +84,32 @@
               .evt-cards-grid {
                   max-width: 100%;
               }
-              .evt-cards-grid .row {
+              .evt-cards-scroll {
                   display: flex;
-                  flex-wrap: wrap;
-                  margin: 0 -15px;
+                  overflow-x: auto;
+                  gap: 20px;
+                  padding-bottom: 15px;
+                  scroll-behavior: smooth;
+                  -webkit-overflow-scrolling: touch;
               }
-              .evt-cards-grid .row > div {
-                  padding: 0 15px;
-                  margin-bottom: 20px;
+              .evt-cards-scroll::-webkit-scrollbar {
+                  height: 8px;
+              }
+              .evt-cards-scroll::-webkit-scrollbar-track {
+                  background: #f1f1f1;
+                  border-radius: 4px;
+              }
+              .evt-cards-scroll::-webkit-scrollbar-thumb {
+                  background: #888;
+                  border-radius: 4px;
+              }
+              .evt-cards-scroll::-webkit-scrollbar-thumb:hover {
+                  background: #555;
               }
               .evt-card-link {
                   text-decoration: none;
                   display: block;
+                  flex: 0 0 320px;
               }
               .evt-card {
                   background: transparent;
@@ -377,8 +389,9 @@
                                              <th>Clínica</th>
                                              <th>Data</th>
                                              <th>Status</th>
+                                             
                                              <th>Ações</th>
-                                             <% if (user) { %>
+                                                                                  <% if (user) { %>
                                                  <th>Excluir</th>
                                              <% } %>
                                              <th>Detalhes</th>
@@ -409,14 +422,16 @@
                                                           <% } else { %>
                                                               <span class="text-success">-</span>
                                                           <% } %>
-                                                         <% if (user) { %>
-                                                            <form action="/castracao/delete/<%= castracao.id %>/<%= castracao.arquivo || 'sem_arquivo' %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento')">
-                                                                <button type="submit" class="btn btn-danger btn-sm" title="Excluir Agendamento">
-                                                                    <i class="bi bi-trash"></i>
-                                                                    <span class="visually-hidden">Excluir</span>
-                                                                </button>
-                                                            </form>
-                                                        <% } %>
+                                                          </td>
+                                                          <td>
+                                                          <% if (user) { %>
+                                                             <form action="/castracao/delete/<%= castracao.id %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento')">
+                                                                 <button type="submit" class="btn btn-danger btn-sm" title="Excluir Agendamento">
+                                                                     <i class="bi bi-trash"></i>
+                                                                     <span class="visually-hidden">Excluir</span>
+                                                                 </button>
+                                                             </form>
+                                                         <% } %>
                                                      </td>
 
                                                     <td>

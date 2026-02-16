@@ -23,8 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nome: nome,
             especie: especie,
             porte: porte,
-            idade: document.getElementById('petIdade').value || 'Não informada',
-            localidadede: document.getElementById('petLocalidade').value || ''
+            idade: document.getElementById('petIdade').value || 'Não informada'
         };
         
         petsCadastrados.push(pet);
@@ -126,7 +125,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${especieIcon} ${especieLabels[pet.especie] || pet.especie}</td>
                     <td>${porteLabels[pet.porte] || pet.porte}</td>
                     <td>${pet.idade} ano(s)</td>
-                    <td>${pet.localidade || '-'}</td>
                     <td>
                         <button type="button" class="btn btn-sm btn-outline-danger btn-remove-pet" data-index="${index}" title="Remover pet">
                             <i class="fas fa-trash"></i>
@@ -166,8 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 { name: 'pet_nome[]', value: pet.nome },
                 { name: 'pet_especie[]', value: pet.especie },
                 { name: 'pet_porte[]', value: pet.porte },
-                { name: 'pet_idade[]', value: pet.idade !== 'Não informada' ? pet.idade : '' },
-                { name: 'pet_localidade[]', value: pet.localidade }
+                { name: 'pet_idade[]', value: pet.idade !== 'Não informada' ? pet.idade : '' }
             ];
             
             campos.forEach(campo => {

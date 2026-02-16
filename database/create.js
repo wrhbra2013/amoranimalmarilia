@@ -67,23 +67,25 @@ const { pool } = require('./database');
   await executeDDL(ddl, 'adotado');
  }
  
- async function create_castracao() {
-      const ddl = `CREATE TABLE IF NOT EXISTS castracao (
-          id SERIAL PRIMARY KEY,
-          origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          ticket VARCHAR(50) UNIQUE NOT NULL,
-          nome VARCHAR(255),
-          contato VARCHAR(100),
-          whatsapp VARCHAR(20),
-          arquivo VARCHAR(255),
-          idade INT,
-          especie VARCHAR(100),
-          porte VARCHAR(50),
-          clinica VARCHAR(255),
-          agenda VARCHAR(255),
-          status VARCHAR(50) DEFAULT 'PENDENTE',
-          atendido_em TIMESTAMP NULL
-      );`;
+  async function create_castracao() {
+       const ddl = `CREATE TABLE IF NOT EXISTS castracao (
+           id SERIAL PRIMARY KEY,
+           origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+           ticket VARCHAR(50) UNIQUE NOT NULL,
+           nome VARCHAR(255),
+           contato VARCHAR(100),
+           whatsapp VARCHAR(20),
+           idade INT,
+           especie VARCHAR(100),
+           porte VARCHAR(50),
+           clinica VARCHAR(255),
+           agenda VARCHAR(255),
+           status VARCHAR(50) DEFAULT 'PENDENTE',
+           atendimento TIMESTAMP NULL,
+           tipo VARCHAR(50) DEFAULT 'padrao',
+           nome_pet VARCHAR(255),
+           locality VARCHAR(255)
+       );`;
    await executeDDL(ddl, 'castracao');
    
    // Adiciona a coluna 'tipo' se não existir

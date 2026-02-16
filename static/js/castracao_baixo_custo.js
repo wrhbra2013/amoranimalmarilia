@@ -23,8 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nome: nome,
             especie: especie,
             porte: porte,
-            idade: document.getElementById('petIdade').value || 'Não informada',
-            localidades: document.getElementById('petLocalidade').value || ''
+            idade: document.getElementById('petIdade').value || 'Não informada'
         };
         
         petsCadastrados.push(pet);
@@ -54,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('petEspecie').value = '';
         document.getElementById('petPorte').value = '';
         document.getElementById('petIdade').value = '';
-        document.getElementById('petLocalidade').value = '';
     }
 
     function atualizarResumo() {
@@ -68,18 +66,18 @@ document.addEventListener('DOMContentLoaded', function() {
             btnSubmit.disabled = true;
             btnSubmit.classList.remove('btn-primary');
             btnSubmit.classList.add('btn-secondary');
-            btnSubmit.innerHTML = '<i class="fas fa-paw"></i> Adicione um pet primeiro';
+            btnSubmit.innerHTML = '<i class="bi bi-paw"></i> Adicione um pet primeiro';
         } else {
             btnSubmit.disabled = false;
             btnSubmit.classList.remove('btn-secondary');
             btnSubmit.classList.add('btn-primary');
-            btnSubmit.innerHTML = '<i class="fas fa-check"></i> Solicitar Agendamento';
+            btnSubmit.innerHTML = '<i class="bi bi-check-lg"></i> Solicitar Agendamento';
         }
         
         if (petsCadastrados.length === 0) {
             petsTableContainer.innerHTML = `
                 <div class="p-3 text-muted text-center">
-                    <i class="fas fa-paw fa-2x mb-2"></i>
+                    <i class="bi bi-paw" style="font-size: 2rem;"></i>
                     <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
                 </div>
             `;
@@ -107,7 +105,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <th scope="col">Espécie</th>
                         <th scope="col">Porte</th>
                         <th scope="col">Idade</th>
-                        <th scope="col">Localidade</th>
                         <th scope="col" width="80">Ações</th>
                     </tr>
                 </thead>
@@ -116,8 +113,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         petsCadastrados.forEach((pet, index) => {
             const especieIcon = pet.especie === 'gato' || pet.especie === 'gata' 
-                ? '<i class="fas fa-cat"></i>' 
-                : '<i class="fas fa-dog"></i>';
+                ? '<i class="bi bi-cat"></i>' 
+                : '<i class="bi bi-github"></i>';
             
             tableHTML += `
                 <tr>
@@ -126,10 +123,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${especieIcon} ${especieLabels[pet.especie] || pet.especie}</td>
                     <td>${porteLabels[pet.porte] || pet.porte}</td>
                     <td>${pet.idade} ano(s)</td>
-                    <td>${pet.localidades || '-'}</td>
                     <td>
                         <button type="button" class="btn btn-sm btn-outline-danger btn-remove-pet" data-index="${index}" title="Remover pet">
-                            <i class="fas fa-trash"></i>
+                            <i class="bi bi-trash"></i>
                         </button>
                     </td>
                 </tr>
@@ -166,8 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 { name: 'pet_nome[]', value: pet.nome },
                 { name: 'pet_especie[]', value: pet.especie },
                 { name: 'pet_porte[]', value: pet.porte },
-                { name: 'pet_idade[]', value: pet.idade !== 'Não informada' ? pet.idade : '' },
-                { name: 'pet_localidade[]', value: pet.localidades }
+                { name: 'pet_idade[]', value: pet.idade !== 'Não informada' ? pet.idade : '' }
             ];
             
             campos.forEach(campo => {

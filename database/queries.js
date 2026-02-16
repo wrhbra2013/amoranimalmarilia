@@ -47,9 +47,9 @@
  const adotado = `SELECT * FROM adotado;`;
  const adotadoCount = `SELECT COUNT(*) AS count FROM adotado;`;
  
- /* tag castracao */
- const castracao = `SELECT * FROM castracao ORDER BY origem DESC;`;
- const castracaoCount = `SELECT COUNT(*) AS count FROM castracao;`;
+/* tag castracao */
+const castracao = `SELECT * FROM castracao ORDER BY origem DESC;`;
+const castracaoCount = `SELECT COUNT(*) AS count FROM castracao;`;
  
  /* tag procura_se */
  const procura_se = `SELECT * FROM procura_se;`;

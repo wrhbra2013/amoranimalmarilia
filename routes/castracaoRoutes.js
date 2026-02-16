@@ -10,27 +10,244 @@
   
 const router = express.Router();
 
-// Função para gerar ticket sequencial para castração
-async function generateCastracaoTicket(client, tipo = 'C') {
-    const year = new Date().getFullYear();
-    const prefix = `${tipo}${year}`;
+// Rota para exibir página de sucesso após cadastro de castração
+router.get('/sucesso/:ticket', async (req, res) => {
+    const { ticket } = req.params;
+    try {
+        const result = await executeQuery('SELECT * FROM castracao WHERE ticket = $1', [ticket]);
+        if (!result || result.length === 0) {
+            req.flash('error', 'Castração não encontrada.');
+            return res.redirect('/castracao');
+        }
+        res.render('castracao_sucesso', { castracao: result[0] });
+    } catch (error) {
+        console.error('[castracaoRoutes GET /sucesso/:ticket] Erro:', error);
+        req.flash('error', 'Erro ao carregar dados.');
+        res.redirect('/castracao');
+    }
+});
+
+// Rota para gerar comprovante PDF
+router.get('/comprovante/:ticket', async (req, res) => {
+    const { ticket } = req.params;
+    const PdfPrinter = require('pdfmake');
+    
+    try {
+        const result = await executeQuery(`
+            SELECT c.*, cl.endereco as clinica_endereco 
+            FROM castracao c 
+            LEFT JOIN clinicas cl ON c.clinica = cl.nome 
+            WHERE c.ticket = $1
+        `, [ticket]);
+        if (!result || result.length === 0) {
+            req.flash('error', 'Castração não encontrada.');
+            return res.redirect('/castracao');
+        }
+        
+        const castracao = result[0];
+        
+        const fontDescriptors = {
+            Roboto: {
+                normal: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Regular.ttf'),
+                bold: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Medium.ttf'),
+                italics: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Italic.ttf'),
+                bolditalics: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-MediumItalic.ttf')
+            }
+        };
+        
+        const printer = new PdfPrinter(fontDescriptors);
+        
+        const tipoLabel = castracao.tipo === 'mutirao' ? 'Mutirão' : (castracao.tipo === 'pets_rua' ? 'Pet de Rua' : 'Baixo Custo');
+        
+        const logoPath = path.join(__dirname, '..', 'static', 'css', 'imagem', 'ong.jpg');
+        const emitDate = new Date().toLocaleDateString('pt-BR');
+        const emitTime = new Date().toLocaleTimeString('pt-BR');
+        
+        const docDefinition = {
+            pageSize: 'A4',
+            pageOrientation: 'portrait',
+            pageMargins: [40, 80, 40, 50],
+            header: {
+                margin: [20, 10, 20, 0],
+                table: {
+                    widths: [70, '*', 140],
+                    body: [
+                        [{
+                            image: logoPath,
+                            width: 60,
+                            alignment: 'center',
+                            margin: [0, 2, 0, 2]
+                        }, {
+                            stack: [{
+                                text: 'ONG Amor Animal Marilia',
+                                style: 'headerTitle',
+                                alignment: 'center'
+                            }, {
+                                text: 'Comprovante de Inscrição - Castração',
+                                style: 'headerSubtitle',
+                                alignment: 'center'
+                            }, {
+                                text: `Emitido em: ${emitDate} às ${emitTime}`,
+                                style: 'headerDate',
+                                alignment: 'center'
+                            }],
+                            margin: [0, 5, 0, 0]
+                        }, {
+                            text: 'Rua Alcides Caliman, 701\nJd. Bandeirantes\nMarília - SP\nhttps://amoranimal.ong.br',
+                            style: 'addressHeader',
+                            alignment: 'right',
+                            margin: [0, 5, 5, 0]
+                        }]
+                    ]
+                },
+                layout: {
+                    hLineWidth: function() { return 0.5; },
+                    vLineWidth: function() { return 0.5; },
+                    hLineColor: function() { return '#cccccc'; },
+                    vLineColor: function() { return '#cccccc'; }
+                }
+            },
+            content: [
+                { text: `TICKET: ${castracao.ticket}`, style: 'ticket', alignment: 'center', margin: [0, 20, 0, 20] },
+                { text: 'DADOS DO RESPONSÁVEL', style: 'subHeader', margin: [0, 0, 0, 5] },
+                {
+                    table: { widths: ['*', '*'], body: [
+                        [{ text: 'Nome:', style: 'label' }, { text: castracao.nome || '-', style: 'value' }],
+                        [{ text: 'Contato:', style: 'label' }, { text: castracao.contato || '-', style: 'value' }],
+                        [{ text: 'WhatsApp:', style: 'label' }, { text: castracao.whatsapp || '-', style: 'value' }],
+                        ...(castracao.locality ? [[{ text: 'Localidade:', style: 'label' }, { text: castracao.locality, style: 'value' }]] : [])
+                    ]}, layout: 'lightHorizontalPadding', margin: [0, 0, 0, 15]
+                },
+                { text: 'DADOS DO PET', style: 'subHeader', margin: [0, 10, 0, 5] },
+                {
+                    table: {
+                        widths: ['*', '*', '*', '*'],
+                        body: [
+                            [
+                                { text: 'Nome', style: 'tableHeader' },
+                                { text: 'Espécie', style: 'tableHeader' },
+                                { text: 'Porte', style: 'tableHeader' },
+                                { text: 'Idade', style: 'tableHeader' }
+                            ],
+                            [
+                                { text: castracao.nome_pet || '-', style: 'tableCell' },
+                                { text: castracao.especie ? (castracao.especie.charAt(0).toUpperCase() + castracao.especie.slice(1)) : '-', style: 'tableCell' },
+                                { text: castracao.porte || '-', style: 'tableCell' },
+                                { text: castracao.idade ? castracao.idade + ' anos' : '-', style: 'tableCell' }
+                            ]
+                        ]
+                    },
+                    layout: {
+                        hLineWidth: function() { return 0.5; },
+                        vLineWidth: function() { return 0.5; },
+                        hLineColor: function() { return '#cccccc'; },
+                        vLineColor: function() { return '#cccccc'; }
+                    },
+                    margin: [0, 0, 0, 15]
+                },
+                { text: 'AGENDAMENTO', style: 'subHeader', margin: [0, 10, 0, 5] },
+                {
+                    table: { widths: ['*', '*'], body: [
+                        [{ text: 'Tipo:', style: 'label' }, { text: tipoLabel, style: 'value' }],
+                        [{ text: 'Clínica:', style: 'label' }, { text: (castracao.clinica || 'A definir') + (castracao.clinica_endereco ? '\n' + castracao.clinica_endereco : ''), style: 'value' }],
+                        [{ text: 'Dia Preferencial:', style: 'label' }, { text: castracao.agenda || 'A definir', style: 'value' }],
+                        [{ text: 'Status:', style: 'label' }, { text: castracao.status || 'PENDENTE', style: 'value' }]
+                    ]}, layout: 'lightHorizontalPadding', margin: [0, 0, 0, 15]
+                },
+                { text: 'Guarde este comprovante para apresentação no dia da castração.', style: 'footer', alignment: 'center', margin: [0, 20, 0, 0] }
+            ],
+            styles: {
+                headerTitle: {
+                    fontSize: 14,
+                    bold: true,
+                    color: '#0066CC'
+                },
+                headerSubtitle: {
+                    fontSize: 11,
+                    color: '#333333'
+                },
+                headerDate: {
+                    fontSize: 8,
+                    color: '#666666'
+                },
+                addressHeader: {
+                    fontSize: 8,
+                    color: '#555555'
+                },
+                ticket: {
+                    fontSize: 24,
+                    bold: true,
+                    color: '#cc0000',
+                    background: '#f5f5f5'
+                },
+                subHeader: {
+                    fontSize: 12,
+                    bold: true,
+                    color: '#0066CC',
+                    margin: [0, 10, 0, 5]
+                },
+                label: {
+                    fontSize: 10,
+                    bold: true,
+                    color: '#666666'
+                },
+                value: {
+                    fontSize: 10,
+                    color: '#333333'
+                },
+                tableHeader: {
+                    fontSize: 9,
+                    bold: true,
+                    color: '#ffffff',
+                    fillColor: '#0066CC'
+                },
+                tableCell: {
+                    fontSize: 9,
+                    color: '#333333'
+                },
+                footer: {
+                    fontSize: 10,
+                    italics: true,
+                    color: '#666666'
+                }
+            }
+        };
+        
+        const pdfDoc = printer.createPdfKitDocument(docDefinition);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=comprovante_castracao_${ticket}.pdf`);
+        pdfDoc.pipe(res);
+        pdfDoc.end();
+        
+    } catch (error) {
+        console.error('[castracaoRoutes GET /comprovante/:ticket] Erro:', error);
+        req.flash('error', 'Erro ao gerar comprovante.');
+        res.redirect('/castracao');
+    }
+});
+
+// Função para gerar ticket sequencial com prefixo por tipo
+// B = baixo_custo, M = mutirao, R = pets_rua
+async function generateCastracaoTicket(client, tipo = 'baixo_custo') {
+    const prefixo = tipo === 'mutirao' ? 'M' : (tipo === 'pets_rua' ? 'R' : 'B');
+    const pattern = `^${prefixo}[0-9]{4}$`;
     
     const result = await client.query(`
         SELECT ticket FROM castracao 
-        WHERE ticket LIKE $1 
+        WHERE ticket ~ $1
         ORDER BY ticket DESC LIMIT 1
-    `, [prefix + '%']);
+    `, [pattern]);
     
     let nextNumber = 1;
     if (result.rows.length > 0) {
         const lastTicket = result.rows[0].ticket;
-        const lastNumber = parseInt(lastTicket.replace(prefix, ''), 10);
+        const lastNumber = parseInt(lastTicket.slice(1), 10);
         if (!isNaN(lastNumber)) {
             nextNumber = lastNumber + 1;
         }
     }
     
-    return `${prefix}${String(nextNumber).padStart(4, '0')}`;
+    return prefixo + String(nextNumber).padStart(4, '0');
 }
    
 // GET /castracao - Exibe o dashboard de castração
@@ -75,27 +292,67 @@ router.get('/mutirao/inscrever/:id', async (req, res) => {
     }
 });
 
-// POST /castracao/mutirao/create - Inscrever no mutirão (usa calendario_mutirao)
+// POST /castracao/mutirao/create - Inscrever no mutirão (salva na tabela castracao)
 router.post('/mutirao/create', async (req, res) => {
+    const client = await pool.connect();
     try {
         const { calendario_id, mutirao_id, tutor_nome, tutor_contato, vagas_solicitadas, animais_json } = req.body;
-        // animais_json deve ser JSON string
+        
         let animais = null;
         if (animais_json) {
             try { animais = JSON.parse(animais_json); } catch (e) { console.warn('animais_json parse error', e); }
         }
 
-        // Usa mutirao_id (de calendario_mutirao) ou calendario_id como fallback
         const mutiraoRef = mutirao_id || calendario_id;
         
-        const insertSql = `INSERT INTO mutirao_castracao (calendario_id, tutor_nome, tutor_contato, vagas_solicitadas, animais) VALUES ($1,$2,$3,$4,$5)`;
-        await pool.query(insertSql, [mutiraoRef || null, tutor_nome, tutor_contato, parseInt(vagas_solicitadas || 1, 10), animais]);
+        // Gera ticket com prefixo M para mutirão
+        const ticketBase = await generateCastracaoTicket(client, 'mutirao');
+        
+        // Salva cada animal na tabela castracao com tipo='mutirao'
+        const numVagas = parseInt(vagas_solicitadas || 1, 10);
+        
+        // Se tiver animais_json, usa eles, senão cria 1 registro
+        let pets = [];
+        if (animais && animais.length > 0) {
+            pets = animais;
+        } else {
+            pets = [{ nome: 'Pet do mutirão', especie: 'não especificado' }];
+        }
+
+        const baseNumber = parseInt(ticketBase.slice(1), 10);
+        const prefixo = 'M';
+
+        // Pegar o primeiro ticket gerado para redirecionar
+        const firstTicket = prefixo + String(baseNumber).padStart(4, '0');
+
+        for (let i = 0; i < pets.length; i++) {
+            const pet = pets[i];
+            const ticket = prefixo + String(baseNumber + i).padStart(4, '0');
+            
+            await insert_castracao(
+                ticket,
+                tutor_nome,
+                tutor_contato,
+                'sim',
+                pet.idade || null,
+                pet.especie || 'não especificado',
+                pet.porte || 'não especificado',
+                req.body.clinica || 'não especificada',
+                req.body.agenda || mutiraoRef,
+                'mutirao',
+                pet.nome || 'Pet do mutirão',
+                null
+            );
+        }
+
         req.flash('success', 'Inscrição para mutirão enviada com sucesso.');
-        res.redirect('/castracao');
+        res.redirect('/castracao/sucesso/' + firstTicket);
     } catch (error) {
         console.error('[castracaoRoutes POST /mutirao/create] Erro ao criar inscrição de mutirão:', error);
         req.flash('error', 'Erro ao enviar inscrição. Tente novamente.');
         res.redirect('/castracao/mutirao');
+    } finally {
+        client.release();
     }
 });
 
@@ -799,152 +1056,71 @@ router.get('/lista', async (req, res) => {
       }
   });
   
-  // POST /castracao/form - Processa o formulário de novo registro de castração (suporta múltiplos pets e formulário com arquivo)
-  router.post('/form', uploadCastracao.single('arquivo'), async (req, res) => {
+  // POST /castracao/form - Processa o formulário de novo registro de castração (múltiplos pets)
+  router.post('/form', async (req, res) => {
       const client = await pool.connect();
       const { 
           nome, contato, whatsapp, clinica, agenda, 
           tipo_castracao,
-          pet_nome, pet_especie, pet_porte, pet_idade, pet_localidade
+          pet_nome, pet_especie, pet_porte, pet_idade,
+          locality
       } = req.body;
 
-      // Verificar se é submissão com arquivo (formulário antigo) ou sem arquivo (novo com múltiplos pets)
-      if (req.file) {
-          // Comportamento antigo: um pet com arquivo
-          const { filename } = req.file;
-          const finalFilePath = req.file.path;
+      const nomesPets = Array.isArray(pet_nome) ? pet_nome.filter(nome => nome && nome.trim() !== '') : [pet_nome];
+      
+      if (!nomesPets || nomesPets.length === 0) {
+          req.flash('error', 'É necessário cadastrar pelo menos um pet.');
+          return res.redirect('/castracao/baixo-custo');
+      }
+
+      try {
+          const tipo = tipo_castracao || 'baixo_custo';
+          const ticketBase = await generateCastracaoTicket(client, tipo);
+          const baseNumber = parseInt(ticketBase.slice(1), 10);
+          const prefixo = ticketBase.charAt(0);
           
-          try {
-              console.log(`[castracaoRoutes POST /form] Arquivo de castração salvo como: ${filename}`);
-              const clinicaFinal = req.body.clinica;
-              const tipo = tipo_castracao || 'baixo_custo';
-              const tipoPrefixo = tipo === 'mutirao' ? 'M' : 'C';
-              const ticket = req.body.ticket || await generateCastracaoTicket(client, tipoPrefixo);
-
-              const castracaoData = {
-                  ticket: ticket,
-                  nome: req.body.nome,
-                  contato: req.body.contato,
-                  whatsapp: req.body.whatsapp,
-                  arquivo: filename,
-                  idade: req.body.idade_pet,
-                  especie: req.body.especie,
-                  porte: req.body.porte,
-                  clinica: clinicaFinal,
-                  agenda: req.body.agenda,
-                  tipo: tipo
-              };
-
+          for (let i = 0; i < nomesPets.length; i++) {
+              const petNomeValido = nomesPets[i];
+              const arrayIndex = Array.isArray(pet_nome) ? pet_nome.indexOf(petNomeValido) : 0;
+              
               await insert_castracao(
-                  castracaoData.ticket,
-                  castracaoData.nome,
-                  castracaoData.contato,
-                  castracaoData.whatsapp,
-                  castracaoData.arquivo,
-                  castracaoData.idade,
-                  castracaoData.especie,
-                  castracaoData.porte,
-                  castracaoData.clinica,
-                  castracaoData.agenda,
-                  castracaoData.tipo
+                  prefixo + String(baseNumber + i).padStart(4, '0'),
+                  nome,
+                  contato,
+                  whatsapp,
+                  Array.isArray(pet_idade) ? pet_idade[arrayIndex] : pet_idade,
+                  Array.isArray(pet_especie) ? pet_especie[arrayIndex] : pet_especie,
+                  Array.isArray(pet_porte) ? pet_porte[arrayIndex] : pet_porte,
+                  clinica,
+                  agenda,
+                  tipo,
+                  petNomeValido,
+                  locality
               );
-              
-              console.log('[castracaoRoutes POST /form] Dados de castração inseridos:', castracaoData);
-              req.flash('success', 'Agendamento de castração solicitado com sucesso.');
-              res.redirect('/castracao');
-
-          } catch (error) {
-              console.error("[castracaoRoutes POST /form] Erro ao processar formulário de castração:", error);
-              try {
-                  await fs.unlink(finalFilePath);
-                  console.log("[castracaoRoutes POST /form] Arquivo salvo removido após erro no banco de dados:", finalFilePath);
-              } catch (cleanupError) {
-                  console.error("[castracaoRoutes POST /form] Erro ao limpar arquivo após falha no formulário:", cleanupError);
-              }
-
-              let errorMessage = 'Erro ao salvar os dados de castração. Tente novamente.';
-              if (error.code === '23505') {
-                  errorMessage = 'Erro: O número do ticket já existe. Tente enviar o formulário novamente.';
-              }
-              req.flash('error', errorMessage);
-              req.flash('formData', req.body);
-              res.redirect('/castracao/form');
-          } finally {
-              client.release();
           }
-      } else {
-          // Novo comportamento: múltiplos pets sem arquivo
-          const nomesPets = Array.isArray(pet_nome) ? pet_nome.filter(nome => nome && nome.trim() !== '') : [pet_nome];
           
-          if (!nomesPets || nomesPets.length === 0) {
-              req.flash('error', 'É necessário cadastrar pelo menos um pet.');
-              return res.redirect('/castracao/baixo-custo');
+          console.log('[castracaoRoutes POST /form] Dados de castração inseridos:', nomesPets.length, 'pets');
+          req.flash('success', `Agendamento de castração solicitado com sucesso! ${nomesPets.length} pet(s) inscrito(s).`);
+          res.redirect('/castracao/sucesso/' + ticketBase);
+
+      } catch (error) {
+          console.error("[castracaoRoutes POST /form] Erro ao processar formulário de castração:", error);
+          
+          let errorMessage = 'Erro ao salvar os dados de castração. Tente novamente.';
+          if (error.code === '23505') {
+              errorMessage = 'Erro: O número do ticket já existe. Tente enviar o formulário novamente.';
           }
-
-          try {
-              const tipo = tipo_castracao || 'baixo_custo';
-              const tipoPrefixo = tipo === 'mutirao' ? 'M' : 'C';
-              const ticketBase = await generateCastracaoTicket(client, tipoPrefixo);
-              const baseNumber = parseInt(ticketBase.replace(tipoPrefixo, ''), 10);
-              
-              for (let i = 0; i < nomesPets.length; i++) {
-                  const petNomeValido = nomesPets[i];
-                  const arrayIndex = Array.isArray(pet_nome) ? pet_nome.indexOf(petNomeValido) : 0;
-                  
-                  const castracaoData = {
-                      ticket: `${tipoPrefixo}${String(baseNumber + i).padStart(4, '0')}`,
-                      nome: nome,
-                      contato: contato,
-                      whatsapp: whatsapp,
-                      arquivo: null,
-                      idade: Array.isArray(pet_idade) ? pet_idade[arrayIndex] : pet_idade,
-                      especie: Array.isArray(pet_especie) ? pet_especie[arrayIndex] : pet_especie,
-                      porte: Array.isArray(pet_porte) ? pet_porte[arrayIndex] : pet_porte,
-                      clinica: clinica,
-                      agenda: agenda,
-                      tipo: tipo
-                  };
-
-                  await insert_castracao(
-                      castracaoData.ticket,
-                      castracaoData.nome,
-                      castracaoData.contato,
-                      castracaoData.whatsapp,
-                      castracaoData.arquivo,
-                      castracaoData.idade,
-                      castracaoData.especie,
-                      castracaoData.porte,
-                      castracaoData.clinica,
-                      castracaoData.agenda,
-                      castracaoData.tipo
-                  );
-              }
-              
-              console.log('[castracaoRoutes POST /form] Dados de castração inseridos:', nomesPets.length, 'pets');
-              req.flash('success', `Agendamento de castração solicitado com sucesso! ${nomesPets.length} pet(s) inscrito(s).`);
-              res.redirect('/castracao');
-
-          } catch (error) {
-              console.error("[castracaoRoutes POST /form] Erro ao processar formulário de castração:", error);
-              
-              let errorMessage = 'Erro ao salvar os dados de castração. Tente novamente.';
-              if (error.code === '23505') {
-                  errorMessage = 'Erro: O número do ticket já existe. Tente enviar o formulário novamente.';
-              }
-              req.flash('error', errorMessage);
-              req.flash('formData', req.body);
-              res.redirect('/castracao/baixo-custo');
-          } finally {
-              client.release();
-          }
+          req.flash('error', errorMessage);
+          req.flash('formData', req.body);
+          res.redirect('/castracao/baixo-custo');
+      } finally {
+          client.release();
       }
   });
   
-  // POST /castracao/delete/:id/:arq - Deleta um registro de castração
-  router.post('/delete/:id/:arq', isAdmin, async (req, res) => {
-      const { id, arq } = req.params;
-      const uploadsDir = path.join(__dirname, '..', 'static', 'uploads', 'castracao');
-      const filePath = path.join(uploadsDir, path.basename(arq)); // path.basename para segurança
+  // POST /castracao/delete/:id - Deleta um registro de castração
+  router.post('/delete/:id', isAdmin, async (req, res) => {
+      const { id } = req.params;
   
       try {
           const deleteSql = `DELETE FROM castracao WHERE id = $1`;
@@ -956,25 +1132,14 @@ router.get('/lista', async (req, res) => {
               console.log(`[castracaoRoutes DELETE] Registro de castração com ID: ${id} deletado.`);
           }
   
-          // Tenta deletar o arquivo associado
-          try {
-              await fs.unlink(filePath);
-              console.log(`[castracaoRoutes DELETE] Arquivo de castração ${filePath} deletado.`);
-          } catch (fileError) {
-              if (fileError.code === 'ENOENT') {
-                  console.log(`[castracaoRoutes DELETE] Arquivo ${filePath} não encontrado para deleção, pode já ter sido removido.`);
-              } else {
-                  console.error(`[castracaoRoutes DELETE] Erro ao deletar arquivo de castração ${filePath} (não é ENOENT):`, fileError);
-              }
-          }
           req.flash('success', 'Registro de castração removido com sucesso.');
           res.redirect('/castracao/lista');
   
       } catch (error) {
-          console.error(`[castracaoRoutes DELETE /delete/:id/:arq] Erro ao deletar registro de castração com ID: ${id}:`, error);
+          console.error(`[castracaoRoutes DELETE /delete/:id] Erro ao deletar registro de castração com ID: ${id}:`, error);
           res.status(500).render('error', { error: 'Erro ao deletar o agendamento de castração. Tente novamente.' });
       }
-});
+  });
    
 // POST /castracao/updateStatus/:id - Updates the status of a castracao entry
   router.post('/updateStatus/:id',  async (req, res) => {

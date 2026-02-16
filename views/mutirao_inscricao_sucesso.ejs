@@ -14,7 +14,7 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Ticket:</strong> <span class="text-danger fw-bold" style="font-size: 1.5rem;"><%= inscricao.ticket %></span></p>
+                    <p><strong>Ticket:</strong> <span class="text-danger fw-bold" style="font-size: 2rem; border: 2px solid #dc3545; padding: 5px 15px; border-radius: 5px;"><%= inscricao.ticket %></span></p>
                     <p><strong>Responsável:</strong> <%= inscricao.nome_responsavel %></p>
                     <p><strong>Contato:</strong> <%= inscricao.contato %></p>
                     <% if (inscricao.localidades) { %>
@@ -92,7 +92,7 @@
             </div>
             <div class="modal-body text-center">
                 <p class="lead">Sua inscrição foi realizada com sucesso!</p>
-                <p><strong>Ticket:</strong> <span class="text-danger fw-bold" style="font-size: 1.5rem;"><%= inscricao.ticket %></span></p>
+                <p><strong>Ticket:</strong> <span class="text-danger fw-bold" style="font-size: 2rem; border: 2px solid #dc3545; padding: 5px 15px; border-radius: 5px; display: inline-block;"><%= inscricao.ticket %></span></p>
                 <p class="text-muted"><%= pets.length %> pet(s) cadastrado(s)</p>
             </div>
             <div class="modal-footer justify-content-center">

@@ -1,96 +1,101 @@
- <%- include("_header") -%>
- 
- <main class="container mt-4 mb-5">
-     <section class="card shadow-sm">
-         <div class="card-header bg-primary text-white">
-             <h1 class="h4 mb-0"><i class="fas fa-cut me-2"></i>Interessados em Castração</h1>
-         </div>
-         <fieldset class="card-body">
-            <legend class="card-title h5">IMPORTANTE</legend>
-            <p class="card-text">
-                     <p>Levar a partir das 08h30 da manhã e buscar à tarde ou no horário combinado na clínica!</p>
-                     <p>Fazer jejum com a ração a partir das 23h do dia anterior.</p>
-                     <p>Tomar água à vontade.</p>
-                     <p>Gatos levar na caixa de transporte e cães na coleira.</p>
-                     <p>Pagamento direto na clínica, à vista no PIX, débito ou dinheiro.</p>
-                 </p>
-                 </fieldset>
-         </div>
-     </section>
- 
-             <form action="/castracao/form" enctype="multipart/form-data" method="post" class="row g-3 mt-3">
-                 <div class="col-md-6">
-                     <label for="nome" class="form-label fw-bold">Nome do Tutor:*</label>
-                     <input type="text" class="form-control" id="nome" name="nome" placeholder="Nome completo do tutor" required>
-                 </div>
-                 <div class="col-md-6">
-                     <label for="phone" class="form-label fw-bold">Telefone:*</label>
-                      <input type="tel" class="form-control phone-input" name="contato" id="phone" placeholder="Telefone com DDD (55) já é adicionado automaticamente" required>
-                 </div>
-                 <div class="col-md-6">
-                     <label for="whatsapp" class="form-label fw-bold">Disponível no WhatsApp?</label>
-                     <select name="whatsapp" id="whatsapp" class="form-select">
-                         <option value="" selected disabled>Selecione...</option>
-                         <option value="sim">Sim</option>
-                         <option value="nao">Não</option>
-                     </select>
-                 </div>
-                 <div class="col-md-6">
-                     <label for="idade_pet" class="form-label fw-bold">Idade do Pet (anos):*</label>
-                     <input type="number" class="form-control" name="idade_pet" id="idade_pet" placeholder="Ex: 2" min="0" required>
-                 </div>
- 
-                 <!-- Seção de Upload de Foto do Pet -->
-                 <div class="col-12">
-                     <label for="arquivo" class="form-label fw-bold">Foto do Pet:*</label>
-                     <div id="image-preview-container" class="text-center border rounded p-3 mb-2 bg-light" style="min-height: 220px; display: flex; align-items: center; justify-content: center;">
-                         <img id="frame" src="" alt="Pré-visualização da foto do pet" class="img-fluid rounded" style="display: none; object-fit: cover; max-width: 100%; max-height: 200px; height: auto;"/>
-                         <span id="preview-placeholder" class="text-muted">Nenhuma imagem selecionada</span>
-                     </div>
-                     <input type="file" class="form-control" name="arquivo" id="arquivo" onchange="preview()" accept="image/*" required>
-                     <div class="mt-2">
-                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearImage()">
-                             <i class="fas fa-times me-1"></i>Limpar Imagem
-                         </button>
-                     </div>
-                 </div>
- 
-                 <div class="col-md-6">
-                     <label for="especie" class="form-label fw-bold">Espécie e Sexo:*</label>
-                     <select name="especie" id="especie" class="form-select" required>
-                         <option value="" selected disabled>Selecione...</option>
-                         <option value="gato">Gato (Macho) - R$110,00 c/ medicação</option>
-                         <option value="gata">Gata (Fêmea) - R$120,00 c/ medicação</option>
-                         <option value="cachorro">Cachorro/Cachorra - R$200,00 c/ medicação</option>
-                     </select>
-                 </div>
-                 <div class="col-md-6">
-                     <label for="porte" class="form-label fw-bold">Porte:*</label>
-                     <select name="porte" id="porte" class="form-select" required>
-                         <option value="" selected disabled>Selecione...</option>
-                         <option value="pequeno">Pequeno</option>
-                         <option value="medio">Médio</option>
-                         <option value="grande">Grande</option>
-                     </select>
-                 </div>
-                 <div class="col-md-6">
-                    <label for="clinica" class="form-label fw-bold">Clínica:*</label>
-                    <select class="form-select" id="clinica" name="clinica" required>
-                        <option value="" selected disabled>Selecione uma clínica ou cadastre uma nova</option>
-                        
-                        <% if (typeof clinicas !== 'undefined' && clinicas.length > 0) { %>
-                            <% clinicas.forEach(function(clinica) { %>
-                                <option value="<%= clinica.nome %>" <%= (typeof formData !== 'undefined' && formData.clinica === clinica.nome) ? 'selected' : '' %>>
-                                    <%= clinica.nome %>
-                                </option>
-                            <% }); %>
-                        <% } %>
-                        <% if(user) { %>
-                        <option value="__nova_clinica__" <%= (typeof formData !== 'undefined' && formData.clinica === '__nova_clinica__') ? 'selected' : '' %>>
-                            Cadastrar nova clínica...
-                        </option>
-                        <% } %>
+<%- include("_header") -%>
+  
+<main class="container mt-4 mb-5">
+    <section class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h1 class="h4 mb-0"><i class="fas fa-cut me-2"></i>Interessados em Castração</h1>
+        </div>
+        <fieldset class="card-body">
+           <legend class="card-title h5">IMPORTANTE</legend>
+           <p class="card-text">
+                    <p>Levar a partir das 08h30 da manhã e buscar à tarde ou no horário combinado na clínica!</p>
+                    <p>Fazer jejum com a ração a partir das 23h do dia anterior.</p>
+                    <p>Tomar água à vontade.</p>
+                    <p>Gatos levar na caixa de transporte e cães na coleira.</p>
+                    <p>Pagamento direto na clínica, à vista no PIX, débito ou dinheiro.</p>
+                </p>
+                </fieldset>
+        </div>
+    </section>
+
+            <form action="/castracao/form" method="post" class="row g-3 mt-3">
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <h4>Dados do Responsável</h4>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="nome" class="form-label fw-bold">Nome do Tutor:*</label>
+                    <input type="text" class="form-control" id="nome" name="nome" placeholder="Nome completo do tutor" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="phone" class="form-label fw-bold">Telefone:*</label>
+                     <input type="tel" class="form-control phone-input" name="contato" id="phone" placeholder="Telefone com DDD (55) já é adicionado automaticamente" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="whatsapp" class="form-label fw-bold">Disponível no WhatsApp?</label>
+                    <select name="whatsapp" id="whatsapp" class="form-select">
+                        <option value="" selected disabled>Selecione...</option>
+                        <option value="sim">Sim</option>
+                        <option value="nao">Não</option>
                     </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="locality" class="form-label fw-bold">Localidade (Bairro)</label>
+                    <input type="text" name="locality" id="locality" class="form-control" placeholder="Bairro">
+                </div>
+
+                <div class="row mb-3 mt-3">
+                    <div class="col-12">
+                        <h4>Dados do Pet</h4>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="pet_nome" class="form-label fw-bold">Nome do Pet:*</label>
+                    <input type="text" class="form-control" name="pet_nome" id="pet_nome" placeholder="Nome do pet" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="especie" class="form-label fw-bold">Espécie e Sexo:*</label>
+                    <select name="pet_especie" id="especie" class="form-select" required>
+                        <option value="" selected disabled>Selecione...</option>
+                        <option value="gato">Gato (Macho) - R$110,00 c/ medicação</option>
+                        <option value="gata">Gata (Fêmea) - R$120,00 c/ medicação</option>
+                        <option value="cachorro">Cachorro/Cachorra - R$200,00 c/ medicação</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="porte" class="form-label fw-bold">Porte:*</label>
+                    <select name="pet_porte" id="porte" class="form-select" required>
+                        <option value="" selected disabled>Selecione...</option>
+                        <option value="pequeno">Pequeno</option>
+                        <option value="medio">Médio</option>
+                        <option value="grande">Grande</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="pet_idade" class="form-label fw-bold">Idade do Pet (anos):*</label>
+                    <input type="number" class="form-control" name="pet_idade" id="pet_idade" placeholder="Ex: 2" min="0" required>
+                </div>
+                <div class="col-md-6">
+                   <label for="clinica" class="form-label fw-bold">Clínica:*</label>
+                   <select class="form-select" id="clinica" name="clinica" required>
+                       <option value="" selected disabled>Selecione uma clínica ou cadastre uma nova</option>
+                       
+                       <% if (typeof clinicas !== 'undefined' && clinicas.length > 0) { %>
+                           <% clinicas.forEach(function(clinica) { %>
+                               <option value="<%= clinica.nome %>" <%= (typeof formData !== 'undefined' && formData.clinica === clinica.nome) ? 'selected' : '' %>>
+                                   <%= clinica.nome %>
+                               </option>
+                           <% }); %>
+                       <% } %>
+                       <% if(user) { %>
+                       <option value="__nova_clinica__" <%= (typeof formData !== 'undefined' && formData.clinica === '__nova_clinica__') ? 'selected' : '' %>>
+                           Cadastrar nova clínica...
+                       </option>
+                       <% } %>
+                   </select>
                 </div>
 
                  <div class="col-md-6">
@@ -104,27 +109,24 @@
                          <option value="sexta-feira">Sexta-feira</option>
                      </select>
                  </div>
- 
-                 <div class="col-12 d-flex justify-content-end mt-4 pt-3 border-top">
-                      <a href="/castracao/lista" class="btn btn-outline-secondary me-2">
-                         <i class="fas fa-times me-1"></i>Cancelar
-                     </a>
-                     <button type="submit" class="btn btn-primary" onclick="return confirm('Confirma o envio dos dados para agendamento?')">
-                         <i class="fas fa-check me-1"></i>Solicitar Agendamento
-                     </button>
-                 </div>
-             </form>
-         </div>
-     </section>
- 
-     <div class="text-center mt-4 mb-3">
-         <a href="/relatorio/castracao" class="btn btn-info">
-             <i class="fas fa-file-alt me-1"></i>Gerar Relatório de Castrações
-         </a>
-     </div>
+  
+                <div class="col-12 d-flex justify-content-end mt-4 pt-3 border-top">
+                     <a href="/castracao/lista" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary" onclick="return confirm('Confirma o envio dos dados para agendamento?')">
+                        <i class="fas fa-check me-1"></i>Solicitar Agendamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <div class="text-center mt-4 mb-3">
+        <a href="/relatorio/castracao" class="btn btn-info">
+            <i class="fas fa-file-alt me-1"></i>Gerar Relatório de Castrações
+        </a>
+    </div>
 </main>
 
-<script src="/static/js/form_castracao.js"></script>
-
 <%- include("_footer")-%>
- 
