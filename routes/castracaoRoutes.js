@@ -484,7 +484,7 @@ router.get('/mutirao-inscricao/:id', async (req, res) => {
     }
 });
 
-// Função para gerar ticket sequencial (apenas números com 4 dígitos)
+// Função para gerar ticket sequencial com prefixo M para mutirão
 async function generateSequentialTicket(client) {
     const result = await client.query(`
         SELECT ticket FROM mutirao_inscricao 
@@ -494,13 +494,13 @@ async function generateSequentialTicket(client) {
     let nextNumber = 1;
     if (result.rows.length > 0) {
         const lastTicket = result.rows[0].ticket;
-        const lastNumber = parseInt(lastTicket, 10);
+        const lastNumber = parseInt(lastTicket.replace(/^M/, ''), 10);
         if (!isNaN(lastNumber)) {
             nextNumber = lastNumber + 1;
         }
     }
     
-    return String(nextNumber).padStart(4, '0');
+    return 'M' + String(nextNumber).padStart(4, '0');
 }
 
 // POST /castracao/mutirao-inscricao - Processa inscrição
