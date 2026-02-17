@@ -556,8 +556,10 @@ router.post('/mutirao-inscricao', async (req, res) => {
         }
         
         // Verificar se há vagas disponíveis
-        const mutiraoResult = await client.query('SELECT vagas FROM calendario_mutirao WHERE id = $1', [calendario_mutirao_id]);
+        const mutiraoResult = await client.query('SELECT vagas, clinica, data_evento FROM calendario_mutirao WHERE id = $1', [calendario_mutirao_id]);
         const mutirao = mutiraoResult.rows[0];
+        const clinicaMutirao = mutirao.clinica;
+        const dataMutirao = mutirao.data_evento;
         
         if (mutirao.vagas !== 0) {
             const vagasUsadas = await client.query(`
@@ -635,6 +637,28 @@ router.post('/mutirao-inscricao', async (req, res) => {
                 pet.peso,
                 pet.vacinado,
                 pet.medicamento || null
+            ]);
+        }
+        
+        // Inserir também na tabela castracao para aparecer na home
+        for (const pet of petsSincronizados) {
+            await client.query(`
+                INSERT INTO castracao (
+                    ticket, nome, contato, whatsapp, idade, especie, porte, clinica, agenda, tipo, nome_pet, locality
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            `, [
+                ticket,
+                nome_responsavel,
+                contato,
+                'sim',
+                pet.idade ? parseInt(pet.idade, 10) : null,
+                pet.especie,
+                null, // porte - não existe no mutirão
+                clinicaMutirao,
+                dataMutirao ? new Date(dataMutirao).toLocaleDateString('pt-BR', { weekday: 'long' }) : null,
+                'mutirao',
+                pet.nome,
+                localidades
             ]);
         }
         

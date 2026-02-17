@@ -389,9 +389,9 @@
                                              <th>Clínica</th>
                                              <th>Data</th>
                                              <th>Status</th>
-                                             
                                              <th>Ações</th>
-                                                                                  <% if (user) { %>
+
+                                                <% if (user) { %>
                                                  <th>Excluir</th>
                                              <% } %>
                                              <th>Detalhes</th>
@@ -422,8 +422,7 @@
                                                           <% } else { %>
                                                               <span class="text-success">-</span>
                                                           <% } %>
-                                                          </td>
-                                                          <td>
+                                                                                                                   <td>
                                                           <% if (user) { %>
                                                              <form action="/castracao/delete/<%= castracao.id %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento')">
                                                                  <button type="submit" class="btn btn-danger btn-sm" title="Excluir Agendamento">

@@ -50,6 +50,20 @@
 /* tag castracao */
 const castracao = `SELECT * FROM castracao ORDER BY origem DESC;`;
 const castracaoCount = `SELECT COUNT(*) AS count FROM castracao;`;
+
+/* tag mutirao_inscricao */
+const mutirao_inscricao = `SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco 
+    FROM mutirao_inscricao mi 
+    LEFT JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
+    ORDER BY mi.created_at DESC;`;
+const mutirao_inscricaoCount = `SELECT COUNT(*) AS count FROM mutirao_inscricao;`;
+
+/* tag mutirao_pet */
+const mutirao_pet = `SELECT mp.*, mi.ticket as inscricao_ticket, mi.nome_responsavel 
+    FROM mutirao_pet mp 
+    LEFT JOIN mutirao_inscricao mi ON mp.mutirao_inscricao_id = mi.id
+    ORDER BY mp.created_at DESC;`;
+const mutirao_petCount = `SELECT COUNT(*) AS count FROM mutirao_pet;`;
  
  /* tag procura_se */
  const procura_se = `SELECT * FROM procura_se;`;
@@ -74,26 +88,30 @@ const coletaCount = `SELECT COUNT(*) AS count FROM coleta;`;
   */
  async function executeAllQueries() {
      // Renomeado 'queries' para 'queryTasks' para evitar conflito com o objeto 'queries' exportado.
-     const queryTasks = [
-         { name: 'home', query: home },
-         { name: 'adocao', query: adocao },
-         { name: 'adocaoCount', query: adocaoCount },
-         { name: 'adotante', query: adotante },
-         { name: 'adotanteCount', query: adotanteCount },
-         { name: 'adotado', query: adotado },
-         { name: 'adotadoCount', query: adotadoCount },
-         { name: 'castracao', query: castracao },
-         { name: 'castracaoCount', query: castracaoCount },
-         { name: 'procura_se', query: procura_se },
-         { name: 'procura_seCount', query: procura_seCount },
-         { name: 'parceria', query: parceria },
-         { name: 'parceriaCount', query: parceriaCount },
-         { name: 'voluntario', query: voluntario },
-         { name: 'voluntarioCount', query: voluntarioCount },
-         { name: 'coleta', query: coleta },
-         { name: 'coletaCount', query: coletaCount }
+      const queryTasks = [
+          { name: 'home', query: home },
+          { name: 'adocao', query: adocao },
+          { name: 'adocaoCount', query: adocaoCount },
+          { name: 'adotante', query: adotante },
+          { name: 'adotanteCount', query: adotanteCount },
+          { name: 'adotado', query: adotado },
+          { name: 'adotadoCount', query: adotadoCount },
+          { name: 'castracao', query: castracao },
+          { name: 'castracaoCount', query: castracaoCount },
+          { name: 'mutirao_inscricao', query: mutirao_inscricao },
+          { name: 'mutirao_inscricaoCount', query: mutirao_inscricaoCount },
+          { name: 'mutirao_pet', query: mutirao_pet },
+          { name: 'mutirao_petCount', query: mutirao_petCount },
+          { name: 'procura_se', query: procura_se },
+          { name: 'procura_seCount', query: procura_seCount },
+          { name: 'parceria', query: parceria },
+          { name: 'parceriaCount', query: parceriaCount },
+          { name: 'voluntario', query: voluntario },
+          { name: 'voluntarioCount', query: voluntarioCount },
+          { name: 'coleta', query: coleta },
+          { name: 'coletaCount', query: coletaCount }
 
-     ];
+      ];
      const results = {};
      // Use Promise.all to execute queries concurrently
    // /home/wander/amor.animal2/database/queries.js
@@ -123,27 +141,31 @@ const coletaCount = `SELECT COUNT(*) AS count FROM coleta;`;
   *                              and values are either the query results or an error object
      
  */
- module.exports = {
-     executeQuery,
-     executeAllQueries,
-     queries: { // Exportando as strings de query brutas, caso sejam necessárias em outro lugar
-         home,
-         adocao,
-         adocaoCount,
-         adotante,
-         adotanteCount,
-         adotado,
-         adotadoCount,
-         castracao,
-         castracaoCount,
-         procura_se,
-         procura_seCount,
-         parceria,
-         parceriaCount,
-         voluntario,
-         voluntarioCount, 
-         coleta, 
-         coletaCount
-     }
- };
+  module.exports = {
+      executeQuery,
+      executeAllQueries,
+      queries: {
+          home,
+          adocao,
+          adocaoCount,
+          adotante,
+          adotanteCount,
+          adotado,
+          adotadoCount,
+          castracao,
+          castracaoCount,
+          mutirao_inscricao,
+          mutirao_inscricaoCount,
+          mutirao_pet,
+          mutirao_petCount,
+          procura_se,
+          procura_seCount,
+          parceria,
+          parceriaCount,
+          voluntario,
+          voluntarioCount, 
+          coleta, 
+          coletaCount
+      }
+  };
  

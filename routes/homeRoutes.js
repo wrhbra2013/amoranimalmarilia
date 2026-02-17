@@ -62,27 +62,31 @@
          };
  
          return {
-             home: data.home || [],
-             adocao: data.adocao || [],
-             adocaoCount: extractCountValue(data.adocaoCount),
-             adotante: data.adotante || [],
-             adotanteCount: extractCountValue(data.adotanteCount),
-             adotado: data.adotado || [],
-             adotadoCount: extractCountValue(data.adotadoCount),
-             castracao: data.castracao || [],
-             castracaoCount: extractCountValue(data.castracaoCount),
-             procura_se: data.procura_se || [],
-             procura_seCount: extractCountValue(data.procura_seCount),
-             parceria: data.parceria || [],
-             parceriaCount: extractCountValue(data.parceriaCount),
-             voluntario: data.voluntario || [],
-             voluntarioCount: extractCountValue(data.voluntarioCount),
-             coleta: data.coleta || [],
-             coletaCount: extractCountValue(data.coletaCount),
-             eventos: eventos || [],
-             eventosCount: eventosCount || 0,
-              errorLoadingData: false // Agora será um número
-         };
+              home: data.home || [],
+              adocao: data.adocao || [],
+              adocaoCount: extractCountValue(data.adocaoCount),
+              adotante: data.adotante || [],
+              adotanteCount: extractCountValue(data.adotanteCount),
+              adotado: data.adotado || [],
+              adotadoCount: extractCountValue(data.adotadoCount),
+              castracao: data.castracao || [],
+              castracaoCount: extractCountValue(data.castracaoCount),
+              mutirao_inscricao: data.mutirao_inscricao || [],
+              mutirao_inscricaoCount: extractCountValue(data.mutirao_inscricaoCount),
+              mutirao_pet: data.mutirao_pet || [],
+              mutirao_petCount: extractCountValue(data.mutirao_petCount),
+              procura_se: data.procura_se || [],
+              procura_seCount: extractCountValue(data.procura_seCount),
+              parceria: data.parceria || [],
+              parceriaCount: extractCountValue(data.parceriaCount),
+              voluntario: data.voluntario || [],
+              voluntarioCount: extractCountValue(data.voluntarioCount),
+              coleta: data.coleta || [],
+              coletaCount: extractCountValue(data.coletaCount),
+              eventos: eventos || [],
+              eventosCount: eventosCount || 0,
+               errorLoadingData: false
+          };
      } catch (error) {
          // Este catch é para erros na chamada executeAllQueries em si.
          console.error("Erro crítico em getHomePageData ao chamar executeAllQueries:", error);
@@ -113,25 +117,29 @@ router.get(['/', '/home'], checkCookieConsent, async (req, res) => {
             isAdmin: req.isAdmin || false,
             model1: homePageData.home,
             model2: homePageData.adocao,
-            model3: homePageData.adocaoCount, // Será um número
+            model3: homePageData.adocaoCount,
             model4: homePageData.adotante,
-            model5: homePageData.adotanteCount, // Será um número
+            model5: homePageData.adotanteCount,
             model6: homePageData.adotado,
-            model7: homePageData.adotadoCount, // Será um número
+            model7: homePageData.adotadoCount,
             model8: homePageData.castracao,
-            model9: homePageData.castracaoCount, // Será um número
+            model9: homePageData.castracaoCount,
+            modelMutiraoInscricao: homePageData.mutirao_inscricao,
+            modelMutiraoInscricaoCount: homePageData.mutirao_inscricaoCount,
+            modelMutiraoPet: homePageData.mutirao_pet,
+            modelMutiraoPetCount: homePageData.mutirao_petCount,
             model10: homePageData.procura_se,
-            model11: homePageData.procura_seCount, // Será um número
+            model11: homePageData.procura_seCount,
             model12: homePageData.parceria,
-            model13: homePageData.parceriaCount, // Será um número
+            model13: homePageData.parceriaCount,
             model14: homePageData.voluntario,
-            model15: homePageData.voluntarioCount, 
+            model15: homePageData.voluntarioCount,
             model16: homePageData.coleta,
             model17: homePageData.coletaCount,
             modelEventos: homePageData.eventos,
             modelEventosCount: homePageData.eventosCount,
             success_msg: req.flash('success'),
-            error_msg: req.flash('error') // Adicionando para consistência
+            error_msg: req.flash('error')
         });
     } catch (error) {
         // Este catch é mais para erros inesperados no próprio handler da rota.
@@ -162,12 +170,16 @@ router.get('/dashboard', checkCookieConsent, async (req, res) => {
             model7: homePageData.adotadoCount,
             model8: homePageData.castracao,
             model9: homePageData.castracaoCount,
+            modelMutiraoInscricao: homePageData.mutirao_inscricao,
+            modelMutiraoInscricaoCount: homePageData.mutirao_inscricaoCount,
+            modelMutiraoPet: homePageData.mutirao_pet,
+            modelMutiraoPetCount: homePageData.mutirao_petCount,
             model10: homePageData.procura_se,
             model11: homePageData.procura_seCount,
             model12: homePageData.parceria,
             model13: homePageData.parceriaCount,
             model14: homePageData.voluntario,
-            model15: homePageData.voluntarioCount,
+            model15: homePageData.voluntarioCount, 
             model16: homePageData.coleta,
             model17: homePageData.coletaCount,
             modelEventos: homePageData.eventos,
