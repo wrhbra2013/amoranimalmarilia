@@ -394,7 +394,7 @@
                                                 <% if (user) { %>
                                                  <th>Excluir</th>
                                              <% } %>
-                                              <th>Detalhes</th>
+                                             <th></th>                                              <th>Detalhes</th>
                                               <th>Comprovante</th>
                                           </tr>
                                      </thead>
@@ -423,6 +423,7 @@
                                                           <% } else { %>
                                                               <span class="text-success">-</span>
                                                           <% } %>
+                                                     </td>
                                                                                                                    <td>
                                                           <% if (user) { %>
                                                              <form action="/castracao/delete/<%= castracao.id %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento')">
