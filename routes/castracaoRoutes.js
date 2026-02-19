@@ -1318,39 +1318,14 @@ router.get('/calendario-mutirao/relatorio/:id', isAdmin, async (req, res) => {
         
         // Cabeçalhos da tabela (formato relatorioRoutes)
         const tableHeaders = ['Responsável', 'Localidade', 'Contato', 'Data Inscrição', 'Pet', 'Espécie', 'Sexo', 'Idade', 'Peso', 'Vacinado', 'Medicamento'];
-        const columnWidths = ['auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', '*'];
-        
-        // Adicionar cabeçalhos da tabela
-        content.push({
-            table: {
-                widths: columnWidths,
-                body: [
-                    tableHeaders.map(header => ({
-                        text: sanitizeTextForPdf(header),
-                        style: 'tableHeader',
-                        alignment: 'center'
-                    }))
-                ]
-            },
-            layout: {
-                hLineWidth: () => 0.8,
-                vLineWidth: () => 0.8,
-                hLineColor: () => '#0066CC',
-                vLineColor: () => '#0066CC',
-                paddingLeft: () => 4,
-                paddingRight: () => 4,
-                paddingTop: () => 3,
-                paddingBottom: () => 3,
-                fillColor: () => '#E8F4FD'
-            }
-        });
+        const columnWidths = Array(11).fill('*');
         
         // Dados da tabela
         const tableBody = [];
         
         // Agrupar dados por inscrição/pet
         inscricoesResult.forEach(row => {
-            if (row.pet_id) { // Apenas linhas com pet
+            if (row.pet_id) {
                 const rowData = [
                     sanitizeTextForPdf(row.nome_responsavel),
                     sanitizeTextForPdf(row.localidade || 'Não informada'),
@@ -1372,12 +1347,52 @@ router.get('/calendario-mutirao/relatorio/:id', isAdmin, async (req, res) => {
             }
         });
         
+        // Resumo final
+        const totalPets = tableBody.length;
+        const responsaveisUnicos = [...new Set(inscricoesResult.filter(row => row.pet_id).map(row => row.nome_responsavel))].length;
+        
+        // Adicionar total antes do header da tabela
+        content.push({
+            text: sanitizeTextForPdf(`Total: ${responsaveisUnicos} responsável(is) com ${totalPets} pet(s) inscritos`),
+            style: 'totalStyle',
+            alignment: 'center',
+            margin: [0, 0, 0, 5]
+        });
+        
+        // Adicionar cabeçalhos da tabela
+        content.push({
+            table: {
+                widths: columnWidths,
+                headerRows: 1,
+                keepWithHeader: true,
+                body: [
+                    tableHeaders.map(header => ({
+                        text: sanitizeTextForPdf(header),
+                        style: 'tableHeader',
+                        alignment: 'center'
+                    }))
+                ]
+            },
+            layout: {
+                hLineWidth: () => 0.8,
+                vLineWidth: () => 0.8,
+                hLineColor: () => '#0066CC',
+                vLineColor: () => '#0066CC',
+                paddingLeft: () => 4,
+                paddingRight: () => 4,
+                paddingTop: () => 3,
+                paddingBottom: () => 3,
+                fillColor: () => '#E8F4FD'
+            }
+        });
+        
         // Adicionar tabela com dados
         if (tableBody.length > 0) {
             content.push({
                 table: {
                     headerRows: 0,
                     widths: columnWidths,
+                    keepWithHeader: true,
                     body: tableBody
                 },
                 layout: {
@@ -1395,21 +1410,6 @@ router.get('/calendario-mutirao/relatorio/:id', isAdmin, async (req, res) => {
                 }
             });
         }
-        
-        // Resumo final
-        const totalPets = tableBody.length;
-        const responsaveisUnicos = [...new Set(inscricoesResult.filter(row => row.pet_id).map(row => row.nome_responsavel))].length;
-        
-        content.push({
-            text: ' ',
-            margin: [0, 10]
-        });
-        
-        content.push({
-            text: sanitizeTextForPdf(`Total: ${responsaveisUnicos} responsável(is) com ${totalPets} pet(s) inscritos`),
-            style: 'subHeader',
-            alignment: 'center'
-        });
         
         // Logo do sistema (caminho igual ao relatorioRoutes)
         const logoPath = path.join(__dirname, '..', 'static', 'css', 'imagem', 'ong.jpg');
@@ -1503,6 +1503,13 @@ router.get('/calendario-mutirao/relatorio/:id', isAdmin, async (req, res) => {
                     margin: [0, 0, 0, 5],
                     bold: true,
                     color: '#0066CC'
+                },
+                totalStyle: {
+                    fontSize: 11,
+                    alignment: 'center',
+                    margin: [0, 0, 0, 5],
+                    bold: true,
+                    color: '#CC0000'
                 },
                 yearMonthHeader: {
                     fontSize: 6,
