@@ -605,6 +605,18 @@ router.post('/mutirao-inscricao', async (req, res) => {
             }
         }
         
+        // Verificar se tutor já está cadastrado neste mutirão (pelo contato)
+        const tutorExistente = await client.query(`
+            SELECT id, nome_responsavel, ticket 
+            FROM mutirao_inscricao 
+            WHERE calendario_mutirao_id = $1 AND contato = $2
+        `, [calendario_mutirao_id, contato]);
+        
+        if (tutorExistente.rows.length > 0) {
+            const tutor = tutorExistente.rows[0];
+            throw new Error(`Tutor "${tutor.nome_responsavel}" já cadastrado neste mutirão! Ticket: ${tutor.ticket}`);
+        }
+        
         // Gerar ticket sequencial
         const ticket = await generateSequentialTicket(client);
         
