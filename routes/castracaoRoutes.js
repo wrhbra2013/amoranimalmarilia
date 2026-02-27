@@ -93,7 +93,7 @@ router.get('/comprovante/:ticket', async (req, res) => {
                             }],
                             margin: [0, 5, 0, 0]
                         }, {
-                            text: 'Rua Alcides Caliman, 701\nJd. Bandeirantes\nMarília - SP\nhttps://amoranimal.ong.br',
+                            text: 'Rua Pascoal Eugenio Brasini, 701\nJd. Eldorado\nMarília - SP\nhttps://amoranimal.ong.br',
                             style: 'addressHeader',
                             alignment: 'right',
                             margin: [0, 5, 5, 0]
@@ -926,7 +926,7 @@ router.get('/mutirao-inscricao/comprovante/:id', async (req, res) => {
                             }],
                             margin: [0, 5, 0, 0]
                         }, {
-                            text: 'Rua Alcides Caliman, 701\nJd. Bandeirantes\nMarília - SP\nhttps://amoranimal.ong.br',
+                            text: 'Rua Pascoal Eugenio Brasini, 701\nJd. Eldorado\nMarília - SP\nhttps://amoranimal.ong.br',
                             style: 'addressHeader',
                             alignment: 'right',
                             margin: [0, 5, 5, 0]
@@ -1484,7 +1484,7 @@ router.get('/calendario-mutirao/relatorio/:id', isAdmin, async (req, res) => {
                                 }],
                                 margin: [0, 5, 0, 0]
                             }, {
-                                text: 'Rua Alcides Caliman, 701\nJd. Bandeirantes\nMarília - SP\nhttps://amoranimal.ong.br',
+                                text: 'Rua Pascoal Eugenio Brasini, 701\nJd. Eldorado\nMarília - SP\nhttps://amoranimal.ong.br',
                                 style: 'addressHeader',
                                 alignment: 'right',
                                 margin: [0, 5, 5, 0]
