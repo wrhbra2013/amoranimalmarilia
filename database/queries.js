@@ -45,11 +45,45 @@
  
  /* tag adotado */
  const adotado = `SELECT * FROM adotado;`;
- const adotadoCount = `SELECT COUNT(*) AS count FROM adotado;`;
- 
+  const adotadoCount = `SELECT COUNT(*) AS count FROM adotado;`;
+  
 /* tag castracao */
 const castracao = `SELECT * FROM castracao ORDER BY origem DESC;`;
 const castracaoCount = `SELECT COUNT(*) AS count FROM castracao;`;
+
+/* tag castracao_e_mutirao - UNION de castracao e mutirao_pet para exibir na home */
+const castracao_e_mutirao = `
+    SELECT 
+        c.id,
+        c.ticket,
+        c.nome,
+        c.nome_pet,
+        c.sexo,
+        c.especie,
+        c.clinica,
+        c.origem as data_evento,
+        c.status,
+        'castracao' as tipo,
+        NULL as inscricao_id
+    FROM castracao c
+    UNION ALL
+    SELECT 
+        mp.id,
+        mi.ticket,
+        mi.nome_responsavel as nome,
+        mp.nome as nome_pet,
+        mp.sexo,
+        mp.especie,
+        cm.clinica,
+        cm.data_evento,
+        mi.status,
+        'mutirao' as tipo,
+        mi.id as inscricao_id
+    FROM mutirao_inscricao mi
+    LEFT JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
+    LEFT JOIN mutirao_pet mp ON mi.id = mp.mutirao_inscricao_id
+    ORDER BY data_evento DESC;
+`;
 
 /* tag mutirao_inscricao */
 const mutirao_inscricao = `SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco 
@@ -96,9 +130,10 @@ const coletaCount = `SELECT COUNT(*) AS count FROM coleta;`;
           { name: 'adotanteCount', query: adotanteCount },
           { name: 'adotado', query: adotado },
           { name: 'adotadoCount', query: adotadoCount },
-          { name: 'castracao', query: castracao },
-          { name: 'castracaoCount', query: castracaoCount },
-          { name: 'mutirao_inscricao', query: mutirao_inscricao },
+           { name: 'castracao', query: castracao },
+           { name: 'castracaoCount', query: castracaoCount },
+           { name: 'castracao_e_mutirao', query: castracao_e_mutirao },
+           { name: 'mutirao_inscricao', query: mutirao_inscricao },
           { name: 'mutirao_inscricaoCount', query: mutirao_inscricaoCount },
           { name: 'mutirao_pet', query: mutirao_pet },
           { name: 'mutirao_petCount', query: mutirao_petCount },
@@ -152,9 +187,10 @@ const coletaCount = `SELECT COUNT(*) AS count FROM coleta;`;
           adotanteCount,
           adotado,
           adotadoCount,
-          castracao,
-          castracaoCount,
-          mutirao_inscricao,
+           castracao,
+           castracaoCount,
+           castracao_e_mutirao,
+           mutirao_inscricao,
           mutirao_inscricaoCount,
           mutirao_pet,
           mutirao_petCount,

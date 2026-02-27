@@ -158,6 +158,7 @@ async function create_mutirao_inscricao() {
         nome_responsavel VARCHAR(255) NOT NULL,
         localidades VARCHAR(255),
         contato VARCHAR(50),
+        status VARCHAR(20) DEFAULT 'PENDENTE',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );`;
     await executeDDL(ddl, 'mutirao_inscricao');

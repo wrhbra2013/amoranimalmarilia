@@ -1251,11 +1251,39 @@ router.get('/lista', async (req, res) => {
           res.redirect('/home');
       }
     });
-      
 
-  
-    
+// POST /castracao/mutirao/updateStatus/:id - Updates the status of a mutirao_inscricao entry
+  router.post('/mutirao/updateStatus/:id',  async (req, res) => {
+      const { id } = req.params;
 
+      try {
+          const idNum = parseInt(id, 10);
+          if (!Number.isInteger(idNum) || idNum <= 0) {
+              console.warn(`[castracaoRoutes UPDATE /mutirao/updateStatus] ID inválido recebido: ${id}`);
+              req.flash('error', 'ID inválido para atualização do status.');
+              return res.redirect('/home');
+          }
+
+          const updateSql = `UPDATE mutirao_inscricao SET status = 'ATENDIDO' WHERE id = $1`;
+          const result = await pool.query(updateSql, [idNum]);
+
+          if (result.rowCount === 0) {
+              console.warn(`[castracaoRoutes UPDATE /mutirao/updateStatus] Nenhum registro encontrado na tabela 'mutirao_inscricao' com ID: ${id}`);
+              req.flash('error', `Nenhum registro encontrado na tabela 'mutirao_inscricao' com ID: ${id}`);
+          } else {
+              console.log(`[castracaoRoutes UPDATE /mutirao/updateStatus] Registro de mutirão com ID: ${id} teve o status atualizado para ATENDIDO.`);
+              req.flash('success', 'Status do agendamento de mutirão atualizado para ATENDIDO com sucesso.');
+          }
+          res.redirect('/home');
+      } catch (error) {
+          console.error(`[castracaoRoutes UPDATE /mutirao/updateStatus/:id] Erro ao atualizar o status do mutirão com ID: ${id}:`, error && error.stack ? error.stack : error);
+          req.flash('error', 'Erro ao atualizar o status do agendamento de mutirão. Tente novamente.');
+          res.redirect('/home');
+      }
+    });
+
+   
+     
   // Rota generica
    router.get('/:id', async (req, res) => {
    const id = req.params.id;
@@ -1654,17 +1682,17 @@ router.post('/mutirao/delete/:id', isAdmin, async (req, res) => {
     const { id } = req.params;
 
     try {
-        const deleteSql = `DELETE FROM mutirao_castracao WHERE id = $1`;
+        const deleteSql = `DELETE FROM mutirao_inscricao WHERE id = $1`;
         const result = await pool.query(deleteSql, [id]);
 
         if (result.rowCount === 0) {
-            console.warn(`[castracaoRoutes DELETE] Nenhum registro encontrado na tabela 'mutirao_castracao' com ID: ${id} para deletar.`);
+            console.warn(`[castracaoRoutes DELETE] Nenhum registro encontrado na tabela 'mutirao_inscricao' com ID: ${id} para deletar.`);
             req.flash('error', 'Inscrição não encontrada.');
         } else {
-            console.log(`[castracaoRoutes DELETE] Registro de mutirão castração com ID: ${id} deletado.`);
+            console.log(`[castracaoRoutes DELETE] Registro de mutirão com ID: ${id} deletado.`);
             req.flash('success', 'Inscrição de mutirão removida com sucesso.');
         }
-        res.redirect('/castracao/lista');
+        res.redirect('/home');
 
     } catch (error) {
         console.error(`[castracaoRoutes DELETE /mutirao/delete/:id] Erro ao deletar inscrição de mutirão com ID: ${id}:`, error);
