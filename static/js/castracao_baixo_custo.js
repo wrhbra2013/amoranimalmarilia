@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnAddPet').addEventListener('click', function() {
         const nome = document.getElementById('petNome').value.trim();
         const especie = document.getElementById('petEspecie').value;
+        const sexo = document.getElementById('petSexo').value;
         const porte = document.getElementById('petPorte').value;
         
         if (!nome || !especie || !porte) {
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const pet = {
             nome: nome,
             especie: especie,
+            sexo: sexo,
             porte: porte,
             idade: document.getElementById('petIdade').value || 'Não informada'
         };
@@ -51,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function limparFormulario() {
         document.getElementById('petNome').value = '';
         document.getElementById('petEspecie').value = '';
+        document.getElementById('petSexo').value = '';
         document.getElementById('petPorte').value = '';
         document.getElementById('petIdade').value = '';
     }
@@ -103,6 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <th scope="col" width="40">#</th>
                         <th scope="col">Nome</th>
                         <th scope="col">Espécie</th>
+                        <th scope="col">Sexo</th>
                         <th scope="col">Porte</th>
                         <th scope="col">Idade</th>
                         <th scope="col" width="80">Ações</th>
@@ -112,15 +116,21 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         petsCadastrados.forEach((pet, index) => {
-            const especieIcon = pet.especie === 'gato' || pet.especie === 'gata' 
+            const especieIcon = pet.especie === 'gato' 
                 ? '<i class="bi bi-cat"></i>' 
                 : '<i class="bi bi-github"></i>';
+            
+            const sexoLabels = {
+                'macho': 'Macho',
+                'femea': 'Fêmea'
+            };
             
             tableHTML += `
                 <tr>
                     <th scope="row">${index + 1}</th>
                     <td class="fw-bold">${pet.nome}</td>
-                    <td>${especieIcon} ${especieLabels[pet.especie] || pet.especie}</td>
+                    <td>${especieIcon} ${pet.especie}</td>
+                    <td>${sexoLabels[pet.sexo] || '-'}</td>
                     <td>${porteLabels[pet.porte] || pet.porte}</td>
                     <td>${pet.idade} ano(s)</td>
                     <td>
@@ -161,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const campos = [
                 { name: 'pet_nome[]', value: pet.nome },
                 { name: 'pet_especie[]', value: pet.especie },
+                { name: 'pet_sexo[]', value: pet.sexo || '' },
                 { name: 'pet_porte[]', value: pet.porte },
                 { name: 'pet_idade[]', value: pet.idade !== 'Não informada' ? pet.idade : '' }
             ];

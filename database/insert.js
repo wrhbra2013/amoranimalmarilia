@@ -65,13 +65,13 @@ const { pool } = require('./database');
      return executeInsert(insertSQL, values, 'adotado');
  }
  
-  async function insert_castracao(ticket, nome, contato, whatsapp, idade, especie, porte, clinica, agenda, tipo = 'padrao', nome_pet = null, locality = null) {
+  async function insert_castracao(ticket, nome, contato, whatsapp, idade, especie, porte, clinica, agenda, tipo = 'padrao', nome_pet = null, locality = null, sexo = null) {
         const insertSQL = `INSERT INTO castracao (
-            ticket, nome, contato, whatsapp, idade, especie, porte, clinica, agenda, tipo, nome_pet, locality
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);`;
+            ticket, nome, contato, whatsapp, idade, especie, porte, sexo, clinica, agenda, tipo, nome_pet, locality
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);`;
         const values = [
             ticket, nome, contato, whatsapp, parseInt(idade, 10),
-            especie, porte, clinica, agenda, tipo, nome_pet, locality
+            especie, porte, sexo, clinica, agenda, tipo, nome_pet, locality
         ];
         return executeInsert(insertSQL, values, 'castracao');
     }

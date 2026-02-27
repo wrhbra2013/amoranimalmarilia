@@ -67,35 +67,44 @@ const { pool } = require('./database');
   await executeDDL(ddl, 'adotado');
  }
  
-  async function create_castracao() {
-       const ddl = `CREATE TABLE IF NOT EXISTS castracao (
-           id SERIAL PRIMARY KEY,
-           origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-           ticket VARCHAR(50) UNIQUE NOT NULL,
-           nome VARCHAR(255),
-           contato VARCHAR(100),
-           whatsapp VARCHAR(20),
-           idade INT,
-           especie VARCHAR(100),
-           porte VARCHAR(50),
-           clinica VARCHAR(255),
-           agenda VARCHAR(255),
-           status VARCHAR(50) DEFAULT 'PENDENTE',
-           atendimento TIMESTAMP NULL,
-           tipo VARCHAR(50) DEFAULT 'padrao',
-           nome_pet VARCHAR(255),
-           locality VARCHAR(255)
-       );`;
-   await executeDDL(ddl, 'castracao');
+   async function create_castracao() {
+        const ddl = `CREATE TABLE IF NOT EXISTS castracao (
+            id SERIAL PRIMARY KEY,
+            origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            ticket VARCHAR(50) UNIQUE NOT NULL,
+            nome VARCHAR(255),
+            contato VARCHAR(100),
+            whatsapp VARCHAR(20),
+            idade INT,
+            especie VARCHAR(100),
+            porte VARCHAR(50),
+            sexo VARCHAR(10),
+            clinica VARCHAR(255),
+            agenda VARCHAR(255),
+            status VARCHAR(50) DEFAULT 'PENDENTE',
+            atendimento TIMESTAMP NULL,
+            tipo VARCHAR(50) DEFAULT 'padrao',
+            nome_pet VARCHAR(255),
+            locality VARCHAR(255)
+        );`;
+    await executeDDL(ddl, 'castracao');
    
    // Adiciona a coluna 'tipo' se não existir
    try {
        await pool.query(`ALTER TABLE castracao ADD COLUMN IF NOT EXISTS tipo VARCHAR(50) DEFAULT 'padrao';`);
-       console.log("Coluna 'tipo' adicionada ou já existe na tabela castracao");
-   } catch (error) {
-       console.log("Erro ao adicionar coluna 'tipo' (pode já existir):", error.message);
+        console.log("Coluna 'tipo' adicionada ou já existe na tabela castracao");
+    } catch (error) {
+        console.log("Erro ao adicionar coluna 'tipo' (pode já existir):", error.message);
+    }
+
+    // Adiciona a coluna 'sexo' se não existir
+    try {
+        await pool.query(`ALTER TABLE castracao ADD COLUMN IF NOT EXISTS sexo VARCHAR(10);`);
+        console.log("Coluna 'sexo' adicionada ou já existe na tabela castracao");
+    } catch (error) {
+        console.log("Erro ao adicionar coluna 'sexo' (pode já existir):", error.message);
+    }
    }
-  }
  
  async function create_procura_se() {
      const ddl = `CREATE TABLE IF NOT EXISTS procura_se (

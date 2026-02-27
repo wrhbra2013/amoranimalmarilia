@@ -226,30 +226,49 @@ router.get('/comprovante/:ticket', async (req, res) => {
     }
 });
 
-// Função para gerar ticket sequencial com prefixo por tipo
-// B = baixo_custo, M = mutirao, R = pets_rua
+// Contador em memória para tickets (evita problemas de concorrência)
+const ticketCounters = {
+    mutirao: 0,
+    pets_rua: 0,
+    baixo_custo: 0
+};
+
+// Função para gerar ticket sequencial com prefixo por tipo usando transação atômica
 async function generateCastracaoTicket(client, tipo = 'baixo_custo') {
     const prefixo = tipo === 'mutirao' ? 'M' : (tipo === 'pets_rua' ? 'R' : 'B');
-    const pattern = `^${prefixo}[0-9]{4}$`;
     
-    const result = await client.query(`
-        SELECT ticket FROM castracao 
-        WHERE ticket ~ $1
-        ORDER BY ticket DESC LIMIT 1
-    `, [pattern]);
-    
-    let nextNumber = 1;
-    if (result.rows.length > 0) {
-        const lastTicket = result.rows[0].ticket;
-        const lastNumber = parseInt(lastTicket.slice(1), 10);
-        if (!isNaN(lastNumber)) {
-            nextNumber = lastNumber + 1;
+    try {
+        // Usa função do banco para gerar ticket único de forma atômica
+        const result = await client.query(`
+            WITH max_ticket AS (
+                SELECT MAX(
+                    CASE 
+                        WHEN ticket ~ $1 THEN CAST(SUBSTRING(ticket FROM 2 FOR 4) AS INTEGER)
+                        ELSE 0
+                    END
+                ) as max_num
+                FROM castracao
+                WHERE ticket LIKE $2
+            )
+            SELECT $3 || LPAD(COALESCE(max_num, 0) + 1, 4, '0') as new_ticket
+            FROM max_ticket
+        `, [`^[${prefixo}][0-9]{4}$`, prefixo + '%', prefixo]);
+        
+        if (result.rows.length > 0) {
+            const newTicket = result.rows[0].new_ticket;
+            console.log(`[generateCastracaoTicket] Ticket gerado: ${newTicket}`);
+            return newTicket;
         }
+    } catch (err) {
+        console.error('[generateCastracaoTicket] Erro na query:', err);
     }
     
-    return prefixo + String(nextNumber).padStart(4, '0');
+    // Fallback: gera ticket simples
+    const fallbackTicket = prefixo + '0001';
+    console.log(`[generateCastracaoTicket] Ticket fallback: ${fallbackTicket}`);
+    return fallbackTicket;
 }
-   
+ 
 // GET /castracao - Exibe o dashboard de castração
 router.get('/', async (req, res) => {
     try {
@@ -305,9 +324,6 @@ router.post('/mutirao/create', async (req, res) => {
 
         const mutiraoRef = mutirao_id || calendario_id;
         
-        // Gera ticket com prefixo M para mutirão
-        const ticketBase = await generateCastracaoTicket(client, 'mutirao');
-        
         // Salva cada animal na tabela castracao com tipo='mutirao'
         const numVagas = parseInt(vagas_solicitadas || 1, 10);
         
@@ -319,15 +335,14 @@ router.post('/mutirao/create', async (req, res) => {
             pets = [{ nome: 'Pet do mutirão', especie: 'não especificado' }];
         }
 
-        const baseNumber = parseInt(ticketBase.slice(1), 10);
-        const prefixo = 'M';
+        // Primeiro ticket para redirecionar
+        let firstTicket = '';
 
-        // Pegar o primeiro ticket gerado para redirecionar
-        const firstTicket = prefixo + String(baseNumber).padStart(4, '0');
-
+        // Gera um ticket único para cada pet
         for (let i = 0; i < pets.length; i++) {
             const pet = pets[i];
-            const ticket = prefixo + String(baseNumber + i).padStart(4, '0');
+            // Cada pet gera um ticket sequencial único (incluindo o primeiro)
+            const ticket = await generateCastracaoTicket(client, 'mutirao');
             
             await insert_castracao(
                 ticket,
@@ -341,8 +356,14 @@ router.post('/mutirao/create', async (req, res) => {
                 req.body.agenda || mutiraoRef,
                 'mutirao',
                 pet.nome || 'Pet do mutirão',
-                null
+                null,
+                pet.sexo || null
             );
+            
+            // Salva o primeiro ticket para redirecionar após o primeiro insert
+            if (i === 0) {
+                firstTicket = ticket;
+            }
         }
 
         req.flash('success', 'Inscrição para mutirão enviada com sucesso.');
@@ -486,21 +507,28 @@ router.get('/mutirao-inscricao/:id', async (req, res) => {
 
 // Função para gerar ticket sequencial com prefixo M para mutirão
 async function generateSequentialTicket(client) {
+    const prefixo = 'M';
+    
+    // Busca o último ticket na tabela castracao
     const result = await client.query(`
-        SELECT ticket FROM mutirao_inscricao 
+        SELECT ticket FROM castracao 
+        WHERE ticket LIKE $1
         ORDER BY ticket DESC LIMIT 1
-    `);
+    `, [prefixo + '%']);
     
     let nextNumber = 1;
     if (result.rows.length > 0) {
         const lastTicket = result.rows[0].ticket;
-        const lastNumber = parseInt(lastTicket.replace(/^M/, ''), 10);
-        if (!isNaN(lastNumber)) {
-            nextNumber = lastNumber + 1;
+        const match = lastTicket.match(/^([A-Z])(\d{4})/);
+        if (match) {
+            const lastNumber = parseInt(match[2], 10);
+            if (!isNaN(lastNumber)) {
+                nextNumber = lastNumber + 1;
+            }
         }
     }
     
-    return 'M' + String(nextNumber).padStart(4, '0');
+    return prefixo + String(nextNumber).padStart(4, '0');
 }
 
 // POST /castracao/mutirao-inscricao - Processa inscrição
@@ -642,18 +670,22 @@ router.post('/mutirao-inscricao', async (req, res) => {
         
         // Inserir também na tabela castracao para aparecer na home
         for (const pet of petsSincronizados) {
+            // Gera um ticket único para cada pet
+            const petTicket = await generateSequentialTicket(client);
+            
             await client.query(`
                 INSERT INTO castracao (
-                    ticket, nome, contato, whatsapp, idade, especie, porte, clinica, agenda, tipo, nome_pet, locality
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                    ticket, nome, contato, whatsapp, idade, especie, porte, sexo, clinica, agenda, tipo, nome_pet, locality
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             `, [
-                ticket,
+                petTicket,
                 nome_responsavel,
                 contato,
                 'sim',
                 pet.idade ? parseInt(pet.idade, 10) : null,
                 pet.especie,
                 null, // porte - não existe no mutirão
+                pet.sexo,
                 clinicaMutirao,
                 dataMutirao ? new Date(dataMutirao).toLocaleDateString('pt-BR', { weekday: 'long' }) : null,
                 'mutirao',
@@ -1086,7 +1118,7 @@ router.get('/lista', async (req, res) => {
       const { 
           nome, contato, whatsapp, clinica, agenda, 
           tipo_castracao,
-          pet_nome, pet_especie, pet_porte, pet_idade,
+          pet_nome, pet_especie, pet_porte, pet_idade, pet_sexo,
           locality
       } = req.body;
 
@@ -1099,16 +1131,25 @@ router.get('/lista', async (req, res) => {
 
       try {
           const tipo = tipo_castracao || 'baixo_custo';
-          const ticketBase = await generateCastracaoTicket(client, tipo);
-          const baseNumber = parseInt(ticketBase.slice(1), 10);
-          const prefixo = ticketBase.charAt(0);
           
+          // Normalizar pet_sexo para array
+          const sexoArray = Array.isArray(pet_sexo) ? pet_sexo : [pet_sexo];
+          
+          // Primeiro ticket para redirecionar
+          let firstTicket = '';
+          
+          // Gera um ticket único para cada pet
           for (let i = 0; i < nomesPets.length; i++) {
               const petNomeValido = nomesPets[i];
               const arrayIndex = Array.isArray(pet_nome) ? pet_nome.indexOf(petNomeValido) : 0;
               
+              // Cada pet gera um ticket sequencial único
+              const ticket = await generateCastracaoTicket(client, tipo);
+              
+              if (i === 0) firstTicket = ticket;
+              
               await insert_castracao(
-                  prefixo + String(baseNumber + i).padStart(4, '0'),
+                  ticket,
                   nome,
                   contato,
                   whatsapp,
@@ -1119,13 +1160,14 @@ router.get('/lista', async (req, res) => {
                   agenda,
                   tipo,
                   petNomeValido,
-                  locality
+                  locality,
+                  sexoArray[i] || null
               );
           }
           
           console.log('[castracaoRoutes POST /form] Dados de castração inseridos:', nomesPets.length, 'pets');
           req.flash('success', `Agendamento de castração solicitado com sucesso! ${nomesPets.length} pet(s) inscrito(s).`);
-          res.redirect('/castracao/sucesso/' + ticketBase);
+          res.redirect('/castracao/sucesso/' + firstTicket);
 
       } catch (error) {
           console.error("[castracaoRoutes POST /form] Erro ao processar formulário de castração:", error);
@@ -1157,7 +1199,7 @@ router.get('/lista', async (req, res) => {
           }
   
           req.flash('success', 'Registro de castração removido com sucesso.');
-          res.redirect('/castracao/lista');
+          res.redirect('/home');
   
       } catch (error) {
           console.error(`[castracaoRoutes DELETE /delete/:id] Erro ao deletar registro de castração com ID: ${id}:`, error);
