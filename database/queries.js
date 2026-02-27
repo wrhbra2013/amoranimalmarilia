@@ -76,7 +76,7 @@ const castracao_e_mutirao = `
         mp.especie,
         cm.clinica,
         cm.data_evento,
-        mi.status,
+        'PENDENTE' as status,
         'mutirao' as tipo,
         mi.id as inscricao_id
     FROM mutirao_inscricao mi
