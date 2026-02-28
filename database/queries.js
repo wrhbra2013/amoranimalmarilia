@@ -66,6 +66,7 @@ const castracao_e_mutirao = `
         'castracao' as tipo,
         NULL as inscricao_id
     FROM castracao c
+    WHERE c.tipo IN ('baixo_custo', 'pets_rua', 'padrao') OR c.tipo IS NULL OR c.tipo = ''
     UNION ALL
     SELECT 
         mp.id,

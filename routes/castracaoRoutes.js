@@ -680,32 +680,6 @@ router.post('/mutirao-inscricao', async (req, res) => {
             ]);
         }
         
-        // Inserir também na tabela castracao para aparecer na home
-        for (const pet of petsSincronizados) {
-            // Gera um ticket único para cada pet
-            const petTicket = await generateSequentialTicket(client);
-            
-            await client.query(`
-                INSERT INTO castracao (
-                    ticket, nome, contato, whatsapp, idade, especie, porte, sexo, clinica, agenda, tipo, nome_pet, locality
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-            `, [
-                petTicket,
-                nome_responsavel,
-                contato,
-                'sim',
-                pet.idade ? parseInt(pet.idade, 10) : null,
-                pet.especie,
-                null, // porte - não existe no mutirão
-                pet.sexo,
-                clinicaMutirao,
-                dataMutirao ? new Date(dataMutirao).toLocaleDateString('pt-BR', { weekday: 'long' }) : null,
-                'mutirao',
-                pet.nome,
-                localidades
-            ]);
-        }
-        
         await client.query('COMMIT');
         
         // Redirecionar para página de sucesso com ticket
