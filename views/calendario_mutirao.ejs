@@ -76,14 +76,24 @@
               <td style="white-space: pre-line; max-width: 150px;"><%= c.endereco || '-' %></td>
               <td><%= c.vagas === 0 ? 'Ilimitadas' : c.vagas %></td>
               <td>
-                <span class="badge <%= c.vagas_disponiveis !== null && c.vagas_disponiveis <= 3 ? 'bg-warning' : 'bg-success' %>">
-                  <%= c.vagas_disponiveis !== undefined ? (c.vagas_disponiveis === null ? 'Ilimitadas' : c.vagas_disponiveis) : (c.vagas === 0 ? 'Ilimitadas' : c.vagas) %>
-                </span>
+                <% if (c.vagas_disponiveis !== null && c.vagas_disponiveis <= 0) { %>
+                  <span class="badge bg-danger">Vagas Esgotadas</span>
+                <% } else if (c.vagas_disponiveis !== null && c.vagas_disponiveis <= 3) { %>
+                  <span class="badge bg-warning text-dark"><%= c.vagas_disponiveis %></span>
+                <% } else { %>
+                  <span class="badge bg-success"><%= c.vagas_disponiveis !== undefined ? (c.vagas_disponiveis === null ? 'Ilimitadas' : c.vagas_disponiveis) : (c.vagas === 0 ? 'Ilimitadas' : c.vagas) %></span>
+                <% } %>
               </td>
               <td>
-                <a href="/castracao/mutirao-inscricao/<%= c.id %>" class="btn btn-sm btn-outline-primary">
-                  <i class="fas fa-user-plus"></i> Inscrever
-                </a>
+                <% if (c.vagas_disponiveis !== null && c.vagas_disponiveis <= 0) { %>
+                  <button class="btn btn-sm btn-outline-secondary" disabled>
+                    <i class="fas fa-user-plus"></i> Esgotado
+                  </button>
+                <% } else { %>
+                  <a href="/castracao/mutirao-inscricao/<%= c.id %>" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-user-plus"></i> Inscrever
+                  </a>
+                <% } %>
                 </td>
                  <td><%= c.created_at ? new Date(c.created_at).toLocaleString('pt-BR') : '' %></td>
                 <td>
