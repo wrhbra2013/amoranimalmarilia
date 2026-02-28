@@ -729,9 +729,9 @@ router.get('/mutirao-inscricao/sucesso/:id', async (req, res) => {
     }
 });
 
-// GET /castracao/mutirao-inscricao/comprovante/:id - Gera PDF do comprovante
-router.get('/mutirao-inscricao/comprovante/:id', async (req, res) => {
-    const { id } = req.params;
+// GET /castracao/mutirao/comprovante/:ticket - Gera PDF do comprovante por ticket
+router.get('/mutirao/comprovante/:ticket', async (req, res) => {
+    const { ticket } = req.params;
     const PdfPrinter = require('pdfmake');
     const path = require('path');
     
@@ -740,8 +740,8 @@ router.get('/mutirao-inscricao/comprovante/:id', async (req, res) => {
             SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco 
             FROM mutirao_inscricao mi
             JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
-            WHERE mi.id = $1
-        `, [id]);
+            WHERE mi.ticket = $1
+        `, [ticket]);
         
         if (!inscricaoResult || inscricaoResult.length === 0) {
             req.flash('error', 'Inscrição não encontrada.');
@@ -751,7 +751,7 @@ router.get('/mutirao-inscricao/comprovante/:id', async (req, res) => {
         const inscricao = inscricaoResult[0];
         const pets = await executeQuery(`
             SELECT * FROM mutirao_pet WHERE mutirao_inscricao_id = $1
-        `, [id]);
+        `, [inscricao.id]);
         
         const fontDescriptors = {
             Roboto: {
