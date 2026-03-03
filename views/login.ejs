@@ -4,52 +4,50 @@
         <a href="/" class="btn btn-primary">Voltar para a página inicial</a>
     </div>
 
-
     <div class="container">
         <div class="row align-items-center">
-            <!-- Supondo que você tenha classes .row e .col-md-X do Bootstrap ou similar -->
             <div class="col-md-7">
                 <div class="card">
                     <h3 class="text-center">Acesso ao Sistema</h3>
                 </div>
                 <div class="card-body">
-                    <form action="/auth/login" method="post"> <!-- Adicione a action correta -->
+                    <form action="/auth/login" method="post">
                         <div class="mb-3">
                             <label for="usuario" class="form-label">Usuário:</label>
-                            <!-- Corrigido 'for' para 'usuario' -->
                             <input type="text" id="usuario" name="usuario" class="form-control" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="senha" class="form-label">Senha:</label> <!-- Corrigido 'for' para 'senha' -->
-                            <input type="password" id="senha" name="senha" class="form-control" required>
-                            <!-- Adicionar checkbox para mostrar/ocultar senha -->
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="mostrarSenha"
-                                    onclick="togglePasswordVisibility()">
+                            <label for="senha" class="form-label">Senha:</label>
+                            <div style="position: relative;">
+                                <input type="password" id="senha" name="senha" class="form-control" required style="padding-right: 40px;">
+                                <span onclick="document.getElementById('senha').type = document.getElementById('senha').type === 'password' ? 'text' : 'password'" 
+                                      style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; user-select: none;">
+                                    👁
+                                </span>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input type="checkbox" class="form-check-input" id="mostrarSenha" 
+                                    onchange="document.getElementById('senha').type = this.checked ? 'text' : 'password'">
                                 <label class="form-check-label" for="mostrarSenha">Mostrar Senha</label>
                             </div>
+                        </div>
 
-
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">Login</button>
-                            </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
                     </form>
                     <% if (typeof error !=='undefined' && error) { %>
                         <div class="alert alert-danger mt-3">
                             <%= error %>
                         </div>
-                        <% } %>
+                    <% } %>
                 </div>
                 <div class="card-footer text-center">
-                    <p class="mb-0">
-                        <!--  Adicione um link para uma página de registro, se necessário -->
-                        <!-- <a href="/register">Não tem uma conta? Registre-se</a> -->
-                    </p>
+                    <p class="mb-0"></p>
                 </div>
             </div>
         </div>
     </div>
-    </div>
 
-    <%-include("_footer")-%>
+<%-include("_footer")-%>

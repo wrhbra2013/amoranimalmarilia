@@ -412,7 +412,8 @@ router.post('/calendario', isAdmin, async (req, res) => {
 // GET /castracao/calendario-mutirao - lista e formulário de criação (admin)
 router.get('/calendario-mutirao', async (req, res) => {
     try {
-        const calendario = await executeQuery('SELECT * FROM calendario_mutirao ORDER BY data_evento;');
+        const calendario = await executeQuery('SELECT * FROM calendario_mutirao WHERE arquivado = FALSE OR arquivado IS NULL ORDER BY data_evento;');
+        const arquivados = await executeQuery('SELECT * FROM calendario_mutirao WHERE arquivado = TRUE ORDER BY data_evento DESC;');
         const clinicas = await executeQuery("SELECT id, nome, endereco FROM clinicas ORDER BY nome;");
         
         // Calcular vagas disponíveis para cada mutirão
@@ -430,10 +431,10 @@ router.get('/calendario-mutirao', async (req, res) => {
             }
         }
         
-        res.render('calendario_mutirao', { calendario: calendario, clinicas: clinicas, error: req.flash('error'), success: req.flash('success') });
+        res.render('calendario_mutirao', { calendario: calendario, arquivados: arquivados, clinicas: clinicas, error: req.flash('error'), success: req.flash('success') });
     } catch (error) {
         console.error('[castracaoRoutes GET /calendario-mutirao] Erro ao buscar calendario:', error);
-        res.status(500).render('calendario_mutirao', { calendario: [], clinicas: [], error: 'Erro ao carregar calendário de mutirão.' });
+        res.status(500).render('calendario_mutirao', { calendario: [], arquivados: [], clinicas: [], error: 'Erro ao carregar calendário de mutirão.' });
     }
 });
 
@@ -1226,6 +1227,28 @@ router.get('/lista', async (req, res) => {
       }
     });
 
+// POST /castracao/updateStatusAll - Updates status of all pending castracoes
+  router.post('/updateStatusAll', async (req, res) => {
+      try {
+          // Update regular castracoes
+          const updateCastracao = `UPDATE castracao SET status = 'ATENDIDO', atendimento_data = CURRENT_TIMESTAMP WHERE status != 'ATENDIDO' OR status IS NULL`;
+          const result1 = await pool.query(updateCastracao);
+          
+          // Update mutirao inscriptions
+          const updateMutirao = `UPDATE mutirao_inscricao SET status = 'ATENDIDO' WHERE status != 'ATENDIDO' OR status IS NULL`;
+          const result2 = await pool.query(updateMutirao);
+          
+          const total = result1.rowCount + result2.rowCount;
+          console.log(`[castracaoRoutes UPDATE ALL] ${result1.rowCount} castrações e ${result2.rowCount} mutirões atualizados para ATENDIDO.`);
+          req.flash('success', `${total} agendamento(s) marcado(s) como ATENDIDO com sucesso.`);
+          res.redirect('/home');
+      } catch (error) {
+          console.error(`[castracaoRoutes UPDATE ALL] Erro ao atualizar todos os status:`, error);
+          req.flash('error', 'Erro ao atualizar os status dos agendamentos.');
+          res.redirect('/home');
+      }
+    });
+
 // POST /castracao/mutirao/updateStatus/:id - Updates the status of a mutirao_inscricao entry
   router.post('/mutirao/updateStatus/:id',  async (req, res) => {
       const { id } = req.params;
@@ -1256,8 +1279,103 @@ router.get('/lista', async (req, res) => {
       }
     });
 
-   
-     
+// POST /castracao/arquivar/:id - Arquiva uma castracao
+  router.post('/arquivar/:id', async (req, res) => {
+      const { id } = req.params;
+      try {
+          const idNum = parseInt(id, 10);
+          if (!Number.isInteger(idNum) || idNum <= 0) {
+              req.flash('error', 'ID inválido.');
+              return res.redirect('/home');
+          }
+          await pool.query(`UPDATE castracao SET arquivado = TRUE WHERE id = $1`, [idNum]);
+          req.flash('success', 'Castração arquivada com sucesso.');
+          res.redirect('/home');
+      } catch (error) {
+          console.error(`[castracaoRoutes] Erro ao arquivar:`, error);
+          req.flash('error', 'Erro ao arquivar.');
+          res.redirect('/home');
+      }
+    });
+
+// POST /castracao/desarquivar/:id - Desarquiva uma castracao
+  router.post('/desarquivar/:id', async (req, res) => {
+      const { id } = req.params;
+      try {
+          const idNum = parseInt(id, 10);
+          if (!Number.isInteger(idNum) || idNum <= 0) {
+              req.flash('error', 'ID inválido.');
+              return res.redirect('/home');
+          }
+          await pool.query(`UPDATE castracao SET arquivado = FALSE WHERE id = $1`, [idNum]);
+          req.flash('success', 'Castração desarquivada com sucesso.');
+          res.redirect('/home');
+      } catch (error) {
+          console.error(`[castracaoRoutes] Erro ao desarquivar:`, error);
+          req.flash('error', 'Erro ao desarquivar.');
+          res.redirect('/home');
+      }
+    });
+
+// POST /castracao/mutirao/arquivar/:id - Arquiva uma inscricao de mutirao
+  router.post('/mutirao/arquivar/:id', async (req, res) => {
+      const { id } = req.params;
+      try {
+          const idNum = parseInt(id, 10);
+          if (!Number.isInteger(idNum) || idNum <= 0) {
+              req.flash('error', 'ID inválido.');
+              return res.redirect('/home');
+          }
+          await pool.query(`UPDATE mutirao_inscricao SET arquivado = TRUE WHERE id = $1`, [idNum]);
+          req.flash('success', 'Inscrição de mutirão arquivada com sucesso.');
+          res.redirect('/home');
+      } catch (error) {
+          console.error(`[castracaoRoutes] Erro ao arquivar mutirão:`, error);
+          req.flash('error', 'Erro ao arquivar.');
+          res.redirect('/home');
+      }
+    });
+
+// POST /castracao/mutirao/desarquivar/:id - Desarquiva uma inscricao de mutirao
+  router.post('/mutirao/desarquivar/:id', async (req, res) => {
+      const { id } = req.params;
+      try {
+          const idNum = parseInt(id, 10);
+          if (!Number.isInteger(idNum) || idNum <= 0) {
+              req.flash('error', 'ID inválido.');
+              return res.redirect('/castracao/arquivados');
+          }
+          await pool.query(`UPDATE mutirao_inscricao SET arquivado = FALSE WHERE id = $1`, [idNum]);
+          req.flash('success', 'Inscrição de mutirão restaurada com sucesso.');
+          res.redirect('/castracao/arquivados');
+      } catch (error) {
+          console.error(`[castracaoRoutes] Erro ao desarquivar mutirão:`, error);
+          req.flash('error', 'Erro ao restaurar.');
+          res.redirect('/castracao/arquivados');
+      }
+    });
+
+// GET /castracao/arquivados - Lista todos os arquivados
+  router.get('/arquivados', async (req, res) => {
+      try {
+          const castracao = await pool.query(`SELECT * FROM castracao WHERE arquivado = TRUE ORDER BY origem DESC`);
+          const mutirao = await pool.query(`
+              SELECT mi.*, cm.clinica, cm.data_evento 
+              FROM mutirao_inscricao mi 
+              LEFT JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id 
+              WHERE mi.arquivado = TRUE 
+              ORDER BY mi.created_at DESC
+          `);
+          res.render('castracao_arquivados', { castracao: castracao.rows, mutirao: mutirao.rows });
+      } catch (error) {
+          console.error(`[castracaoRoutes] Erro ao buscar arquivados:`, error);
+          req.flash('error', 'Erro ao carregar arquivos.');
+          res.redirect('/home');
+      }
+    });
+
+    
+      
   // Rota generica
    router.get('/:id', async (req, res) => {
    const id = req.params.id;
@@ -1648,6 +1766,34 @@ router.post('/calendario-mutirao/delete/:id', isAdmin, async (req, res) => {
         res.redirect('/castracao/calendario-mutirao');
     } finally {
         client.release();
+    }
+});
+
+// POST /castracao/calendario-mutirao/arquivar/:id - Arquiva um mutirão
+router.post('/calendario-mutirao/arquivar/:id', isAdmin, async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query(`UPDATE calendario_mutirao SET arquivado = TRUE WHERE id = $1`, [id]);
+        req.flash('success', 'Mutirão arquivado com sucesso.');
+        res.redirect('/castracao/calendario-mutirao');
+    } catch (error) {
+        console.error(`[castracaoRoutes] Erro ao arquivar:`, error);
+        req.flash('error', 'Erro ao arquivar.');
+        res.redirect('/castracao/calendario-mutirao');
+    }
+});
+
+// POST /castracao/calendario-mutirao/desarquivar/:id - Desarquiva um mutirão
+router.post('/calendario-mutirao/desarquivar/:id', isAdmin, async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query(`UPDATE calendario_mutirao SET arquivado = FALSE WHERE id = $1`, [id]);
+        req.flash('success', 'Mutirão restaurado com sucesso.');
+        res.redirect('/castracao/calendario-mutirao');
+    } catch (error) {
+        console.error(`[castracaoRoutes] Erro ao desarquivar:`, error);
+        req.flash('error', 'Erro ao restaurar.');
+        res.redirect('/castracao/calendario-mutirao');
     }
 });
 

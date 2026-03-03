@@ -8,105 +8,84 @@
   <link rel="stylesheet" href="/static/css/default.css">
   <link rel="stylesheet" href="/static/css/imagem/bootstrap-icons.min.css">
   <link rel="icon" type="image/png" href="/static/css/favicon/ong.ico">
-
 </head>
 
 <body>
-  <div>
-    <!-- User Controls and Accessibility -->
-    <button id="contrast-toggle-button" aria-label="Alternar alto contraste"
-      style=" border: none;   background-color: transparent;  color:rgb(0, 195, 255);cursor:pointer; font-size:30px;">◧
-    </button>
+  <!-- High Contrast Toggle - CSS Pure -->
+  <input type="checkbox" id="contrast-toggle" class="css-toggle-checkbox">
+  <label for="contrast-toggle" class="contrast-label" aria-label="Alternar alto contraste">◧</label>
+
+  <!-- Mobile Menu Toggle - must be directly before mobile-menu-wrapper for CSS ~ selector -->
+  <input type="checkbox" id="mobile-menu-toggle" class="css-toggle-checkbox">
+  <label for="mobile-menu-toggle" class="mobile-menu-button" aria-label="Abrir menu">
+    <span></span>
+  </label>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu-wrapper">
+    <nav class="mobile-menu">
+      <ul class="nav-list">
+        <li><a href="/home" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Início</a></li>
+        <li><a href="/adocao" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Adoção</a></li>
+        <li><a href="/adotado" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Adotados</a></li>
+        <li><a href="/castracao" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Castração</a></li>
+        <li><a href="/procura_se" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Procura-se</a></li>
+        <li><a href="/doacao" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Doação</a></li>
+        <%if (user) {%>
+          <li><a href="/doacao/voluntario" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Voluntario</a></li>
+          <li><a href="/doacao/coleta" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Coleta</a></li>
+        <% } %>
+        <li><a href="/parceria" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Parceria</a></li>
+        <li><a href="/sobre" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Sobre</a></li>
+        <li><a href="/transparencia" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Transparencia</a></li>
+        <% if (user) { %>
+          <li><a href="/admin/form" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Novo @admin</a></li>
+          <li><a href="/relatorio/" onclick="document.getElementById('mobile-menu-toggle').checked = false;">Relatorios</a></li>
+        <%}%>
+      </ul>
+    </nav>
   </div>
 
-
-
-  <!-- <img src="/static/css/favicon/contrast.png" alt="Alto contraste"></button> -->
   <!-- Main Header and Navigation -->
   <header class="main-header">
 
     <main class="main-header-controls">
-
       <% if (user) { %>
-
-        <span style=" text-align: center; font-weight: bold;  "> Administrador
-          <br>
+        <span style="text-align: center; font-weight: bold;">Administrador<br>
           <a href="/auth/logout" class="login-button">Sair</a>
-
-          <% } else { %>
-            <a href="/auth/login" class="login-button">Acesso</a>
-            <% } %>
         </span>
+      <% } else { %>
+        <a href="/auth/login" class="login-button">Acesso</a>
+      <% } %>
     </main>
-
-
 
     <div class="nav-container">
       <img src="/static/css/imagem/ong.jpg" alt="Logo ONG AMOR ANIMAL MARILIA" />
-    </div> <!-- Fechamento do nav-container -->
-
-    <button class="mobile-menu-button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobileMenu">
-      &#9776; <!-- Ícone de hambúrguer (pode ser um SVG ou Font Awesome também) -->
-    </button>
-
+    </div>
 
     <div class="nav-wrapper">
       <nav class="main-nav">
-        <ul class="nav-list" id="main-nav-list">
-          <li><a href="/home">Início</a></li> <!-- Use absolute paths -->
+        <ul class="nav-list">
+          <li><a href="/home">Início</a></li>
           <li><a href="/adocao">Adoção</a></li>
-          <li><a href="/adotado">Adotados</a></li> <!-- Use absolute paths -->
-          <li><a href="/castracao">Castração</a></li> <!-- Use absolute paths -->
-          <li><a href="/procura_se">Procura-se</a></li><!-- Use absolute paths -->
-          <li><a href="/doacao">Doação</a></li> <!-- Use absolute paths -->
+          <li><a href="/adotado">Adotados</a></li>
+          <li><a href="/castracao">Castração</a></li>
+          <li><a href="/procura_se">Procura-se</a></li>
+          <li><a href="/doacao">Doação</a></li>
           <%if (user) {%>
             <li><a href="/doacao/voluntario">Voluntario</a></li>
             <li><a href="/doacao/coleta">Coleta</a></li>
-            <% } %>
-              <li><a href="/parceria">Parceria</a></li> <!-- Use absolute paths -->
-              <li><a href="/sobre">Sobre</a></li> <!-- Use absolute paths -->
-              <li><a href="/transparencia">Transparencia</a></li> <!-- Use absolute paths -->
-              <% if (user) { %>
-                <li><a href="/admin/form">Novo @admin</a></li>
-                <li><a href="/relatorio/" class="login-button" style="text-align: center;">Relatorios</a></li>
-                <%}%>
+          <% } %>
+          <li><a href="/parceria">Parceria</a></li>
+          <li><a href="/sobre">Sobre</a></li>
+          <li><a href="/transparencia">Transparencia</a></li>
+          <% if (user) { %>
+            <li><a href="/admin/form">Novo @admin</a></li>
+            <li><a href="/relatorio/" class="login-button" style="text-align: center;">Relatorios</a></li>
+          <%}%>
         </ul>
-
       </nav>
-
-      <div class="nav-wrapper">
-        <nav class="mobile-menu" id="mobileMenu" aria-hidden="true" aria-controls="main-nav-list">
-          <!-- <nav class="main-nav"> -->
-          <ul class="nav-list" id="main-nav-list">
-            <li><a href="/home">Início</a></li> <!-- Use absolute paths -->
-            <li><a href="/adocao">Adoção</a></li>
-            <li><a href="/adotado">Adotados</a></li> <!-- Use absolute paths -->
-            <li><a href="/castracao">Castração</a></li> <!-- Use absolute paths -->
-            <li><a href="/procura_se">Procura-se</a></li><!-- Use absolute paths -->
-            <li><a href="/doacao">Doação</a></li> <!-- Use absolute paths -->
-            
-            <%if (user) {%>
-              <li><a href="/doacao/voluntario">Voluntario</a></li>
-              <li><a href="/doacao/coleta">Coleta</a></li>
-              <% } %>
-                <li><a href="/parceria">Parceria</a></li> <!-- Use absolute paths -->
-                <li><a href="/sobre">Sobre</a></li> <!-- Use absolute paths -->
-                <li><a href="/transparencia">Transparencia</a></li> <!-- Use absolute paths -->
-                
-                <% if (user) { %>
-                  <li><a href="/admin/form">Novo @admin</a></li>
-                  <li><a href="/relatorio/" class="login-button" style="text-align: center;">Relatorios</a></li>
-                  <%}%>
-          </ul>
-          <!-- </nav> -->
-        </nav>
-
-
-
-
-      </div> <!-- Fechamento do nav-wrapper -->
+    </div>
   </header>
-  <!-- The main content of each page will be included after this header -->
-
 
   <%- include('_cookie') %>

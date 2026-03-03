@@ -1,7 +1,324 @@
- /* ==========================================================================
-    1. Base Styles & Variables
-    ========================================================================== */
-:root {  
+/* ==========================================================================
+   0. CSS Pure Toggle Hacks (replaces JS)
+   ========================================================================== */
+.css-toggle-checkbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* High Contrast Toggle - CSS Pure */
+.contrast-label {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 9999;
+  cursor: pointer;
+  font-size: 30px;
+  color: rgb(0, 195, 255);
+  background: transparent;
+  border: none;
+  line-height: 1;
+  padding: 5px;
+}
+
+#contrast-toggle:checked ~ body {
+  --bg-color: var(--hc-bg-color);
+  --text-color: var(--hc-text-color);
+  --container-bg: var(--hc-container-bg);
+  --container-shadow: var(--hc-container-shadow);
+  --container-border: var(--hc-container-border);
+  --heading-color: var(--hc-heading-color);
+  --paragraph-color: var(--hc-paragraph-color);
+  --link-color: var(--hc-link-color);
+  --link-hover-decoration: var(--hc-link-hover-decoration);
+  --border-color: var(--hc-border-color);
+  --table-header-bg: var(--hc-table-header-bg);
+  --nav-bg: var(--hc-nav-bg);
+  --nav-text: var(--hc-nav-text);
+  --footer-bg: var(--hc-footer-bg);
+  --footer-text: var(--hc-footer-text);
+  --input-bg: var(--hc-input-bg);
+  --input-text: var(--hc-input-text);
+  --input-border: var(--hc-input-border);
+  --button-bg: var(--hc-button-bg);
+  --button-text: var(--hc-button-text);
+  --button-hover-bg: var(--hc-button-hover-bg);
+}
+
+/* Mobile Menu Toggle - CSS Pure */
+.mobile-menu-button {
+  display: none;
+  background-color: var(--nav-bg);
+  color: var(--nav-text);
+  border: 1px solid var(--nav-text);
+  padding: 8px 12px;
+  font-size: 1.5em;
+  cursor: pointer;
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 1001;
+}
+
+.mobile-menu-button span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--nav-text);
+  position: relative;
+}
+
+.mobile-menu-button span::before,
+.mobile-menu-button span::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 2px;
+  background: var(--nav-text);
+  left: 0;
+}
+
+.mobile-menu-button span::before {
+  top: -8px;
+}
+
+.mobile-menu-button span::after {
+  top: 8px;
+}
+
+/* Hide on desktop */
+@media (min-width: 768px) {
+  .mobile-menu-button {
+    display: none !important;
+  }
+}
+
+/* Mobile only */
+@media (max-width: 767px) {
+  .main-nav {
+    display: none;
+  }
+  
+  .mobile-menu-button {
+    display: block;
+  }
+  
+  .css-toggle-checkbox#mobile-menu-toggle {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.mobile-menu-wrapper {
+  display: none;
+}
+
+/* Show menu when checkbox is checked - sibling selector */
+#mobile-menu-toggle:checked ~ .mobile-menu-wrapper {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: var(--nav-bg);
+  z-index: 1000;
+  overflow-y: auto;
+  animation: slide-in 0.3s ease-in-out;
+}
+
+#mobile-menu-toggle:checked ~ .mobile-menu-wrapper .mobile-menu {
+  padding: 60px 20px 20px;
+}
+
+#mobile-menu-toggle:checked ~ .mobile-menu-wrapper .mobile-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#mobile-menu-toggle:checked ~ .mobile-menu-wrapper .mobile-menu li {
+  margin-bottom: 15px;
+}
+
+#mobile-menu-toggle:checked ~ .mobile-menu-wrapper .mobile-menu a {
+  color: var(--nav-text);
+  text-decoration: none;
+  font-size: 1.3em;
+  display: block;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+@keyframes slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (min-width: 768px) {
+  .mobile-menu-button,
+  .mobile-menu-wrapper {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .main-nav {
+    display: none;
+  }
+  
+  .mobile-menu-button {
+    display: block;
+  }
+}
+
+/* ==========================================================================
+   CSS Pure Carousel - Photo Banner
+   ========================================================================== */
+.photobanner-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.photobanner-slides {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+}
+
+.photobanner-slide {
+  min-width: 100%;
+  display: none;
+}
+
+.photobanner-slide:first-child,
+.photobanner-slide.active {
+  display: block;
+}
+
+.photobanner-slide img {
+  width: 100%;
+  height: auto;
+}
+
+/* Radio-based CSS Carousel */
+.photobanner-radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.photobanner-radio:nth-child(1):checked ~ .photobanner-slides {
+  transform: translateX(0);
+}
+
+.photobanner-radio:nth-child(2):checked ~ .photobanner-slides {
+  transform: translateX(-100%);
+}
+
+.photobanner-radio:nth-child(3):checked ~ .photobanner-slides {
+  transform: translateX(-200%);
+}
+
+.photobanner-radio:nth-child(4):checked ~ .photobanner-slides {
+  transform: translateX(-300%);
+}
+
+.photobanner-radio:nth-child(5):checked ~ .photobanner-slides {
+  transform: translateX(-400%);
+}
+
+/* Controls visibility based on radio */
+.photobanner-radio:nth-child(1):checked ~ .photobanner-dots .dot:nth-child(1),
+.photobanner-radio:nth-child(2):checked ~ .photobanner-dots .dot:nth-child(2),
+.photobanner-radio:nth-child(3):checked ~ .photobanner-dots .dot:nth-child(3),
+.photobanner-radio:nth-child(4):checked ~ .photobanner-dots .dot:nth-child(4),
+.photobanner-radio:nth-child(5):checked ~ .photobanner-dots .dot:nth-child(5) {
+  background-color: #717171;
+}
+
+/* CSS Auto-play Carousel Animation */
+@keyframes carouselSlide {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(0); }
+  25% { transform: translateX(-100%); }
+  45% { transform: translateX(-100%); }
+  50% { transform: translateX(-200%); }
+  70% { transform: translateX(-200%); }
+  75% { transform: translateX(-300%); }
+  95% { transform: translateX(-300%); }
+  100% { transform: translateX(0); }
+}
+
+.carousel-autoplay .photobanner-slides {
+  animation: carouselSlide 15s infinite;
+}
+
+.carousel-autoplay .photobanner-slide {
+  display: block;
+}
+
+/* CSS Pure Toggle Details */
+.toggle-details-checkbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggle-details-checkbox:checked ~ .hidden {
+  display: table-cell !important;
+}
+
+/* CSS Pure Show/Hide */
+.css-show {
+  display: none;
+}
+
+.css-toggle-checkbox-input {
+  position: absolute;
+  opacity: 0;
+}
+
+.css-toggle-checkbox-input:checked ~ .css-show {
+  display: block;
+}
+
+.css-toggle-checkbox-input:not(:checked) ~ .css-hide {
+  display: none;
+}
+
+/* CSS Pure Accordion */
+.accordion-checkbox {
+  position: absolute;
+  opacity: 0;
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.accordion-checkbox:checked ~ .accordion-content {
+  max-height: 500px;
+}
+
+.accordion-icon::after {
+  content: '\+';
+  transition: transform 0.3s;
+}
+
+.accordion-checkbox:checked ~ .accordion-icon::after {
+  content: '\-';
+  transform: rotate(180deg);
+}
+
+/* ==========================================================================
+   1. Base Styles & Variables
+   ========================================================================== */
+:root {
   /* --- Paleta de Cores Moderna e Acessível --- */
   --brand-teal: #0b6e58;       /* cor primária (botões, CTAs) */
   --brand-teal-dark: #085a46;  /* hover */
@@ -830,131 +1147,13 @@ ul.list-checked li::before {
     8. Grid System (Placeholder - Use Bootstrap's or complete this)
     ========================================================================== */
  /*
-    If you are including the Bootstrap CSS file,
-    you DO NOT need to redefine grid classes (.row, .col-*) here.
-    Remove them if Bootstrap's CSS is linked.
-    If not using Bootstrap's CSS, you'll need to complete these definitions.
- */
- 
- /* ==========================================================================
-    9. Responsive Design & Mobile Menu
-    ========================================================================== */
- .mobile-menu-button {
-   display: none;
-   background-color: var(--nav-bg);
-   color: var(--nav-text);
-   border: 1px solid var(--nav-text); /* Or var(--border-color) */
-   padding: 8px 12px;
-   font-size: 1.5em;
-   cursor: pointer;
-   position: absolute;
-   top: 15px;
-   right: 15px;
-   z-index: 1001; 
- }
- 
- .mobile-menu {
-   display: none;
-   background-color: var(--nav-bg); /* opaque mobile menu background */
-   color: var(--nav-text); 
-   /* border: 1px solid var(--nav-text); /* Might be too much with bg color */
-   padding: 8px 12px; /* This padding is for the button itself if it were visible */
-   /* font-size: small; /* This was on the button, not the menu container */
-   /* cursor: pointer; /* Not needed for the menu container */
-   /* position: absolute; /* Overridden by .active */
-   /* top: 15px; */
-   /* right: 15px; */
-   z-index: 1000; /* Slightly lower than button if button is to overlap */
- }
- 
- .mobile-menu.active {
-   display: block;
-   padding: 8px 12px;   
-   animation: slide-in 0.3s ease-in-out forwards; 
-   position: fixed;
-   top: 0; /* Start from top after header */
-   left: 0;
-   width: 100%;
-   height: 100vh; /* Full viewport height */
-   overflow-y: scroll;
-   padding-top: 3px; /* Space for a fixed header or close button area */
-   background-color: var(--nav-bg);  /*Ensure background covers content (opaque) */
-   /* background-color: #000; */
- }
- 
- .mobile-menu ul {
-   list-style: none;
-   padding: 20px;
-   margin: 0;
- }
- .mobile-menu li {
-   margin-bottom: 10px; /* Spacing between items */
-   /* background-color: whitesmoke; /* Removed, let text color provide contrast */
- }
- .mobile-menu li:hover {
-   /* font-size: larger; /* Avoid changing font size on hover for layout stability */
-   background-color: rgba(255, 255, 255, 0.1); /* Subtle hover for items */
- }
- .mobile-menu a {
-   color: var(--nav-text); /* Should be white or light on dark blue */
-   text-decoration: none;
-   font-size: 1.2em;
-   display: block;
-   padding: 10px 20px; /* More padding for easier tapping */
- }
- 
- 
- @keyframes slide-in {
-   from { transform: translateX(100%); }
-   to { transform: translateX(0); }
- }
- 
- .mobile-menu-close {
-   position: absolute;
-   top: 15px; /* Align with mobile-menu-button's original top */
-   right: 20px;
-   font-size: 2em;
-   color: var(--nav-text); /* Ensure visibility on menu background */
-   background: none;
-   border: none;
-   cursor: pointer;
-   z-index: 1001; /* Above menu content */
- }
- 
- /* High Contrast Toggle Button */
- #high-contrast-toggle {
-     background-color: #eee; /* Consider var(--button-bg) or a specific var */
-     color: #333; /* Consider var(--button-text) */
-     border: 1px solid #ccc; /* Consider var(--border-color) */
-     padding: 5px 10px;
-     cursor: pointer;
-     /* Add margin if needed for spacing */
- }
- #high-contrast-toggle.active,
- body.high-contrast #high-contrast-toggle {
-     background-color: yellow; /* Specific HC active state */
-     color: black;
-     border: 1px solid black;
- }
- 
- 
- @media (max-width: 768px) {
-   .container {
-     margin: 10px;
-     padding: 15px;
-   }
-   h1 { font-size: 2em; }
-   h2 { font-size: 1.75em; }
- 
-   nav.main-nav { /* The desktop navigation */
-     display: none;
-   }
-   .mobile-menu-button { /* The hamburger button */
-     display: block;
-   }
- }
- 
- @media (max-width: 600px) {
+     If you are including the Bootstrap CSS file,
+     you DO NOT need to redefine grid classes (.row, .col-*) here.
+     Remove them if Bootstrap's CSS is linked.
+     If not using Bootstrap's CSS, you'll need to complete these definitions.
+  */
+  
+  @media (max-width: 600px) {
    .container {
      margin: 5px;
      padding: 10px;

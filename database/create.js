@@ -67,7 +67,7 @@ const { pool } = require('./database');
   await executeDDL(ddl, 'adotado');
  }
  
-   async function create_castracao() {
+    async function create_castracao() {
         const ddl = `CREATE TABLE IF NOT EXISTS castracao (
             id SERIAL PRIMARY KEY,
             origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -85,11 +85,20 @@ const { pool } = require('./database');
             atendimento TIMESTAMP NULL,
             tipo VARCHAR(50) DEFAULT 'padrao',
             nome_pet VARCHAR(255),
-            locality VARCHAR(255)
+            locality VARCHAR(255),
+            arquivado BOOLEAN DEFAULT FALSE
         );`;
     await executeDDL(ddl, 'castracao');
-   
-   // Adiciona a coluna 'tipo' se não existir
+    
+    // Adiciona coluna 'arquivado' se não existir
+    try {
+        await pool.query(`ALTER TABLE castracao ADD COLUMN IF NOT EXISTS arquivado BOOLEAN DEFAULT FALSE;`);
+        console.log("Coluna 'arquivado' adicionada ou já existe na tabela castracao");
+    } catch (error) {
+        console.log("Erro ao adicionar coluna 'arquivado':", error.message);
+    }
+    
+    // Adiciona a coluna 'tipo' se não existir
    try {
        await pool.query(`ALTER TABLE castracao ADD COLUMN IF NOT EXISTS tipo VARCHAR(50) DEFAULT 'padrao';`);
         console.log("Coluna 'tipo' adicionada ou já existe na tabela castracao");
@@ -159,9 +168,18 @@ async function create_mutirao_inscricao() {
         localidades VARCHAR(255),
         contato VARCHAR(50),
         status VARCHAR(20) DEFAULT 'PENDENTE',
+        arquivado BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );`;
     await executeDDL(ddl, 'mutirao_inscricao');
+    
+    // Adiciona coluna 'arquivado' se não existir
+    try {
+        await pool.query(`ALTER TABLE mutirao_inscricao ADD COLUMN IF NOT EXISTS arquivado BOOLEAN DEFAULT FALSE;`);
+        console.log("Coluna 'arquivado' adicionada ou já existe na tabela mutirao_inscricao");
+    } catch (error) {
+        console.log("Erro ao adicionar coluna 'arquivado' em mutirao_inscricao:", error.message);
+    }
 }
 
 async function create_mutirao_pet() {
@@ -292,9 +310,18 @@ async function create_calendario_mutirao() {
         clinica VARCHAR(255) NOT NULL,
         vagas INT DEFAULT 0,
         criado_por VARCHAR(255),
+        arquivado BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`;
     await executeDDL(ddl, 'calendario_mutirao');
+    
+    // Adiciona coluna 'arquivado' se não existir
+    try {
+        await pool.query(`ALTER TABLE calendario_mutirao ADD COLUMN IF NOT EXISTS arquivado BOOLEAN DEFAULT FALSE;`);
+        console.log("Coluna 'arquivado' adicionada ou já existe na tabela calendario_mutirao");
+    } catch (error) {
+        console.log("Erro ao adicionar coluna 'arquivado':", error.message);
+    }
 }
 
 async function migrateCalendarioMutiraoEndereco() {

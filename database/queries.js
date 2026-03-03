@@ -63,10 +63,12 @@ const castracao_e_mutirao = `
         c.clinica,
         c.origem as data_evento,
         c.status,
+        c.arquivado,
         'castracao' as tipo,
         NULL as inscricao_id
     FROM castracao c
-    WHERE c.tipo IN ('baixo_custo', 'pets_rua', 'padrao') OR c.tipo IS NULL OR c.tipo = ''
+    WHERE (c.tipo IN ('baixo_custo', 'pets_rua', 'padrao') OR c.tipo IS NULL OR c.tipo = '')
+    AND (c.arquivado IS NULL OR c.arquivado = FALSE)
     UNION ALL
     SELECT 
         mp.id,
@@ -77,12 +79,14 @@ const castracao_e_mutirao = `
         mp.especie,
         cm.clinica,
         cm.data_evento,
-        'PENDENTE' as status,
+        mi.status,
+        mi.arquivado,
         'mutirao' as tipo,
         mi.id as inscricao_id
     FROM mutirao_inscricao mi
     LEFT JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
     LEFT JOIN mutirao_pet mp ON mi.id = mp.mutirao_inscricao_id
+    WHERE mi.arquivado IS NULL OR mi.arquivado = FALSE
     ORDER BY data_evento DESC;
 `;
 

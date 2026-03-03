@@ -1,46 +1,52 @@
-    <footer> <!-- Mantendo a tag footer -->
-        <div class="footer-content"> <!-- Adicionando um container para o conteúdo do footer -->
-            <p class="footer-copyright"> <!-- Adicionando classe para o parágrafo de copyright -->
+    <footer>
+        <div class="footer-content">
+            <p class="footer-copyright">
                 &copy; <%= new Date().getFullYear() %> - ONG Amor Animal Marilia.
-    
             </p>
         </div>
-   
-        <div class="footer-social"> <!-- Adicionando um container para os links de redes sociais -->
-            <a href="https://www.instagram.com/grupoamoranimal/?hl=pt" target="_blank"><img
-                    src="/static/css/favicon/insta.png" alt="Instagram"></a> <!-- Adicionando alt text -->
-            <a href="https://api.whatsapp.com/send?phone=5514998151723&text=ONGAmor%20Animal" target="_blank"><img
-                    src="/static/css/favicon/whats.png" alt="WhatsApp"></a> <!-- Adicionando alt text -->
-            <a href="https://web.facebook.com/ongamoranimal" target="_blank"><img src="/static/css/favicon/face.png"
-                    alt="Facebook"></a> <!--dicionando alt text-->
+        <div class="footer-social">
+            <a href="https://www.instagram.com/grupoamoranimal/?hl=pt" target="_blank">
+                <img src="/static/css/favicon/insta.png" alt="Instagram">
+            </a>
+            <a href="https://api.whatsapp.com/send?phone=5514998151723&text=ONGAmor%20Animal" target="_blank">
+                <img src="/static/css/favicon/whats.png" alt="WhatsApp">
+            </a>
+            <a href="https://web.facebook.com/ongamoranimal" target="_blank">
+                <img src="/static/css/favicon/face.png" alt="Facebook">
+            </a>
         </div>
     </footer>
-    <script src="/static/js/style.js"></script>
-    <script src="/static/js/general.js"></script>
-    <script src="/static/js/teste.js"></script>
-    <script src="/static/js/foto.js"></script>
-    <script src="/static/js/phone.js"></script>
-    <script src="/static/js/doacao.js"></script>
-    <script src="/static/js/table.js"></script>
-    <script src="/static/js/whats.js"></script>
-    <script src="/static/js/adote.js"></script>
-    <script src="/static/js/cep.js"></script>
-    <script src="/static/js/photobanner.js"></script>
-    <script src="/static/js/adotante.js"></script>
-    <script src="/static/js/constraste.js"></script>
-    <script src="/static/js/relatorio.js"></script>
-    <script src="/static/js/admin.js"></script>
-    <script src="/static/js/home.js"></script>
-    <script src="/static/js/procura_se.js"></script>
-    <script src="/static/js/cookie.js"></script>
-    <script src="/static/js/mutirao_inscricao.js"></script>
+    
+    <!-- Contrast Toggle - Simple JS -->
+    <script>
+    (function() {
+        var toggle = document.getElementById('contrast-toggle');
+        if (!toggle) return;
+        
+        // Check localStorage
+        if (localStorage.getItem('highContrast') === 'true') {
+            document.body.classList.add('high-contrast');
+            toggle.checked = true;
+        }
+        
+        toggle.addEventListener('change', function() {
+            if (toggle.checked) {
+                document.body.classList.add('high-contrast');
+                localStorage.setItem('highContrast', 'true');
+            } else {
+                document.body.classList.remove('high-contrast');
+                localStorage.setItem('highContrast', 'false');
+            }
+        });
+    })();
+    </script>
+    
+    <!-- Main JavaScript - Consolidated -->
+    <script src="/static/js/main.js"></script>
+    
     <% if (typeof enableAnalytics !== 'undefined' && enableAnalytics) { %>
-        <!-- Analytics only loaded with consent -->
         <script>
-            // Placeholder analytics snippet — substituir pelo real (Matomo/GA/others)
             console.log('Analytics enabled by user consent');
         </script>
     <% } %>
 </body>
-
-</html>
