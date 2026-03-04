@@ -173,6 +173,14 @@ async function create_mutirao_inscricao() {
     );`;
     await executeDDL(ddl, 'mutirao_inscricao');
     
+    // Adiciona coluna 'status' se não existir
+    try {
+        await pool.query(`ALTER TABLE mutirao_inscricao ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'PENDENTE';`);
+        console.log("Coluna 'status' adicionada ou já existe na tabela mutirao_inscricao");
+    } catch (error) {
+        console.log("Erro ao adicionar coluna 'status' em mutirao_inscricao:", error.message);
+    }
+    
     // Adiciona coluna 'arquivado' se não existir
     try {
         await pool.query(`ALTER TABLE mutirao_inscricao ADD COLUMN IF NOT EXISTS arquivado BOOLEAN DEFAULT FALSE;`);
