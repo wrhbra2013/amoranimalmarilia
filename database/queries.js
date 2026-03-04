@@ -51,6 +51,13 @@
 const castracao = `SELECT * FROM castracao ORDER BY origem DESC;`;
 const castracaoCount = `SELECT COUNT(*) AS count FROM castracao;`;
 
+/* tag castracao_total_count - Conta TODAS as castrações e mutirões (incluindo arquivadas) para o card de estatísticas */
+const castracao_total_count = `
+    SELECT 
+        (SELECT COUNT(*) FROM castracao WHERE tipo IN ('baixo_custo', 'pets_rua', 'padrao') OR tipo IS NULL OR tipo = '') +
+        (SELECT COUNT(*) FROM mutirao_inscricao) as total;
+`;
+
 /* tag castracao_e_mutirao - UNION de castracao e mutirao_pet para exibir na home */
 const castracao_e_mutirao = `
     SELECT 
@@ -137,8 +144,9 @@ const coletaCount = `SELECT COUNT(*) AS count FROM coleta;`;
           { name: 'adotado', query: adotado },
           { name: 'adotadoCount', query: adotadoCount },
            { name: 'castracao', query: castracao },
-           { name: 'castracaoCount', query: castracaoCount },
-           { name: 'castracao_e_mutirao', query: castracao_e_mutirao },
+            { name: 'castracaoCount', query: castracaoCount },
+            { name: 'castracaoTotalCount', query: castracao_total_count },
+            { name: 'castracao_e_mutirao', query: castracao_e_mutirao },
            { name: 'mutirao_inscricao', query: mutirao_inscricao },
           { name: 'mutirao_inscricaoCount', query: mutirao_inscricaoCount },
           { name: 'mutirao_pet', query: mutirao_pet },

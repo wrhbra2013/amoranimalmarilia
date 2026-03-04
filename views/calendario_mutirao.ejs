@@ -172,8 +172,14 @@
               <td><%= c.endereco || '-' %></td>
               <td><%= c.vagas === 0 ? 'Ilimitadas' : c.vagas %></td>
               <td>
-                <a href="/castracao/calendario-mutirao/relatorio/<%= c.id %>" class="btn btn-sm btn-info" title="Gerar Relatório">
+                <a href="/castracao/calendario-mutirao/relatorio/<%= c.id %>" class="btn btn-sm btn-info" title="Gerar Relatório PDF">
                   <i class="fas fa-file-pdf"></i>
+                </a>
+                <a href="/castracao/calendario-mutirao/export/<%= c.id %>/json" class="btn btn-sm btn-success" title="Exportar JSON" download>
+                  <i class="bi bi-file-earmark-json"></i>
+                </a>
+                <a href="/castracao/calendario-mutirao/export/<%= c.id %>/csv" class="btn btn-sm btn-secondary" title="Exportar CSV" download>
+                  <i class="bi bi-file-earmark-spreadsheet"></i>
                 </a>
               </td>
               <td>
