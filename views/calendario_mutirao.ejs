@@ -60,13 +60,23 @@
     }
   </script>
   <% } %>
+  
   <section>
     <h3>Datas de Mutirão Agendadas</h3>
     <% if (calendario && calendario.length > 0) { %>
       <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
         <table class="table table-striped table-hover">
-          <thead class="sticky-top">
-            <tr><th>Data</th><th>Clínica</th><th>Endereço</th><th>Vagas</th><th>Disponíveis</th><th>Ações</th><th>Criado em</th><th></th><th></th></tr>
+          <thead class="sticky-top bg-light">
+            <tr>
+              <th>Data</th>
+              <th>Clínica</th>
+              <th>Endereço</th>
+              <th>Vagas</th>
+              <th>Disponíveis</th>
+              <th>Inscrever</th>
+              <th>Criado em</th>
+              <th colspan="3">Ações</th>
+            </tr>
           </thead>
           <tbody>
           <% calendario.forEach(function(c){ %>
@@ -94,25 +104,31 @@
                     <i class="fas fa-user-plus"></i> Inscrever
                   </a>
                 <% } %>
-                </td>
-                 <td><%= c.created_at ? new Date(c.created_at).toLocaleString('pt-BR') : '' %></td>
-                <td>
+              </td>
+              <td><%= c.created_at ? new Date(c.created_at).toLocaleString('pt-BR') : '' %></td>
+              <td>
                 <% if (user) { %>
-                  <a href="/castracao/calendario-mutirao/relatorio/<%= c.id %>" class="btn btn-sm btn-info ms-1" title="Gerar Relatório">
-                    <i class="fas fa-file-pdf">Relatorio</i>
+                  <a href="/castracao/calendario-mutirao/relatorio/<%= c.id %>" class="btn btn-sm btn-info" title="Gerar Relatório">
+                    <i class="fas fa-file-pdf"></i>
                   </a>
+                <% } %>
+              </td>
+              <td>
+                <% if (user) { %>
                   <form action="/castracao/calendario-mutirao/arquivar/<%= c.id %>" method="POST" class="d-inline"
                         onsubmit="return confirm('Arquivar este mutirão?')">
-                    <button type="submit" class="btn btn-sm btn-warning ms-1" title="Arquivar Mutirão">
-                      <i class="bi bi-archive">Arquivar</i>
+                    <button type="submit" class="btn btn-sm btn-warning" title="Arquivar Mutirão">
+                      <i class="bi bi-archive"></i>
                     </button>
                   </form>
-                  </td>
-                 <td>
+                <% } %>
+              </td>
+              <td>
+                <% if (user) { %>
                   <form action="/castracao/calendario-mutirao/delete/<%= c.id %>" method="POST" class="d-inline"
                         onsubmit="return confirm('Tem certeza que deseja excluir este mutirão e todas as inscrições relacionadas?')">
-                    <button type="submit" class="btn btn-sm btn-danger ms-1" title="Excluir Mutirão">
-                      <i class="bi bi-trash">Excluir</i>
+                    <button type="submit" class="btn btn-sm btn-danger" title="Excluir Mutirão">
+                      <i class="bi bi-trash"></i>
                     </button>
                   </form>
                 <% } %>
@@ -133,8 +149,14 @@
     <% if (arquivados && arquivados.length > 0) { %>
       <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
         <table class="table table-striped table-hover">
-          <thead class="sticky-top">
-            <tr><th>Data</th><th>Clínica</th><th>Endereço</th><th>Vagas</th><th>Ações</th></tr>
+          <thead class="sticky-top bg-light">
+            <tr>
+              <th>Data</th>
+              <th>Clínica</th>
+              <th>Endereço</th>
+              <th>Vagas</th>
+              <th colspan="3">Ações</th>
+            </tr>
           </thead>
           <tbody>
           <% arquivados.forEach(function(c){ %>
@@ -144,15 +166,22 @@
               <td><%= c.endereco || '-' %></td>
               <td><%= c.vagas === 0 ? 'Ilimitadas' : c.vagas %></td>
               <td>
+                <a href="/castracao/calendario-mutirao/relatorio/<%= c.id %>" class="btn btn-sm btn-info" title="Gerar Relatório">
+                  <i class="fas fa-file-pdf"></i>
+                </a>
+              </td>
+              <td>
                 <form action="/castracao/calendario-mutirao/desarquivar/<%= c.id %>" method="POST" class="d-inline">
                   <button type="submit" class="btn btn-sm btn-success" title="Restaurar">
-                    <i class="bi bi-archive-fill">Restaurar</i>
+                    <i class="bi bi-archive-fill"></i>
                   </button>
                 </form>
+              </td>
+              <td>
                 <form action="/castracao/calendario-mutirao/delete/<%= c.id %>" method="POST" class="d-inline"
                       onsubmit="return confirm('Excluir definitivamente?')">
                   <button type="submit" class="btn btn-sm btn-danger" title="Excluir">
-                    <i class="bi bi-trash">Excluir</i>
+                    <i class="bi bi-trash"></i>
                   </button>
                 </form>
               </td>
