@@ -63,7 +63,7 @@ const castracao_e_mutirao = `
         c.clinica,
         c.origem as data_evento,
         c.status,
-        c.arquivado,
+        COALESCE(c.arquivado, FALSE) as arquivado,
         'castracao' as tipo,
         NULL as inscricao_id
     FROM castracao c
@@ -80,13 +80,14 @@ const castracao_e_mutirao = `
         cm.clinica,
         cm.data_evento,
         mi.status,
-        mi.arquivado,
+        COALESCE(mi.arquivado, FALSE) as arquivado,
         'mutirao' as tipo,
         mi.id as inscricao_id
     FROM mutirao_inscricao mi
     LEFT JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
     LEFT JOIN mutirao_pet mp ON mi.id = mp.mutirao_inscricao_id
-    WHERE mi.arquivado IS NULL OR mi.arquivado = FALSE
+    WHERE (mi.arquivado IS NULL OR mi.arquivado = FALSE)
+    AND (cm.arquivado IS NULL OR cm.arquivado = FALSE)
     ORDER BY data_evento DESC;
 `;
 

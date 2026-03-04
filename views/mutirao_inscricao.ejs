@@ -1,5 +1,10 @@
 <%- include("_header") -%>
 
+<style>
+.medicamento-toggle { display: none; }
+.medicamento-toggle:checked ~ .medicamento-field { display: block !important; }
+</style>
+
 <main class="container mt-4">
   <h1>Inscrição para Mutirão de Castração</h1>
   <p class="text-muted">Preencha os dados abaixo para inscrever-se no mutirão de castração.</p>
@@ -88,7 +93,8 @@
           </div>
           <div class="col-md-3">
             <label class="form-label">Usa medicamento?</label>
-            <select id="petTemMedicamento" class="form-select medicamento-select">
+            <input type="checkbox" id="medicamento-toggle" class="medicamento-toggle">
+            <select id="petTemMedicamento" class="form-select" onchange="document.getElementById('medicamento-toggle').checked = this.value === 'sim';">
               <option value="nao">Não</option>
               <option value="sim">Sim</option>
             </select>
@@ -152,6 +158,8 @@
     </div>
   </div>
 </main>
+
+<script src="/static/js/mutirao_inscricao.js"></script>
 
 <%- include("_footer") -%>
 
