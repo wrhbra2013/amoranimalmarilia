@@ -1732,6 +1732,108 @@ router.get('/calendario-mutirao/relatorio/:id', isAdmin, async (req, res) => {
     }
 });
 
+// GET /castracao/calendario-mutirao/export/:id/:formato - Exporta lista de inscritos
+router.get('/calendario-mutirao/export/:id/:formato', isAdmin, async (req, res) => {
+    const { id, formato } = req.params;
+    const mutiraoId = parseInt(id);
+    
+    try {
+        // Buscar dados do mutirão
+        const mutiraoResult = await executeQuery('SELECT * FROM calendario_mutirao WHERE id = $1', [mutiraoId]);
+        if (!mutiraoResult || mutiraoResult.length === 0) {
+            req.flash('error', 'Mutirão não encontrado.');
+            return res.redirect('/castracao/calendario-mutirao');
+        }
+        const mutirao = mutiraoResult[0];
+        
+        // Buscar inscritos com pets
+        const inscritosResult = await executeQuery(`
+            SELECT 
+                mi.id as inscricao_id,
+                mi.ticket,
+                mi.nome_responsavel,
+                mi.contato,
+                mi.localidades,
+                mi.created_at,
+                mp.nome as pet_nome,
+                mp.especie,
+                mp.sexo,
+                mp.idade,
+                mp.peso,
+                mp.vacinado,
+                mp.medicamento
+            FROM mutirao_inscricao mi
+            LEFT JOIN mutirao_pet mp ON mi.id = mp.mutirao_inscricao_id
+            WHERE mi.calendario_mutirao_id = $1
+            ORDER BY mi.created_at DESC
+        `, [mutiraoId]);
+        
+        // Preparar dados para exportação
+        const dados = [];
+        for (const ins of inscritosResult) {
+            dados.push({
+                ticket: ins.ticket,
+                responsavel: ins.nome_responsavel,
+                contato: ins.contato,
+                localidades: ins.localidades || '',
+                pet_nome: ins.pet_nome || '',
+                especie: ins.especie === 'cachorro' ? 'Cachorro' : (ins.especie === 'gato' ? 'Gato' : ''),
+                sexo: ins.sexo === 'macho' ? 'Macho' : (ins.sexo === 'femea' ? 'Fêmea' : ''),
+                idade: ins.idade || '',
+                peso: ins.peso || '',
+                vacinado: ins.vacinado ? 'Sim' : 'Não',
+                medicamento: ins.medicamento || '',
+                data_inscricao: ins.created_at ? new Date(ins.created_at).toLocaleString('pt-BR') : ''
+            });
+        }
+        
+        // Gerar nome do arquivo
+        const dataStr = new Date().toISOString().slice(0,10);
+        const filename = `mutirao_${mutiraoId}_inscritos_${dataStr}`;
+        
+        // Salvar na pasta uploads
+        const fs = require('fs');
+        const path = require('path');
+        const uploadsDir = path.join(__dirname, '..', '..', 'amoranimal_uploads', 'mutirao');
+        
+        // Criar diretório se não existir
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        
+        if (formato === 'json') {
+            const jsonContent = JSON.stringify(dados, null, 2);
+            const filepath = path.join(uploadsDir, `${filename}.json`);
+            fs.writeFileSync(filepath, jsonContent, 'utf8');
+            
+            res.download(filepath, `${filename}.json`, (err) => {
+                if (err) console.error('Erro ao baixar:', err);
+            });
+        } else if (formato === 'csv') {
+            const headers = ['Ticket', 'Responsável', 'Contato', 'Localidade', 'Pet', 'Espécie', 'Sexo', 'Idade', 'Peso', 'Vacinado', 'Medicamento', 'Data Inscrição'];
+            const rows = dados.map(d => [
+                d.ticket, d.responsavel, d.contato, d.localidades, d.pet_nome, 
+                d.especie, d.sexo, d.idade, d.peso, d.vacinado, d.medicamento, d.data_inscricao
+            ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+            
+            const csvContent = [headers.join(','), ...rows].join('\n');
+            const filepath = path.join(uploadsDir, `${filename}.csv`);
+            fs.writeFileSync(filepath, '\ufeff' + csvContent, 'utf8'); // BOM para Excel
+            
+            res.download(filepath, `${filename}.csv`, (err) => {
+                if (err) console.error('Erro ao baixar:', err);
+            });
+        } else {
+            req.flash('error', 'Formato inválido.');
+            res.redirect('/castracao/calendario-mutirao');
+        }
+    } catch (error) {
+        console.error(`[castracaoRoutes] Erro ao exportar:`, error);
+        req.flash('error', 'Erro ao exportar dados.');
+        res.redirect('/castracao/calendario-mutirao');
+    }
+});
+
 // DELETE /castracao/calendario-mutirao/delete/:id - Exclui um mutirão (admin)
 router.post('/calendario-mutirao/delete/:id', isAdmin, async (req, res) => {
     const client = await pool.connect();

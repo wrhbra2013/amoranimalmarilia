@@ -99,38 +99,36 @@
           </div>
         </div>
       </div>
-
-       
-
-     
        
        <!-- Container oculto para armazenar os dados dos pets -->
        <div id="petsDataContainer"></div>
 
        <!-- Área de visualização dos pets cadastrados -->
        <div class="row mb-3">
-         <div class="col-12">
-           <h5>Pets Cadastrados (<span id="petCount">0</span>)</h5>
-            <div id="petsTableContainer" class="table-responsive border rounded" style="max-height: 300px; overflow-y: auto;">
-              <div id="petsSummary" class="p-3 text-muted text-center">
-                <i class="bi bi-paw" style="font-size: 2rem;"></i>
-                <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
-              </div>
-            </div>
+         <div class="col-12 d-flex justify-content-between align-items-center">
+           <h5 class="mb-0">Pets Cadastrados (<span id="petCount">0</span>)</h5>
+           <div>
+             <button type="button" class="btn btn-outline-primary btn-sm" id="btnAddPet">
+               <i class="bi bi-plus-lg"></i> Adicionar Pet
+             </button>
+             <button type="button" class="btn btn-outline-danger btn-sm ms-1" id="btnClearForm" style="display: none;">
+               <i class="bi bi-x-lg"></i> Limpar
+             </button>
+           </div>
+         </div>
+         <div class="col-12 mt-2">
+           <div id="petsTableContainer" class="table-responsive border rounded" style="max-height: 300px; overflow-y: auto;">
+             <div id="petsSummary" class="p-3 text-muted text-center">
+               <i class="bi bi-paw" style="font-size: 2rem;"></i>
+               <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
+             </div>
+           </div>
          </div>
        </div>
 
         <!-- Botões de ação -->
         <div class="row mb-3">
-          <div class="col-md-6">
-            <button type="button" class="btn btn-outline-primary" id="btnAddPet">
-              <i class="bi bi-plus-lg"></i> Adicionar Pet
-            </button>
-            <button type="button" class="btn btn-outline-danger ms-2" id="btnClearForm" style="display: none;">
-              <i class="bi bi-x-lg"></i> Limpar Formulário
-            </button>
-          </div>
-          <div class="col-md-6 text-end">
+          <div class="col-md-12 text-end">
             <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit">
               <i class="bi bi-check-lg"></i> Realizar Inscrição
             </button>
