@@ -730,6 +730,26 @@ router.get('/mutirao-inscricao/sucesso/:id', async (req, res) => {
     }
 });
 
+// GET /castracao/mutirao-inscricao/comprovante/:id - Redireciona para o comprovante PDF
+router.get('/mutirao-inscricao/comprovante/:id', async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        const result = await executeQuery('SELECT ticket FROM mutirao_inscricao WHERE id = $1', [id]);
+        
+        if (!result || result.length === 0) {
+            req.flash('error', 'Inscrição não encontrada.');
+            return res.redirect('/castracao/calendario-mutirao');
+        }
+        
+        res.redirect(`/castracao/mutirao/comprovante/${result[0].ticket}`);
+    } catch (error) {
+        console.error('[castracaoRoutes GET /mutirao-inscricao/comprovante] Erro:', error);
+        req.flash('error', 'Erro ao gerar comprovante.');
+        res.redirect('/castracao/calendario-mutirao');
+    }
+});
+
 // GET /castracao/mutirao/comprovante/:ticket - Gera PDF do comprovante por ticket
 router.get('/mutirao/comprovante/:ticket', async (req, res) => {
     const { ticket } = req.params;
@@ -1231,7 +1251,7 @@ router.get('/lista', async (req, res) => {
   router.post('/updateStatusAll', async (req, res) => {
       try {
           // Update regular castracoes
-          const updateCastracao = `UPDATE castracao SET status = 'ATENDIDO', atendimento_data = CURRENT_TIMESTAMP WHERE status != 'ATENDIDO' OR status IS NULL`;
+          const updateCastracao = `UPDATE castracao SET status = 'ATENDIDO', atendido_em = CURRENT_TIMESTAMP WHERE status != 'ATENDIDO' OR status IS NULL`;
           const result1 = await pool.query(updateCastracao);
           
           // Update mutirao inscriptions
@@ -1358,15 +1378,18 @@ router.get('/lista', async (req, res) => {
 // GET /castracao/arquivados - Lista todos os arquivados
   router.get('/arquivados', async (req, res) => {
       try {
-          const castracao = await pool.query(`SELECT * FROM castracao WHERE arquivado = TRUE ORDER BY origem DESC`);
-          const mutirao = await pool.query(`
+          const castracaoResult = await pool.query(`SELECT * FROM castracao WHERE arquivado = TRUE ORDER BY origem DESC`);
+          const mutiraoResult = await pool.query(`
               SELECT mi.*, cm.clinica, cm.data_evento 
               FROM mutirao_inscricao mi 
               LEFT JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id 
               WHERE mi.arquivado = TRUE 
               ORDER BY mi.created_at DESC
           `);
-          res.render('castracao_arquivados', { castracao: castracao.rows, mutirao: mutirao.rows });
+          res.render('castracao_arquivados', { 
+            castracao: castracaoResult.rows, 
+            mutirao: mutiraoResult.rows 
+          });
       } catch (error) {
           console.error(`[castracaoRoutes] Erro ao buscar arquivados:`, error);
           req.flash('error', 'Erro ao carregar arquivos.');

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria Sistema - ONG Amor Animal Marília</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; }
+        h2 { color: #2980b9; margin-top: 30px; margin-bottom: 15px; }
+        h3 { color: #16a085; margin-top: 20px; margin-bottom: 10px; }
+        .section { background: white; padding: 25px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .alert { padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .alert-danger { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .alert-warning { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+        .alert-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .alert-info { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #3498db; color: white; }
+        tr:hover { background: #f5f5f5; }
+        .route-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin: 10px 0; }
+        .route-item { background: #ecf0f1; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 13px; }
+        .mermaid { background: white; padding: 20px; border-radius: 8px; margin: 15px 0; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .badge-red { background: #e74c3c; color: white; }
+        .badge-orange { background: #f39c12; color: white; }
+        .badge-green { background: #27ae60; color: white; }
+        .badge-blue { background: #3498db; color: white; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
+        .toc { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .toc ul { list-style: none; padding-left: 0; }
+        .toc li { margin: 8px 0; }
+        .toc a { color: #3498db; text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Auditoria Técnica Completa</h1>
+        <h2>Sistema: ONG Amor Animal Marília</h2>
+        <p><strong>Data da Auditoria:</strong> 03/03/2026</p>
+        <p><strong>Stack:</strong> Node.js + Express + PostgreSQL + EJS</p>
+
+        <div class="toc">
+            <h3>📋 Índice</h3>
+            <ul>
+                <li><a href="#resumo">1. Resumo Executivo</a></li>
+                <li><a href="#seguranca">2. Auditoria de Segurança</a></li>
+                <li><a href="#arquitetura">3. Arquitetura do Sistema</a></li>
+                <li><a href="#rotas">4. Rotas e Endpoints</a></li>
+                <li><a href="#banco">5. Banco de Dados</a></li>
+                <li><a href="#fluxograma">6. Fluxograma do Sistema</a></li>
+                <li><a href="#recomendacoes">7. Recomendações</a></li>
+            </ul>
+        </div>
+
+        <div class="section" id="resumo">
+            <h2>1. Resumo Executivo</h2>
+            <div class="alert alert-info">
+                <strong>Visão Geral:</strong> Sistema web completo para gestão de ONG de animais, incluindo controle de adoções, castrações, voluntários, eventos e transparência.
+            </div>
+            <table>
+                <tr><th>Componente</th><th>Status</th><th>Observação</th></tr>
+                <tr><td>Backend</td><td><span class="badge badge-green">OK</span></td><td>Express.js funcionando</td></tr>
+                <tr><td>Banco de Dados</td><td><span class="badge badge-green">OK</span></td><td>PostgreSQL com 20+ tabelas</td></tr>
+                <tr><td>Autenticação</td><td><span class="badge badge-red">CRÍTICO</span></td><td>Senhas em texto plano</td></tr>
+                <tr><td>Segurança</td><td><span class="badge badge-orange">ATENÇÃO</span></td><td>Várias vulnerabilidades</td></tr>
+                <tr><td>Upload</td><td><span class="badge badge-green">OK</span></td><td>Multer configurado</td></tr>
+                <tr><td>PDF</td><td><span class="badge badge-green">OK</span></td><td>pdfmake implementado</td></tr>
+            </table>
+        </div>
+
+        <div class="section" id="seguranca">
+            <h2>2. Auditoria de Segurança</h2>
+            
+            <div class="alert alert-danger">
+                <strong>🔴 CRÍTICO - Senhas em Texto Plano</strong><br>
+                As senhas são armazenadas e comparadas em texto plano (sem hash). Arquivos: <code>routes/authRoutes.js:38</code>, <code>database/create.js:463</code>
+            </div>
+
+            <div class="alert alert-danger">
+                <strong>🔴 CRÍTICO - Session Secret Hardcoded</strong><br>
+                O secret da sessão está hardcoded no código-fonte. Arquivo: <code>index.js:28</code>
+            </div>
+
+            <div class="alert alert-warning">
+                <strong>🟠 ALTO - SQL Injection Potencial</strong><br>
+                O sistema usa queries parametrizadas ($1, $2), o que é bom, mas há concatenação em alguns pontos. Sempre usar parâmetros.
+            </div>
+
+            <div class="alert alert-warning">
+                <strong>🟠 ALTO - Middleware de Auth Duplicado</strong><br>
+                Há duas definições da função <code>isAdmin</code> em <code>middleware/auth.js</code> (linhas 14 e 26), causando confusão e potencial bypass.
+            </div>
+
+            <div class="alert alert-warning">
+                <strong>🟠 MÉDIO - Rate Limiting Ausente</strong><br>
+                Não há proteção contra ataques de força bruta ou DDoS.
+            </div>
+
+            <div class="alert alert-warning">
+                <strong>🟠 MÉDIO - Headers de Segurança Ausentes</strong><br>
+                Faltam headers como HSTS, X-Frame-Options, CSP.
+            </div>
+
+            <div class="alert alert-info">
+                <strong>🟢 BOAS PRÁTICAS</strong><br>
+                - Uso de express-session com httpOnly cookies<br>
+                - Queries parametrizadas na maioria dos pontos<br>
+                - Middleware de autenticação implementado<br>
+                - Flash messages para feedback ao usuário
+            </div>
+        </div>
+
+        <div class="section" id="arquitetura">
+            <h2>3. Arquitetura do Sistema</h2>
+            
+            <h3>3.1 Estrutura de Arquivos</h3>
+            <pre style="background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto;">
+amoranimalmarilia/
+├── index.js              # Entry point, configuração do Express
+├── package.json          # Dependências
+├── routes/               # Rotas da aplicação
+│   ├── homeRoutes.js     # Homepage e campanhas
+│   ├── adocaoRoutes.js   # Sistema de adoção
+│   ├── adotanteRoutes.js # Cadastro de adotantes
+│   ├── adotadoRoutes.js  # Pets adotados
+│   ├── castracaoRoutes.js # Castrações e mutirões
+│   ├── clinicasRoutes.js # Gestão de clínicas
+│   ├── authRoutes.js     # Login/Logout
+│   ├── adminRoutes.js    # Administração
+│   ├── eventosRoutes.js  # Eventos
+│   ├── transparenciaRoutes.js # Transparência
+│   └── ...outras rotas
+├── database/
+│   ├── database.js       # Configuração PostgreSQL
+│   ├── create.js         # Criação de tabelas
+│   ├── queries.js        # Queries SQL
+│   └── insert.js         # Inserções
+├── middleware/
+│   └── auth.js           # Middleware de autenticação
+├── views/                # Templates EJS
+├── static/               # Arquivos estáticos
+└── utils/
+    └── multerConfig.js   # Upload de arquivos
+            </pre>
+
+            <h3>3.2 Stack Tecnológico</h3>
+            <table>
+                <tr><th>Tecnologia</th><th>Versão</th><th>Uso</th></tr>
+                <tr><td>Node.js</td><td>-</td><td>Runtime JavaScript</td></tr>
+                <tr><td>Express</td><td>4.21.2</td><td>Framework web</td></tr>
+                <tr><td>PostgreSQL</td><td>-</td><td>Banco de dados</td></tr>
+                <tr><td>EJS</td><td>3.1.10</td><td>Template engine</td></tr>
+                <tr><td>express-session</td><td>1.18.1</td><td>Gerenciamento de sessão</td></tr>
+                <tr><td>multer</td><td>2.0.1</td><td>Upload de arquivos</td></tr>
+                <tr><td>pdfmake</td><td>0.2.20</td><td>Geração de PDFs</td></tr>
+            </table>
+        </div>
+
+        <div class="section" id="rotas">
+            <h2>4. Rotas e Endpoints</h2>
+
+            <h3>4.1 Rotas Públicas</h3>
+            <div class="route-list">
+                <div class="route-item">GET / - Home/Dashboard</div>
+                <div class="route-item">GET /home - Dashboard</div>
+                <div class="route-item">GET /adote - Adoção</div>
+                <div class="route-item">GET /adocao - Adoção</div>
+                <div class="route-item">GET /adotante - Lista adotantes</div>
+                <div class="route-item">GET /adotado - Pets adotados</div>
+                <div class="route-item">GET /castracao - Dashboard castração</div>
+                <div class="route-item">GET /castracao/pets-rua - Castração pets rua</div>
+                <div class="route-item">GET /castracao/baixo-custo - Castração baixo custo</div>
+                <div class="route-item">GET /castracao/calendario-mutirao - Calendário mutirões</div>
+                <div class="route-item">GET /clinicas - Lista clínicas</div>
+                <div class="route-item">GET /procura_se - Procura-se</div>
+                <div class="route-item">GET /parceria - Parcerias</div>
+                <div class="route-item">GET /doacao - Doações</div>
+                <div class="route-item">GET /sobre - Sobre a ONG</div>
+                <div class="route-item">GET /privacy - Política de privacidade</div>
+                <div class="route-item">GET /transparencia - Transparência</div>
+                <div class="route-item">GET /eventos - Lista eventos</div>
+                <div class="route-item">GET /cookie-consent - Consentimento cookies</div>
+            </div>
+
+            <h3>4.2 Rotas de Autenticação</h3>
+            <div class="route-list">
+                <div class="route-item">GET /auth/login - Formulário login</div>
+                <div class="route-item">POST /auth/login - Processa login</div>
+                <div class="route-item">GET /auth/logout - Logout</div>
+            </div>
+
+            <h3>4.3 Rotas Administrativas (Protegidas)</h3>
+            <div class="route-list">
+                <div class="route-item">GET /admin/form - Criar admin</div>
+                <div class="route-item">POST /admin/form - Salvar admin</div>
+                <div class="route-item">POST /admin/* - Operações admin</div>
+                <div class="route-item">POST /adocao/delete/:id - Deletar adoção</div>
+                <div class="route-item">POST /castracao/delete/:id - Deletar castração</div>
+                <div class="route-item">POST /adotante/delete/* - Deletar adotante</div>
+                <div class="route-item">POST /delete/campanha/* - Deletar campanha</div>
+                <div class="route-item">POST /castracao/calendario - Criar calendário</div>
+                <div class="route-item">POST /castracao/calendario-mutirao - Criar mutirão</div>
+            </div>
+
+            <h3>4.4 Rotas de Formulários</h3>
+            <div class="route-list">
+                <div class="route-item">GET /adocao/form - Form adoção</div>
+                <div class="route-item">POST /adocao/form - Salvar adoção</div>
+                <div class="route-item">GET /adocao/interessados/form - Form interesse</div>
+                <div class="route-item">POST /adocao/interessados/form - Salvar interesse</div>
+                <div class="route-item">GET /adotante/form/:idPet - Form adotante</div>
+                <div class="route-item">GET /castracao/form - Form castração</div>
+                <div class="route-item">GET /castracao/mutirao-inscricao/:id - Inscrição mutirão</div>
+                <div class="route-item">POST /castracao/mutirao-inscricao - Processar inscrição</div>
+                <div class="route-item">GET /eventos/form - Form evento</div>
+            </div>
+
+            <h3>4.5 Rotas de Relatórios/PDFs</h3>
+            <div class="route-list">
+                <div class="route-item">GET /relatorio - Relatórios</div>
+                <div class="route-item">GET /castracao/sucesso/:ticket - Comprovante</div>
+                <div class="route-item">GET /castracao/comprovante/:ticket - PDF</div>
+                <div class="route-item">GET /castracao/mutirao/comprovante/:ticket - PDF mutirão</div>
+            </div>
+        </div>
+
+        <div class="section" id="banco">
+            <h2>5. Banco de Dados</h2>
+
+            <h3>5.1 Tabelas do Sistema</h3>
+            <table>
+                <tr><th>Tabela</th><th>Descrição</th><th>Campos Principais</th></tr>
+                <tr><td>login</td><td>Usuários administradores</td><td>usuario, senha, isAdmin</td></tr>
+                <tr><td>adocao</td><td>Pets para adoção</td><td>nome, especie, porte, arquivo, termo_arquivo</td></tr>
+                <tr><td>adotante</td><td>Candidatos à adoção</td><td>nome, contato, CEP, idPet</td></tr>
+                <tr><td>adotado</td><td>Pets adotados</td><td>pet, tutor, historia, arquivo</td></tr>
+                <tr><td>castracao</td><td>Castrações individuais</td><td>ticket, nome, especie, clinica, status, tipo</td></tr>
+                <tr><td>clinicas</td><td>Clínicas parceiras</td><td>nome, endereco, telefone</td></tr>
+                <tr><td>mutirao_inscricao</td><td>Inscrições em mutirões</td><td>ticket, nome_responsavel, calendario_mutirao_id</td></tr>
+                <tr><td>mutirao_pet</td><td>Pets dos mutirões</td><td>especie, sexo, idade, vacinado</td></tr>
+                <tr><td>calendario_mutirao</td><td>Calendário de mutirões</td><td>data_evento, clinica, vagas, arquivado</td></tr>
+                <tr><td>procura_se</td><td>Animais procurados</td><td>nomePet, especie, local, tutor</td></tr>
+                <tr><td>parceria</td><td>Parcerias comerciais</td><td>empresa, representante, proposta</td></tr>
+                <tr><td>voluntario</td><td>Cadastro voluntários</td><td>nome, telefone, disponibilidade, habilidade</td></tr>
+                <tr><td>coleta</td><td>Doações de物品</td><td>nome, item, quantidade, endereco</td></tr>
+                <tr><td>home</td><td>Campanhas/Notícias</td><td>titulo, arquivo, link</td></tr>
+                <tr><td>eventos</td><td>Eventos da ONG</td><td>titulo, data_evento, arquivo, descricao</td></tr>
+                <tr><td>transparencia</td><td>Documentos transparência</td><td>titulo, tipo, ano, arquivo</td></tr>
+                <tr><td>solicitacao_acesso</td><td>Solicitações de acesso</td><td>nome, organizacao, email, status, token</td></tr>
+                <tr><td>interessados_adocao</td><td>Interessados em adoção</td><td>nome, especie, porte, cidade</td></tr>
+                <tr><td>termo_responsabilidade</td><td>Termos assinados</td><td>nome, cpf, pet_interesse, arquivo</td></tr>
+                <tr><td>campanha_fotos</td><td>Fotos campanhas</td><td>campanha_id, arquivo, descricao</td></tr>
+                <tr><td>evento_fotos</td><td>Fotos eventos</td><td>evento_id, arquivo</td></tr>
+            </table>
+
+            <h3>5.2 Sistema de Castração</h3>
+            <div class="alert alert-info">
+                <strong>Tipos de Castração:</strong><br>
+                - <code>baixo_custo</code>: Castrações convencionais<br>
+                - <code>mutirao</code>: Mutirões de castração<br>
+                - <code>pets_rua</code>: Pets de rua<br>
+                - <code>padrao</code>: Castração padrão
+            </div>
+
+            <h3>5.3 Sistema de Adoção</h3>
+            <div class="alert alert-info">
+                <strong>Fluxo de Adoção:</strong><br>
+                1. Pet cadastrado em <code>adocao</code><br>
+                2. Interessado se cadastra em <code>interessados_adocao</code><br>
+                3. Sistema calcula compatibilidade (matching)<br>
+                4. Adotante preenche formulário <code>adotante</code><br>
+                5. Termo de responsabilidade em <code>termo_responsabilidade</code>
+            </div>
+        </div>
+
+        <div class="section" id="fluxograma">
+            <h2>6. Fluxograma do Sistema</h2>
+            
+            <h3>6.1 Visão Geral</h3>
+            <div class="mermaid">
+            graph TD
+                A[Usuário] -->|Acessa| B[Servidor Express]
+                B --> C{Rota}
+                
+                C -->|Pública| D[Home/Dashboard]
+                C -->|Pública| E[Adoção]
+                C -->|Pública| F[Castração]
+                C -->|Pública| G[Eventos]
+                C -->|/auth/login| H[Login]
+                
+                H -->|Credenciais OK| I[Session Criada]
+                H -->|Credenciais INV| J[Erro Login]
+                
+                I --> K{isAdmin?}
+                K -->|Sim| L[Dashboard Admin]
+                K -->|Não| M[Dashboard User]
+                
+                L --> N[Gerenciar Adoções]
+                L --> O[Gerenciar Castrações]
+                L --> P[Gerenciar Eventos]
+                L --> Q[Gerenciar Transparência]
+                L --> R[Criar Usuários Admin]
+                
+                subgraph "Sistema de Adoção"
+                E --> E1[Formulário Adoção]
+                E1 --> E2[Salva na Tabela adocao]
+                E2 --> E3[Interessado se cadastra]
+                E3 --> E4[Matching Automático]
+                E4 --> E5[Termo de Responsabilidade]
+                end
+                
+                subgraph "Sistema de Castração"
+                F --> F1[Escolhe Tipo]
+                F1 --> F1a[Baixo Custo]
+                F1 --> F1b[Pet de Rua]
+                F1 --> F1c[Mutirão]
+                
+                F1a --> F2[Gera Ticket B####]
+                F1b --> F2
+                F1c --> F3[Calendário Mutirão]
+                F3 --> F4[Inscrição com Vagas]
+                F4 --> F5[Gera Ticket M####]
+                
+                F2 --> F6[Comprovante PDF]
+                F5 --> F6
+                end
+                
+                subgraph "Sistema de Eventos"
+                G --> G1[Lista Eventos]
+                G1 --> G2[Detalhes Evento]
+                G2 --> G3[Fotos]
+                G3 --> G4[Comentários]
+                end
+            </div>
+
+            <h3>6.2 Fluxo de Autenticação</h3>
+            <div class="mermaid">
+            sequenceDiagram
+                participant U as Usuário
+                participant S as Servidor
+                participant DB as PostgreSQL
+                participant Sess as Session
+                
+                U->>S: POST /auth/login
+                S->>DB: SELECT usuario, senha FROM login
+                DB-->>S: Resultado query
+                
+                alt Usuário encontrado
+                    S->>S: Compara senha (TEXTO PLANO!)
+                    alt Senha OK
+                        S->>Sess: req.session.user = {id, usuario, isAdmin}
+                        S->>U: Redirect /home
+                    else Senha INV
+                        S->>U: Erro "Credenciais inválidas"
+                    end
+                else Usuário não encontrado
+                    S->>U: Erro "Credenciais inválidas"
+                end
+            </div>
+
+            <h3>6.3 Fluxo de Adoção com Matching</h3>
+            <div class="mermaid">
+            graph LR
+                A[Pet Cadastrado] --> B[Tabela adocao]
+                C[Interessado] --> D[Tabela interessados_adocao]
+                D --> E[calculateMatchScore]
+                B --> E
+                E --> F{Score > 0?}
+                F -->|Sim| G[Exibir Match]
+                F -->|Não| H[Sem Compatibilidade]
+                
+                subgraph "Cálculo de Score"
+                E --> E1[Espécie: 50 pts]
+                E --> E2[Porte: 30 pts]
+                E --> E3[Características: 5 pts/termo]
+                end
+            </div>
+
+            <h3>6.4 Fluxo de Castração</h3>
+            <div class="mermaid">
+            graph TD
+                A[Usuário acessa /castracao] --> B{Escolhe tipo}
+                
+                B -->|Baixo Custo| C[Form castração]
+                B -->|Pet de Rua| C
+                B -->|Mutirão| D[Calendário Mutirões]
+                
+                D --> E{Inscrição}
+                E -->|Vagas Disponíveis| F[Formulário Inscrição]
+                E -->|Sem Vagas| G[Erro: Sem vagas]
+                
+                C --> H[Dados Tutor + Pets]
+                F --> H
+                
+                H --> I[generateCastracaoTicket]
+                I --> J[Salva na Tabela castracao/mutirao_inscricao]
+                J --> K[Gera Ticket Único]
+                K --> L[Redirect /sucesso/:ticket]
+                L --> M[Exibe Comprovante]
+                M --> N[Download PDF]
+            </div>
+
+            <h3>6.5 Fluxo de Upload de Arquivos</h3>
+            <div class="mermaid">
+            graph LR
+                A[Arquivo] --> B[multer]
+                B --> C{Destino}
+                C -->|Adoção| D[/amoranimal_uploads/adocao]
+                C -->|Campanha| E[/amoranimal_uploads/campanha]
+                C -->|Home| F[/amoranimal_uploads/home]
+                C -->|Eventos| G[/amoranimal_uploads/eventos]
+                
+                D --> H[Renomeia arquivo]
+                E --> H
+                F --> H
+                G --> H
+                
+                H --> I[Salva caminho no Banco]
+                I --> J[Arquivo disponível em /uploads]
+            </div>
+
+            <h3>6.6 Dashboard Admin</h3>
+            <div class="mermaid">
+            graph TD
+                A[Dashboard /home] --> B{Usuário Admin?}
+                B -->|Não| C[Dashboard Público]
+                B -->|Sim| D[Dashboard Admin]
+                
+                D --> E[Estatísticas]
+                E --> E1[Total Adoções]
+                E --> E2[Total Castrações]
+                E --> E3[Total Voluntários]
+                E --> E4[Eventos]
+                
+                D --> F[Ações Admin]
+                F --> G[CRUD Adoções]
+                F --> H[CRUD Castrações]
+                F --> I[CRUD Eventos]
+                F --> J[CRUD Transparência]
+                F --> K[Gerenciar Calendário Mutirões]
+                F --> L[Criar Admin]
+            </div>
+
+            <h3>6.7 Sistema de Eventos</h3>
+            <div class="mermaid">
+            graph TD
+                A[Admin] --> B[GET /eventos/form]
+                B --> C[Preenche dados]
+                C --> D[POST /eventos/form]
+                D --> E[Upload foto]
+                E --> F[Salva em eventos]
+                
+                G[Usuário] --> H[GET /eventos]
+                H --> I[Lista eventos]
+                I --> J[Seleciona evento]
+                J --> K[Detalhes + Fotos]
+                K --> L[Comentários]
+            </div>
+        </div>
+
+        <div class="section" id="recomendacoes">
+            <h2>7. Recomendações de Segurança</h2>
+
+            <h3>7.1 Crítico (Implementar Imediatamente)</h3>
+            <ul>
+                <li><strong>Hash de Senhas:</strong> Implementar bcrypt para hash de senhas</li>
+                <li><strong>Variáveis de Ambiente:</strong> Mover SESSION_SECRET para variável de ambiente</li>
+                <li><strong>Correção Auth:</strong> Unificar middleware isAdmin em auth.js</li>
+            </ul>
+
+            <h3>7.2 Alto (Implementar em Breve)</h3>
+            <ul>
+                <li><strong>Rate Limiting:</strong> Adicionar express-rate-limit</li>
+                <li><strong>Headers Segurança:</strong> Adicionar helmet.js</li>
+                <li><strong>Validação Entrada:</strong> Implementar validação de dados com Joi ou express-validator</li>
+                <li><strong>CSRF Protection:</strong> Adicionar proteção CSRF</li>
+            </ul>
+
+            <h3>7.3 Médio (Planejar)</h3>
+            <ul>
+                <li><strong>Logs:</strong> Implementar sistema de logging estruturado</li>
+                <li><strong>Cache:</strong> Adicionar Redis para cache de sessões</li>
+                <li><strong>API REST:</strong> Considerar separar API REST para frontends mobile</li>
+                <li><strong>Testes:</strong> Implementar testes automatizados</li>
+            </ul>
+
+            <h3>7.4 Melhorias Técnicas</h3>
+            <ul>
+                <li>Separar middleware de autenticação (currently duplicated)</li>
+                <li>Adicionar TypeScript para type safety</li>
+                <li>Implementar paginação em listagens grandes</li>
+                <li>Adicionar busca/filtros avançados</li>
+                <li>Melhorar sistema de matching com Machine Learning</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>📊 Resumo dos Endpoints</h2>
+            <table>
+                <tr><th>Módulo</th><th>GET</th><th>POST</th><th>PUT/DELETE</th></tr>
+                <tr><td>Home/Campanhas</td><td>4</td><td>4</td><td>1</td></tr>
+                <tr><td>Adoção</td><td>7</td><td>5</td><td>1</td></tr>
+                <tr><td>Castração</td><td>9</td><td>4</td><td>1</td></tr>
+                <tr><td>Adotante</td><td>2</td><td>1</td><td>1</td></tr>
+                <tr><td>Eventos</td><td>4</td><td>3</td><td>-</td></tr>
+                <tr><td>Admin</td><td>2</td><td>2</td><td>-</td></tr>
+                <tr><td>Auth</td><td>2</td><td>1</td><td>-</td></tr>
+                <tr><td>Outros</td><td>5</td><td>2</td><td>-</td></tr>
+                <tr style="font-weight: bold; background: #e8f4f8;"><td>TOTAL</td><td>~35</td><td>~22</td><td>~3</td></tr>
+            </table>
+        </div>
+
+        <div class="section" style="background: #f8f9fa; text-align: center;">
+            <p><strong>Auditoria realizada em:</strong> 03/03/2026</p>
+            <p>Sistema: <strong>ONG Amor Animal Marília</strong></p>
+            <p>Versão: 1.0.0</p>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

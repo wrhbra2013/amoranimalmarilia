@@ -66,14 +66,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         input.addEventListener('blur', function(e) {
-            if (e.target.value && !phoneValidator(e.target.value)) {
-                e.target.classList.add('phone-error');
-            } else {
-                e.target.classList.remove('phone-error');
-            }
+            // Remove destaque vermelho - não aplicar validação visual
+            e.target.classList.remove('phone-error');
         });
         
         input.addEventListener('focus', function(e) {
+            e.target.classList.remove('phone-error');
+        });
+
+        input.addEventListener('input', function(e) {
             e.target.classList.remove('phone-error');
         });
     });

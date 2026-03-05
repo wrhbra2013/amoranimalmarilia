@@ -54,7 +54,7 @@ const castracaoCount = `SELECT COUNT(*) AS count FROM castracao;`;
 /* tag castracao_total_count - Conta TODAS as castrações e mutirões (incluindo arquivadas) para o card de estatísticas */
 const castracao_total_count = `
     SELECT 
-        (SELECT COUNT(*) FROM castracao WHERE tipo IN ('baixo_custo', 'pets_rua', 'padrao') OR tipo IS NULL OR tipo = '') +
+        (SELECT COUNT(*) FROM castracao) +
         (SELECT COUNT(*) FROM mutirao_inscricao) as total;
 `;
 
@@ -71,11 +71,9 @@ const castracao_e_mutirao = `
         c.origem as data_evento,
         c.status,
         COALESCE(c.arquivado, FALSE) as arquivado,
-        'castracao' as tipo,
+        COALESCE(c.tipo, 'padrao') as tipo,
         NULL as inscricao_id
     FROM castracao c
-    WHERE (c.tipo IN ('baixo_custo', 'pets_rua', 'padrao') OR c.tipo IS NULL OR c.tipo = '')
-    AND (c.arquivado IS NULL OR c.arquivado = FALSE)
     UNION ALL
     SELECT 
         mp.id,
@@ -93,8 +91,6 @@ const castracao_e_mutirao = `
     FROM mutirao_inscricao mi
     LEFT JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
     LEFT JOIN mutirao_pet mp ON mi.id = mp.mutirao_inscricao_id
-    WHERE (mi.arquivado IS NULL OR mi.arquivado = FALSE)
-    AND (cm.arquivado IS NULL OR cm.arquivado = FALSE)
     ORDER BY data_evento DESC;
 `;
 

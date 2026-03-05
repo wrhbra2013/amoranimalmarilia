@@ -1,5 +1,23 @@
   <%-include("_header")-%>
 
+  <script>
+  function toggleArchivedRows(show) {
+      document.querySelectorAll('.archived-row').forEach(function(row) {
+          row.style.display = show ? 'table-row' : 'none';
+      });
+  }
+  function toggleAttendedRows(show) {
+      document.querySelectorAll('.attended-row').forEach(function(row) {
+          row.style.display = show ? 'table-row' : 'none';
+      });
+  }
+  // Inicialmente esconder as linhas arquivadas e atendidas
+  document.addEventListener('DOMContentLoaded', function() {
+      toggleArchivedRows(false);
+      toggleAttendedRows(false);
+  });
+  </script>
+
   <main class="main-content">
 
 
@@ -394,13 +412,19 @@
                                    </div>
                                 </div>
 
-                              <h3 class="card-title h4 fw-bold">Agendamentos de Castração</h3> <!-- Ajustado para h4 para não competir com os números grandes -->
+                               <h3 class="card-title h4 fw-bold">Agendamentos de Castração</h3> <!-- Ajustado para h4 para não competir com os números grandes -->
                                <div class="mb-3 d-flex justify-content-between align-items-center">
                                    <input type="text" id="searchCastracao" class="form-control form-control-sm" placeholder="Pesquisar por ticket, nome responsável ou pet..." onkeyup="filterTableCastracao()" style="max-width: 300px;">
                                    <% if (user) { %>
-                                       <div class="form-check">
-                                           <input type="checkbox" class="form-check-input" id="showArchived" onchange="document.querySelectorAll('.archived-row').forEach(r => r.style.display = this.checked ? 'table-row' : 'none');">
-                                           <label class="form-check-label" for="showArchived">Mostrar arquivados</label>
+                                       <div class="d-flex gap-3">
+                                           <div class="form-check">
+                                               <input type="checkbox" class="form-check-input" id="showAttended" onchange="toggleAttendedRows(this.checked);">
+                                               <label class="form-check-label" for="showAttended">Mostrar atendidos</label>
+                                           </div>
+                                           <div class="form-check">
+                                               <input type="checkbox" class="form-check-input" id="showArchived" onchange="toggleArchivedRows(this.checked);">
+                                               <label class="form-check-label" for="showArchived">Mostrar arquivados</label>
+                                           </div>
                                        </div>
                                    <% } %>
                                </div>
@@ -415,20 +439,18 @@
                                               <th>Espécie</th>
                                               <th>Clínica</th>
                                               <th>Data</th>
-                                              <th>Status</th>
-                                              <th>Ações</th>
-
-                                                 <% if (user) { %>
-                                                  <th>Excluir</th>
-                                              <% } %>
-                                              <th></th>                                              <th>Detalhes</th>
+                                               <th>Status</th>
+                                               <th>Ações</th>
+                                               <th>Detalhes</th>
                                                <th>Comprovante</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <% if (typeof model8 !== 'undefined' && model8.length > 0) { %>
+                                             <% if (typeof model8 !== 'undefined' && model8.length > 0) { %>
                                                 <% model8.forEach((castracao, index) => { %>
-                                                     <tr>
+                                                     <% const statusUpper = castracao.status ? String(castracao.status).trim().toUpperCase() : 'PENDENTE'; %>
+                                                     <% const isAttendedRow = statusUpper === 'ATENDIDO'; %>
+                                                     <tr class="<%= castracao.arquivado ? 'archived-row' : '' %> <%= isAttendedRow ? 'attended-row' : '' %>" style="<%= castracao.arquivado ? 'opacity: 0.6;' : '' %> <%= isAttendedRow ? 'background-color: #d4edda;' : '' %>">
                                                         <td>
                                                             <a href="javascript:void(0)" style="cursor:pointer; color:brown; font-size:large;" onclick="this.closest('tr').nextElementSibling.style.display = this.closest('tr').nextElementSibling.style.display === 'none' ? 'table-row' : 'none';">
                                                                 <%= castracao.ticket %>
@@ -443,63 +465,42 @@
                                                         <%
                                                             const rawStatus = (castracao && castracao.status) ? String(castracao.status).trim().toUpperCase() : 'PENDENTE';
                                                             const isPending = rawStatus === 'PENDENTE';
+                                                            const isAttended = rawStatus === 'ATENDIDO';
                                                         %>
                                                         <td>
-                                                            <% if (user) { %>
-                                                                <% if (castracao.tipo === 'mutirao') { %>
+                                                            <% if (isAttended) { %>
+                                                                <span class="badge bg-success">ATENDIDO</span>
+                                                            <% } else { %>
+                                                                <span class="badge bg-warning text-dark">PENDENTE</span>
+                                                            <% } %>
+                                                        </td>
+                                                        <td>
+                                                            <% if (castracao.tipo === 'mutirao') { %>
+                                                                <% if (user) { %>
+                                                                    <form action="/castracao/mutirao/delete/<%= castracao.inscricao_id %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
+                                                                        <button type="submit" class="btn btn-danger btn-sm" title="Excluir">
+                                                                            <i class="bi bi-trash"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                <% } else { %>
                                                                     <form action="/castracao/mutirao/updateStatus/<%= castracao.id %>" method="post">
                                                                         <button type="submit" class="btn btn-success btn-sm" title="Atender">Atender</button>
                                                                     </form>
-                                                                    <form action="/castracao/mutirao/arquivar/<%= castracao.inscricao_id %>" method="post" class="d-inline" onsubmit="return confirm('Arquivar este agendamento?')">
-                                                                        <button type="submit" class="btn btn-warning btn-sm" title="Arquivar">
-                                                                            <i class="bi bi-archive"></i>
-                                                                        </button>
-                                                                    </form>
-                                                                    <form action="/castracao/mutirao/delete/<%= castracao.inscricao_id %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento')">
-                                                                        <button type="submit" class="btn btn-danger btn-sm" title="Excluir Agendamento">
+                                                                <% } %>
+                                                            <% } else { %>
+                                                                <% if (user) { %>
+                                                                    <form action="/castracao/delete/<%= castracao.id %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
+                                                                        <button type="submit" class="btn btn-danger btn-sm" title="Excluir">
                                                                             <i class="bi bi-trash"></i>
-                                                                            <span class="visually-hidden">Excluir</span>
                                                                         </button>
                                                                     </form>
                                                                 <% } else { %>
                                                                     <form action="/castracao/updateStatus/<%= castracao.id %>" method="post">
                                                                         <button type="submit" class="btn btn-success btn-sm" title="Atender">Atender</button>
                                                                     </form>
-                                                                    <form action="/castracao/arquivar/<%= castracao.id %>" method="post" class="d-inline" onsubmit="return confirm('Arquivar este agendamento?')">
-                                                                        <button type="submit" class="btn btn-warning btn-sm" title="Arquivar">
-                                                                            <i class="bi bi-archive"></i>
-                                                                        </button>
-                                                                    </form>
-                                                                    <form action="/castracao/delete/<%= castracao.id %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento')">
-                                                                        <button type="submit" class="btn btn-danger btn-sm" title="Excluir Agendamento">
-                                                                            <i class="bi bi-trash"></i>
-                                                                            <span class="visually-hidden">Excluir</span>
-                                                                        </button>
-                                                                    </form>
                                                                 <% } %>
-                                                           <% } else { %>
-                                                               <span class="text-success">-</span>
-                                                           <% } %>
+                                                            <% } %>
                                                         </td>
-                                                                                                                     <td>
-                                                            <% if (user) { %>
-                                                               <% if (castracao.tipo === 'mutirao') { %>
-                                                                   <form action="/castracao/mutirao/delete/<%= castracao.inscricao_id %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento')">
-                                                                       <button type="submit" class="btn btn-danger btn-sm" title="Excluir Agendamento">
-                                                                           <i class="bi bi-trash"></i>
-                                                                           <span class="visually-hidden">Excluir</span>
-                                                                       </button>
-                                                                   </form>
-                                                               <% } else { %>
-                                                                   <form action="/castracao/delete/<%= castracao.id %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento')">
-                                                                       <button type="submit" class="btn btn-danger btn-sm" title="Excluir Agendamento">
-                                                                           <i class="bi bi-trash"></i>
-                                                                           <span class="visually-hidden">Excluir</span>
-                                                                       </button>
-                                                                   </form>
-                                                               <% } %>
-                                                           <% } %>
-                                                       </td>
 
                                                         <td>
                                                             <% if (castracao.tipo === 'mutirao') { %>
@@ -511,11 +512,11 @@
 
                                                         <td>
                                                             <% if (castracao.tipo === 'mutirao') { %>
-                                                                <a href="/castracao/mutirao/comprovante/<%= castracao.ticket %>" class="-sm" target="_btn btn-primary btnblank" title="Baixar Comprovante">
+                                                                <a href="/castracao/mutirao/comprovante/<%= castracao.ticket %>" class="btn btn-primary btn-sm" target="_blank" title="Baixar Comprovante">
                                                                     <i class="bi bi-file-earmark-pdf"></i> PDF
                                                                 </a>
                                                             <% } else { %>
-                                                                <a href="/castracao/comprovante/<%= castracao.ticket %>" class="-sm" target="_btn btn-primary btnblank" title="Baixar Comprovante">
+                                                                <a href="/castracao/comprovante/<%= castracao.ticket %>" class="btn btn-primary btn-sm" target="_blank" title="Baixar Comprovante">
                                                                     <i class="bi bi-file-earmark-pdf"></i> PDF
                                                                 </a>
                                                             <% } %>

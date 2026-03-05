@@ -96,7 +96,7 @@
                                     <td><%= m.ticket %></td>
                                     <td><%= m.nome_responsavel %></td>
                                     <td><%= m.clinica || '-' %></td>
-                                    <td><%= m.data_evento ? new Date(m.data_evento).toLocaleDateString('pt-BR') : '-' %></td>
+                                    <td><%= m.data_evento ? new Date(m.data_evento).toLocaleDateString('pt-BR') : (m.origem ? new Date(m.origem).toLocaleDateString('pt-BR') : '-') %></td>
                                     <td>
                                         <form action="/castracao/mutirao/desarquivar/<%= m.id %>" method="post" class="d-inline">
                                             <button type="submit" class="btn btn-success btn-sm" title="Desarquivar">
