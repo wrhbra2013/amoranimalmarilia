@@ -615,8 +615,43 @@ router.post('/mutirao-inscricao', async (req, res) => {
             throw new Error(`Tutor "${tutor.nome_responsavel}" já cadastrado neste mutirão! Ticket: ${tutor.ticket}`);
         }
         
-        // Gerar ticket sequencial
-        const ticket = await generateSequentialTicket(client);
+        // Gerar ticket sequencial de forma segura
+        let ticket;
+        let tentativa = 0;
+        const maxTentativas = 10;
+        
+        while (tentativa < maxTentativas) {
+            const prefixo = 'M';
+            const result = await client.query(`
+                SELECT ticket FROM mutirao_inscricao 
+                WHERE ticket LIKE $1
+                ORDER BY ticket DESC LIMIT 1
+            `, [prefixo + '%']);
+            
+            let nextNumber = 1;
+            if (result.rows.length > 0) {
+                const lastTicket = result.rows[0].ticket;
+                const match = lastTicket.match(/^M(\d{4})/);
+                if (match) {
+                    const lastNumber = parseInt(match[1], 10);
+                    if (!isNaN(lastNumber)) {
+                        nextNumber = lastNumber + 1;
+                    }
+                }
+            }
+            ticket = prefixo + String(nextNumber).padStart(4, '0');
+            
+            // Verificar se ticket já existe
+            const checkTicket = await client.query('SELECT 1 FROM mutirao_inscricao WHERE ticket = $1', [ticket]);
+            if (checkTicket.rows.length === 0) {
+                break; // Ticket disponível
+            }
+            tentativa++;
+        }
+        
+        if (tentativa >= maxTentativas) {
+            throw new Error('Erro ao gerar ticket. Tente novamente.');
+        }
         
         // Inserir inscrição do responsável com ticket
         const inscricaoResult = await client.query(`
