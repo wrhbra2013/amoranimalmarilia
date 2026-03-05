@@ -570,13 +570,24 @@ router.post('/mutirao-inscricao', async (req, res) => {
         
         // Verificar se há pets cadastrados - trata tanto array quanto valor único
         let nomesPets = [];
-        if (pet_nome) {
-            if (Array.isArray(pet_nome)) {
-                nomesPets = pet_nome.filter(nome => nome && String(nome).trim() !== '');
-            } else if (String(pet_nome).trim() !== '') {
-                nomesPets = [pet_nome];
+        console.log('[DEBUG SERVER] pet_nome recebido:', pet_nome);
+        console.log('[DEBUG SERVER] Tipo de pet_nome:', typeof pet_nome, Array.isArray(pet_nome));
+        
+        // Aceita tanto 'pet_nome' quanto 'pet_nome[]'
+        const petNamesInput = pet_nome || req.body['pet_nome[]'];
+        
+        if (petNamesInput) {
+            if (Array.isArray(petNamesInput)) {
+                nomesPets = petNamesInput.filter(nome => nome && String(nome).trim() !== '');
+            } else if (typeof petNamesInput === 'object') {
+                // Tentar converter objeto para array
+                nomesPets = Object.values(petNamesInput).filter(nome => nome && String(nome).trim() !== '');
+            } else if (String(petNamesInput).trim() !== '') {
+                nomesPets = [petNamesInput];
             }
         }
+        
+        console.log('[DEBUG SERVER] nomesPets processado:', nomesPets);
         
         console.log('[DEBUG] pets validados:', nomesPets);
         
