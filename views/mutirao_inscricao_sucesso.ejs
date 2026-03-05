@@ -34,8 +34,8 @@
             
             <h5>Pets Cadastrados (<%= pets.length %>)</h5>
             <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
+                <table class="table table-striped" style="background-color: #000; color: #fff;">
+                    <thead style="background-color: #333; color: #fff;">
                         <tr>
                             <th>#</th>
                             <th>Nome</th>
@@ -44,13 +44,12 @@
                             <th>Idade</th>
                             <th>Peso</th>
                             <th>Vacinado</th>
-                            <th>Usa Medicamento?</th>
-                            <th>Qual Medicamento</th>
+                            <th>Medicamento</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody style="background-color: #000; color: #fff;">
                         <% pets.forEach((pet, index) => { %>
-                            <tr>
+                            <tr style="background-color: <%= index % 2 === 0 ? '#000' : '#1a1a1a' %>; color: #fff;">
                                 <td><%= index + 1 %></td>
                                 <td><strong><%= pet.nome %></strong></td>
                                 <td><%= pet.especie === 'gato' ? 'Gato' : 'Cachorro' %></td>
@@ -58,8 +57,7 @@
                                 <td><%= pet.idade || '-' %></td>
                                 <td><%= pet.peso || '-' %></td>
                                 <td><%= pet.vacinado ? 'Sim' : 'Não' %></td>
-                                <td><%= pet.medicamento ? 'Sim' : 'Não' %></td>
-                                <td><%= pet.medicamento || '-' %></td>
+                                <td><%= pet.medicamento ? pet.medicamento : '-' %></td>
                             </tr>
                         <% }); %>
                     </tbody>

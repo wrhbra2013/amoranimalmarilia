@@ -54,7 +54,7 @@ const castracaoCount = `SELECT COUNT(*) AS count FROM castracao;`;
 /* tag castracao_total_count - Conta TODAS as castrações e mutirões (incluindo arquivadas) para o card de estatísticas */
 const castracao_total_count = `
     SELECT 
-        (SELECT COUNT(*) FROM castracao WHERE tipo != 'mutirao' OR tipo IS NULL OR tipo = '') +
+        (SELECT COUNT(*) FROM castracao WHERE tipo IS NULL OR tipo = '' OR tipo = 'baixo_custo' OR tipo = 'pets_rua' OR tipo = 'padrao') +
         (SELECT COUNT(*) FROM mutirao_inscricao) as total;
 `;
 
