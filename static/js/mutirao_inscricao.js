@@ -1,5 +1,15 @@
 document.addEventListener('DOMContentLoaded', function() {
-    window.petsCadastrados = [];
+    console.log('[DEBUG JS] Script carregado!');
+    
+    // Carregar pets do localStorage se existirem
+    const savedPets = localStorage.getItem('petsCadastrados');
+    if (savedPets) {
+        window.petsCadastrados = JSON.parse(savedPets);
+    } else {
+        window.petsCadastrados = [];
+    }
+    
+    console.log('[DEBUG JS] Pets carregados do localStorage:', window.petsCadastrados);
     
     window.atualizarResumo = function() {
         const petsTableContainer = document.getElementById('petsTableContainer');
@@ -85,6 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const index = parseInt(this.dataset.index);
                 if (confirm(`Tem certeza que deseja remover ${window.petsCadastrados[index].nome}?`)) {
                     window.petsCadastrados.splice(index, 1);
+                    localStorage.setItem('petsCadastrados', JSON.stringify(window.petsCadastrados));
                     window.atualizarResumo();
                     
                     if (window.petsCadastrados.length === 0) {
@@ -95,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    atualizarResumo();
+    window.atualizarResumo();
     
     document.getElementById('petTemMedicamento').addEventListener('change', function(e) {
         const medicamentoField = document.querySelector('.medicamento-field');
@@ -110,9 +121,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('btnAddPet').addEventListener('click', function(e) {
         e.preventDefault();
+        console.log('[DEBUG JS] Botão Adicionar Pet clicado');
+        
         const nome = document.getElementById('petNome').value.trim();
         const especie = document.getElementById('petEspecie').value;
         const sexo = document.getElementById('petSexo').value;
+        
+        console.log('[DEBUG JS] Dados do pet:', nome, especie, sexo);
         
         if (!nome || !especie || !sexo) {
             alert('Por favor, preencha os campos obrigatórios do pet (Nome, Espécie e Sexo).');
@@ -130,6 +145,9 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         window.petsCadastrados.push(pet);
+        localStorage.setItem('petsCadastrados', JSON.stringify(window.petsCadastrados));
+        
+        console.log('[DEBUG JS] Pets após adicionar:', window.petsCadastrados);
         
         window.atualizarResumo();
         limparFormulario();
@@ -159,7 +177,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const contatoInput = document.getElementById('contato');
         const contatoValue = contatoInput.value.replace(/\D/g, '');
         
-        console.log('[DEBUG JS] petsCadastrados antes do submit:', window.petsCadastrados);
+        console.log('[DEBUG JS] petsCadastrados no submit:', window.petsCadastrados);
+        console.log('[DEBUG JS] petsCadastrados.length:', window.petsCadastrados.length);
         
         if (!nomeResponsavel) {
             e.preventDefault();
@@ -237,6 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log('[DEBUG JS] Campos hidden criados. Total:', petsDataContainer.querySelectorAll('input').length);
         
-        // Allow form to submit normally after adding the hidden fields
+        // Limpar localStorage após submit
+        localStorage.removeItem('petsCadastrados');
     });
 });

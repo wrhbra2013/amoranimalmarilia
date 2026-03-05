@@ -544,14 +544,7 @@ router.post('/mutirao-inscricao', async (req, res) => {
             nome_responsavel, 
             localidades, 
             contato,
-            pet_nome,
-            pet_especie,
-            pet_sexo,
-            pet_idade,
-            pet_peso,
-            pet_vacinado,
-            pet_tem_medicamento,
-            pet_medicamento
+            pets_json
         } = req.body;
         
         // Debug: mostrar o que está chegando
@@ -559,41 +552,34 @@ router.post('/mutirao-inscricao', async (req, res) => {
             calendario_mutirao_id,
             nome_responsavel,
             contato,
-            pet_nome
+            pets_json
         });
         
         // Validar campos obrigatórios (limpando espaços)
         const contatoLimpo = contato ? String(contato).trim() : '';
         if (!calendario_mutirao_id || !nome_responsavel || !contatoLimpo) {
-            throw new Error('Dados obrigatórios não preenchidos. Contato: ' + contatoLimpo);
+            throw new Error('Dados obrigatórios não preenchidos.');
         }
         
-        // Verificar se há pets cadastrados - trata tanto array quanto valor único
-        let nomesPets = [];
-        console.log('[DEBUG SERVER] pet_nome recebido:', pet_nome);
-        console.log('[DEBUG SERVER] Tipo de pet_nome:', typeof pet_nome, Array.isArray(pet_nome));
-        
-        // Aceita tanto 'pet_nome' quanto 'pet_nome[]'
-        const petNamesInput = pet_nome || req.body['pet_nome[]'];
-        
-        if (petNamesInput) {
-            if (Array.isArray(petNamesInput)) {
-                nomesPets = petNamesInput.filter(nome => nome && String(nome).trim() !== '');
-            } else if (typeof petNamesInput === 'object') {
-                // Tentar converter objeto para array
-                nomesPets = Object.values(petNamesInput).filter(nome => nome && String(nome).trim() !== '');
-            } else if (String(petNamesInput).trim() !== '') {
-                nomesPets = [petNamesInput];
+        // Parsear pets do JSON
+        let pets = [];
+        try {
+            if (pets_json) {
+                pets = JSON.parse(pets_json);
             }
+        } catch (e) {
+            console.error('[DEBUG] Erro ao parsear pets_json:', e);
         }
         
-        console.log('[DEBUG SERVER] nomesPets processado:', nomesPets);
+        console.log('[DEBUG SERVER] pets parsed:', pets);
         
-        console.log('[DEBUG] pets validados:', nomesPets);
-        
-        if (!pet_nome || nomesPets.length === 0) {
+        if (!pets || pets.length === 0) {
             throw new Error('É necessário cadastrar pelo menos um pet para realizar a inscrição.');
         }
+        
+        // Extrair nomes dos pets
+        const nomesPets = pets.map(p => p.nome).filter(n => n && String(n).trim() !== '');
+        console.log('[DEBUG] nomesPets:', nomesPets);
         
         // Verificar se há vagas disponíveis
         const mutiraoResult = await client.query('SELECT vagas, clinica, data_evento FROM calendario_mutirao WHERE id = $1', [calendario_mutirao_id]);
@@ -640,34 +626,16 @@ router.post('/mutirao-inscricao', async (req, res) => {
         
         const inscricaoId = inscricaoResult.rows[0].id;
         
-        // Normalizar campos de pets para sempre serem arrays
-        const normalizeToArray = (value) => {
-            if (value === undefined || value === null) return [];
-            return Array.isArray(value) ? value : [value];
-        };
-        
-        const especieArray = normalizeToArray(pet_especie);
-        const sexoArray = normalizeToArray(pet_sexo);
-        const idadeArray = normalizeToArray(pet_idade);
-        const pesoArray = normalizeToArray(pet_peso);
-        const vacinadoArray = normalizeToArray(pet_vacinado);
-        const temMedicamentoArray = normalizeToArray(pet_tem_medicamento);
-        const medicamentoArray = normalizeToArray(pet_medicamento);
-        
-        // Criar arrays sincronizados apenas com pets válidos
-        const petsSincronizados = [];
-        for (let i = 0; i < nomesPets.length; i++) {
-            petsSincronizados.push({
-                nome: nomesPets[i],
-                especie: especieArray[i] || '',
-                sexo: sexoArray[i] || '',
-                idade: idadeArray[i] || '',
-                peso: pesoArray[i] || '',
-                vacinado: vacinadoArray[i] === 'true',
-                temMedicamento: temMedicamentoArray[i] === 'sim',
-                medicamento: temMedicamentoArray[i] === 'sim' ? (medicamentoArray[i] || '') : ''
-            });
-        }
+        // Usar o array de pets do JSON
+        const petsSincronizados = pets.map(pet => ({
+            nome: pet.nome || '',
+            especie: pet.especie || '',
+            sexo: pet.sexo || '',
+            idade: pet.idade || '',
+            peso: pet.peso || '',
+            vacinado: pet.vacinado || false,
+            medicamento: pet.medicamento || ''
+        })).filter(p => p.nome && p.nome.trim() !== '');
         
         // Inserir pets
         for (const pet of petsSincronizados) {

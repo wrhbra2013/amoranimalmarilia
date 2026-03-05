@@ -1,9 +1,7 @@
 <%- include("_header") -%>
 
 <style>
-.medicamento-toggle { display: none; }
-.medicamento-toggle:checked ~ .medicamento-field { display: block !important; }
-input:invalid { border-color: #ced4da !important; }
+.pet-card { background: #f8f9fa; border-radius: 8px; }
 </style>
 
 <main class="container mt-4">
@@ -30,7 +28,7 @@ input:invalid { border-color: #ced4da !important; }
       <div class="row g-2 mb-4">
         <div class="col-md-4">
           <label class="form-label">Nome do Responsável *</label>
-          <input type="text" name="nome_responsavel" id="nomeResponsavel" class="form-control">
+          <input type="text" name="nome_responsavel" id="nomeResponsavel" class="form-control" required>
         </div>
         <div class="col-md-4">
           <label class="form-label">Localidade</label>
@@ -38,9 +36,11 @@ input:invalid { border-color: #ced4da !important; }
         </div>
         <div class="col-md-4">
           <label class="form-label fw-bold">Contato *</label>
-          <input type="tel" name="contato" id="contato" class="form-control phone-input" placeholder="Telefone com DDD (55) já é adicionado automaticamente" required>
+          <input type="tel" name="contato" id="contato" class="form-control phone-input" placeholder="Telefone com DDD" required>
         </div>
       </div>
+
+      <hr>
 
       <div class="row mb-3">
         <div class="col-12">
@@ -49,13 +49,8 @@ input:invalid { border-color: #ced4da !important; }
         </div>
       </div>
 
-      <div class="row mb-3">
-        <div class="col-12">
-          <h5>Adicionar Novo Pet</h5>
-        </div>
-      </div>
-
-      <div class="pet-card border rounded p-3 mb-3" id="petForm">
+      <!-- Formulário para adicionar pet -->
+      <div class="pet-card border rounded p-3 mb-3">
         <div class="row g-2">
           <div class="col-md-3">
             <label class="form-label">Nome do Pet *</label>
@@ -94,13 +89,12 @@ input:invalid { border-color: #ced4da !important; }
           </div>
           <div class="col-md-3">
             <label class="form-label">Usa medicamento?</label>
-            <input type="checkbox" id="medicamento-toggle" class="medicamento-toggle">
-            <select id="petTemMedicamento" class="form-select" onchange="document.getElementById('medicamento-toggle').checked = this.value === 'sim';">
+            <select id="petTemMedicamento" class="form-select">
               <option value="nao">Não</option>
               <option value="sim">Sim</option>
             </select>
           </div>
-          <div class="col-md-7 medicamento-field" style="display: none;">
+          <div class="col-md-7" id="medicamentoField" style="display: none;">
             <label class="form-label">Qual medicamento?</label>
             <input type="text" id="petMedicamento" class="form-control" placeholder="Descreva o medicamento">
           </div>
@@ -113,37 +107,36 @@ input:invalid { border-color: #ced4da !important; }
           </div>
         </div>
       </div>
-       
-      <!-- Container oculto para armazenar os dados dos pets (DENTRO do form) -->
-      <div id="petsDataContainer"></div>
 
-      <!-- Título da área de pets cadastrados -->
+      <!-- Lista de pets adicionados -->
       <div class="row mb-3">
         <div class="col-12">
-          <h4 class="mb-0">Pets Cadastrados (<span id="petCount">0</span>)</h4>
+          <h4>Pets Cadastrados (<span id="petCount">0</span>)</h4>
         </div>
       </div>
 
-      <!-- Área de visualização dos pets cadastrados -->
       <div class="row mb-3">
-        <div class="col-12 mt-2">
-          <div id="petsTableContainer" class="table-responsive border rounded" style="max-height: 300px; overflow-y: auto;">
+        <div class="col-12">
+          <div id="petsTableContainer" class="table-responsive border rounded">
             <div id="petsSummary" class="p-3 text-muted text-center">
               <i class="bi bi-paw" style="font-size: 2rem;"></i>
-              <p>Nenhum pet cadastrado ainda. Clique em "Adicionar Pet" para começar.</p>
+              <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
             </div>
           </div>
         </div>
       </div>
 
-        <!-- Botões de ação -->
-        <div class="row mb-3">
-          <div class="col-md-12 text-end">
-            <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit">
-              <i class="bi bi-check-lg"></i> Realizar Inscrição
-            </button>
-          </div>
+      <!-- Campos ocultos para os pets (serão preenchidos via JS) -->
+      <input type="hidden" name="pets_json" id="petsJson">
+
+      <!-- Botão de submit -->
+      <div class="row mb-3">
+        <div class="col-md-12 text-end">
+          <button type="submit" class="btn btn-primary btn-lg" id="btnSubmit" disabled>
+            <i class="bi bi-check-lg"></i> Realizar Inscrição
+          </button>
         </div>
+      </div>
     </form>
   </section>
 
@@ -163,8 +156,117 @@ input:invalid { border-color: #ced4da !important; }
   </div>
 </main>
 
-<script src="/static/js/mutirao_inscricao.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let pets = [];
+    
+    const petTemMedicamento = document.getElementById('petTemMedicamento');
+    const medicamentoField = document.getElementById('medicamentoField');
+    const btnAddPet = document.getElementById('btnAddPet');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const petCount = document.getElementById('petCount');
+    const petsTableContainer = document.getElementById('petsTableContainer');
+    const petsJson = document.getElementById('petsJson');
+    
+    // Mostrar/esconder campo medicamento
+    petTemMedicamento.addEventListener('change', function() {
+        medicamentoField.style.display = this.value === 'sim' ? 'block' : 'none';
+    });
+    
+    // Adicionar pet
+    btnAddPet.addEventListener('click', function() {
+        const nome = document.getElementById('petNome').value.trim();
+        const especie = document.getElementById('petEspecie').value;
+        const sexo = document.getElementById('petSexo').value;
+        
+        if (!nome || !especie || !sexo) {
+            alert('Preencha: Nome, Espécie e Sexo do pet');
+            return;
+        }
+        
+        pets.push({
+            nome: nome,
+            especie: especie,
+            sexo: sexo,
+            idade: document.getElementById('petIdade').value || '',
+            peso: document.getElementById('petPeso').value || '',
+            vacinado: document.getElementById('petVacinado').value === 'true',
+            medicamento: petTemMedicamento.value === 'sim' ? document.getElementById('petMedicamento').value : ''
+        });
+        
+        // Limpar formulário
+        document.getElementById('petNome').value = '';
+        document.getElementById('petEspecie').value = '';
+        document.getElementById('petSexo').value = '';
+        document.getElementById('petIdade').value = '';
+        document.getElementById('petPeso').value = '';
+        document.getElementById('petVacinado').value = 'false';
+        petTemMedicamento.value = 'nao';
+        medicamentoField.style.display = 'none';
+        document.getElementById('petMedicamento').value = '';
+        
+        atualizarTabela();
+    });
+    
+    function atualizarTabela() {
+        petCount.textContent = pets.length;
+        
+        // Atualizar campo hidden com JSON
+        petsJson.value = JSON.stringify(pets);
+        
+        // Habilitar/desabilitar botão submit
+        btnSubmit.disabled = pets.length === 0;
+        
+        if (pets.length === 0) {
+            petsTableContainer.innerHTML = `
+                <div class="p-3 text-muted text-center">
+                    <i class="bi bi-paw" style="font-size: 2rem;"></i>
+                    <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '<table class="table table-sm table-hover mb-0"><thead><tr>';
+        html += '<th>#</th><th>Nome</th><th>Espécie</th><th>Sexo</th><th>Idade</th><th>Peso</th><th>Vacinado</th><th>Ações</th>';
+        html += '</tr></thead><tbody>';
+        
+        pets.forEach((pet, index) => {
+            html += '<tr>';
+            html += '<td>' + (index + 1) + '</td>';
+            html += '<td class="fw-bold">' + pet.nome + '</td>';
+            html += '<td>' + pet.especie + '</td>';
+            html += '<td>' + pet.sexo + '</td>';
+            html += '<td>' + (pet.idade || '-') + '</td>';
+            html += '<td>' + (pet.peso || '-') + '</td>';
+            html += '<td>' + (pet.vacinado ? '<span class="badge bg-success">Sim</span>' : '<span class="badge bg-danger">Não</span>') + '</td>';
+            html += '<td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removerPet(' + index + ')"><i class="bi bi-trash"></i></button></td>';
+            html += '</tr>';
+        });
+        
+        html += '</tbody></table>';
+        petsTableContainer.innerHTML = html;
+    }
+    
+    window.removerPet = function(index) {
+        if (confirm('Remover este pet?')) {
+            pets.splice(index, 1);
+            atualizarTabela();
+        }
+    };
+    
+    // Validar submit
+    document.getElementById('formInscricao').addEventListener('submit', function(e) {
+        if (pets.length === 0) {
+            e.preventDefault();
+            alert('Adicione pelo menos um pet');
+            return;
+        }
+        
+        // Garantir que o campo JSON está preenchido
+        petsJson.value = JSON.stringify(pets);
+    });
+});
+</script>
 
 <%- include("_footer") -%>
-
-
