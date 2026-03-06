@@ -412,8 +412,7 @@ router.post('/calendario', isAdmin, async (req, res) => {
 // GET /castracao/calendario-mutirao - lista e formulário de criação (admin)
 router.get('/calendario-mutirao', async (req, res) => {
     try {
-        const calendario = await executeQuery('SELECT * FROM calendario_mutirao WHERE arquivado = FALSE OR arquivado IS NULL ORDER BY data_evento;');
-        const arquivados = await executeQuery('SELECT * FROM calendario_mutirao WHERE arquivado = TRUE ORDER BY data_evento DESC;');
+        const calendario = await executeQuery('SELECT * FROM calendario_mutirao ORDER BY data_evento DESC;');
         const clinicas = await executeQuery("SELECT id, nome, endereco FROM clinicas ORDER BY nome;");
         
         // Calcular vagas disponíveis para cada mutirão
@@ -431,10 +430,10 @@ router.get('/calendario-mutirao', async (req, res) => {
             }
         }
         
-        res.render('calendario_mutirao', { calendario: calendario, arquivados: arquivados, clinicas: clinicas, error: req.flash('error'), success: req.flash('success') });
+        res.render('calendario_mutirao', { calendario: calendario, clinicas: clinicas, error: req.flash('error'), success: req.flash('success') });
     } catch (error) {
         console.error('[castracaoRoutes GET /calendario-mutirao] Erro ao buscar calendario:', error);
-        res.status(500).render('calendario_mutirao', { calendario: [], arquivados: [], clinicas: [], error: 'Erro ao carregar calendário de mutirão.' });
+        res.status(500).render('calendario_mutirao', { calendario: [], clinicas: [], error: 'Erro ao carregar calendário de mutirão.' });
     }
 });
 
@@ -472,6 +471,17 @@ router.get('/mutirao-inscricao/:id', async (req, res) => {
         
         const mutirao = mutiraoResult[0];
         
+        // Verificar se o mutirão já passou (data do evento)
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const dataMutirao = new Date(mutirao.data_evento);
+        dataMutirao.setHours(0, 0, 0, 0);
+        
+        if (dataMutirao <= hoje) {
+            req.flash('error', 'Este mutirão já foi realizado. Inscrições encerradas.');
+            return res.redirect('/castracao/calendario-mutirao');
+        }
+        
         // Verificar se ainda há vagas disponíveis
         if (mutirao.vagas !== 0) {
             const vagasUsadas = await executeQuery(`
@@ -484,7 +494,7 @@ router.get('/mutirao-inscricao/:id', async (req, res) => {
             const vagasDisponiveis = mutirao.vagas - (parseInt(vagasUsadas[0]?.total) || 0);
             
             if (vagasDisponiveis <= 0) {
-                req.flash('error', 'Não há vagas disponíveis para este mutirão.');
+                req.flash('error', 'As vagas para este mutirão foram esgotadas.');
                 return res.redirect('/castracao/calendario-mutirao');
             }
             
@@ -542,22 +552,31 @@ router.post('/mutirao-inscricao', async (req, res) => {
         const { 
             calendario_mutirao_id, 
             nome_responsavel, 
-            localidades, 
             contato,
-            pets_json
+            pets_json,
+            cpf,
+            cep,
+            endereco,
+            numero,
+            complemento,
+            bairro,
+            cidade,
+            estado
         } = req.body;
         
         // Debug: mostrar o que está chegando
         console.log('[DEBUG] POST dados recebidos:', {
             calendario_mutirao_id,
             nome_responsavel,
+            cpf,
             contato,
+            cep,
             pets_json
         });
         
         // Validar campos obrigatórios (limpando espaços)
         const contatoLimpo = contato ? String(contato).trim() : '';
-        if (!calendario_mutirao_id || !nome_responsavel || !contatoLimpo) {
+        if (!calendario_mutirao_id || !nome_responsavel || !contatoLimpo || !cpf) {
             throw new Error('Dados obrigatórios não preenchidos.');
         }
         
@@ -585,7 +604,16 @@ router.post('/mutirao-inscricao', async (req, res) => {
         const mutiraoResult = await client.query('SELECT vagas, clinica, data_evento FROM calendario_mutirao WHERE id = $1', [calendario_mutirao_id]);
         const mutirao = mutiraoResult.rows[0];
         const clinicaMutirao = mutirao.clinica;
-        const dataMutirao = mutirao.data_evento;
+        const dataMutirao = new Date(mutirao.data_evento);
+        
+        // Verificar se o mutirão já passou (data do evento)
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        dataMutirao.setHours(0, 0, 0, 0);
+        
+        if (dataMutirao <= hoje) {
+            throw new Error('Este mutirão já foi realizado. Inscrições encerradas.');
+        }
         
         if (mutirao.vagas !== 0) {
             const vagasUsadas = await client.query(`
@@ -655,9 +683,9 @@ router.post('/mutirao-inscricao', async (req, res) => {
         
         // Inserir inscrição do responsável com ticket
         const inscricaoResult = await client.query(`
-            INSERT INTO mutirao_inscricao (calendario_mutirao_id, ticket, nome_responsavel, localidades, contato) 
-            VALUES ($1, $2, $3, $4, $5) RETURNING id
-        `, [calendario_mutirao_id, ticket, nome_responsavel, localidades, contato]);
+            INSERT INTO mutirao_inscricao (calendario_mutirao_id, ticket, nome_responsavel, cpf, contato, cep, endereco, numero, complemento, bairro, cidade, estado) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id
+        `, [calendario_mutirao_id, ticket, nome_responsavel, cpf, contato, cep, endereco, numero, complemento, bairro, cidade, estado]);
         
         const inscricaoId = inscricaoResult.rows[0].id;
         
@@ -824,13 +852,31 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
             margin: [0, 0, 0, 5]
         });
         
+        // Montar endereço completo
+        var enderecoCompleto = '';
+        if (inscricao.endereco) {
+            enderecoCompleto += inscricao.endereco;
+            if (inscricao.numero) enderecoCompleto += ', ' + inscricao.numero;
+            if (inscricao.complemento) enderecoCompleto += ' - ' + inscricao.complemento;
+        }
+        
+        var enderecoCep = '';
+        if (inscricao.cep) {
+            enderecoCep = inscricao.cep;
+            if (inscricao.bairro) enderecoCep += ' - ' + inscricao.bairro;
+            if (inscricao.cidade) enderecoCep += ' - ' + inscricao.cidade;
+            if (inscricao.estado) enderecoCep += '/' + inscricao.estado;
+        }
+        
         content.push({
             table: {
                 widths: ['*', '*'],
                 body: [
                     [{ text: 'Nome:', style: 'label' }, { text: inscricao.nome_responsavel, style: 'value' }],
-                    [{ text: 'Localidade:', style: 'label' }, { text: inscricao.localidades || 'Não informada', style: 'value' }],
-                    [{ text: 'Contato:', style: 'label' }, { text: inscricao.contato, style: 'value' }]
+                    [{ text: 'CPF:', style: 'label' }, { text: inscricao.cpf || 'Não informado', style: 'value' }],
+                    [{ text: 'Contato:', style: 'label' }, { text: inscricao.contato, style: 'value' }],
+                    [{ text: 'CEP:', style: 'label' }, { text: enderecoCep || 'Não informado', style: 'value' }],
+                    [{ text: 'Endereço:', style: 'label' }, { text: enderecoCompleto || 'Não informado', style: 'value' }]
                 ]
             },
             layout: 'lightHorizontalPadding',
@@ -849,8 +895,7 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
                 widths: ['*', '*'],
                 body: [
                     [{ text: 'Data:', style: 'label' }, { text: inscricao.data_evento ? new Date(inscricao.data_evento).toLocaleDateString('pt-BR') : 'Não definida', style: 'value' }],
-                    [{ text: 'Clínica:', style: 'label' }, { text: inscricao.clinica, style: 'value' }],
-                    [{ text: 'Endereço:', style: 'label' }, { text: inscricao.endereco || 'Não informado', style: 'value' }]
+                    [{ text: 'Clínica:', style: 'label' }, { text: inscricao.clinica, style: 'value' }]
                 ]
             },
             layout: 'lightHorizontalPadding',
@@ -910,6 +955,85 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
             text: `Emitido em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`,
             style: 'footerSmall',
             alignment: 'center'
+        });
+        
+        // ==================== PÁGINA 2: TERMO DE RESPONSABILIDADE ====================
+        content.push({ text: '', pageBreak: 'after', margin: [0, 0, 0, 20] });
+        
+        // Cabeçalho do termo
+        content.push({
+            text: 'TERMO DE RESPONSABILIDADE - CASTRAÇÃO',
+            style: 'header',
+            alignment: 'center',
+            margin: [0, 0, 0, 20]
+        });
+        
+        content.push({
+            text: `Responsável: ${inscricao.nome_responsavel}`,
+            style: 'subHeader',
+            margin: [0, 0, 0, 10]
+        });
+        
+        // Conteúdo do termo
+        const termoContent = [
+            { text: 'O responsável abaixo assinado, ao apresentar seu animal para castração no Mutirão de Castração da ONG Amor Animal Marília, compromete-se a:', style: 'value', margin: [0, 0, 0, 10] },
+            { text: '1. Comparecer no dia e horário agendados.', style: 'value', margin: [0, 3, 0, 3] },
+            { text: '2. Apresentar documento de identidade.', style: 'value', margin: [0, 0, 0, 3] },
+            { text: '3. Seguir as orientações pré e pós-operatórias fornecidas.', style: 'value', margin: [0, 0, 0, 3] },
+            { text: '4. Garantir os cuidados necessários com o animal após a cirurgia.', style: 'value', margin: [0, 0, 0, 3] },
+            { text: '5. Comunicar qualquer intercorrência à clínica ou ONG.', style: 'value', margin: [0, 0, 0, 10] },
+            { text: 'OBSERVAÇÕES IMPORTANTES:', style: 'subHeader', margin: [0, 15, 0, 10] },
+            { text: '• O animal deve estar em jejum de 12 horas antes da cirurgia.', style: 'value', margin: [0, 0, 0, 3] },
+            { text: '• Animais com mais de 7 anos necessitam de exame prévio.', style: 'value', margin: [0, 0, 0, 3] },
+            { text: '• A castração é um procedimento irreversível.', style: 'value', margin: [0, 0, 0, 3] },
+            { text: '• O não comparecimento sem justificativa cancela a vaga.', style: 'value', margin: [0, 0, 0, 20] }
+        ];
+        
+        content.push({
+            stack: termoContent,
+            margin: [20, 0, 20, 0]
+        });
+        
+        // Declaração
+        content.push({
+            text: 'DECLARAÇÃO',
+            style: 'subHeader',
+            alignment: 'center',
+            margin: [0, 30, 0, 15]
+        });
+        
+        content.push({
+            text: 'Declaro que li, compreendi e concordo com os termos acima expostos. Estou ciente de que o não cumprimento das obrigações acima pode resultar no cancelamento da inscrição.',
+            style: 'value',
+            alignment: 'justify',
+            margin: [20, 0, 20, 30]
+        });
+        
+        // Assinaturas
+        content.push({
+            table: {
+                widths: ['*', '*'],
+                body: [
+                    [
+                        { text: '', border: [false, true, false, false], margin: [20, 40, 20, 0] },
+                        { text: '', border: [false, true, false, false], margin: [20, 40, 20, 0] }
+                    ],
+                    [
+                        { text: 'Assinatura do Responsável', alignment: 'center', margin: [0, 5, 0, 0] },
+                        { text: 'Assinatura da ONG', alignment: 'center', margin: [0, 5, 0, 0] }
+                    ]
+                ]
+            },
+            layout: 'noBorders',
+            margin: [0, 0, 0, 20]
+        });
+        
+        // Data
+        content.push({
+            text: `Marília, ${new Date().toLocaleDateString('pt-BR')}`,
+            style: 'value',
+            alignment: 'center',
+            margin: [0, 20, 0, 0]
         });
         
         const logoPath = path.join(__dirname, '..', 'static', 'css', 'imagem', 'ong.jpg');
@@ -1026,6 +1150,11 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
                 headerDate: {
                     fontSize: 8,
                     color: '#555555'
+                },
+                value: {
+                    fontSize: 11,
+                    color: '#333333',
+                    lineHeight: 1.5
                 }
             }
         };
@@ -1351,68 +1480,6 @@ router.get('/lista', async (req, res) => {
       }
     });
 
-// POST /castracao/mutirao/arquivar/:id - Arquiva uma inscricao de mutirao
-  router.post('/mutirao/arquivar/:id', async (req, res) => {
-      const { id } = req.params;
-      try {
-          const idNum = parseInt(id, 10);
-          if (!Number.isInteger(idNum) || idNum <= 0) {
-              req.flash('error', 'ID inválido.');
-              return res.redirect('/home');
-          }
-          await pool.query(`UPDATE mutirao_inscricao SET arquivado = TRUE WHERE id = $1`, [idNum]);
-          req.flash('success', 'Inscrição de mutirão arquivada com sucesso.');
-          res.redirect('/home');
-      } catch (error) {
-          console.error(`[castracaoRoutes] Erro ao arquivar mutirão:`, error);
-          req.flash('error', 'Erro ao arquivar.');
-          res.redirect('/home');
-      }
-    });
-
-// POST /castracao/mutirao/desarquivar/:id - Desarquiva uma inscricao de mutirao
-  router.post('/mutirao/desarquivar/:id', async (req, res) => {
-      const { id } = req.params;
-      try {
-          const idNum = parseInt(id, 10);
-          if (!Number.isInteger(idNum) || idNum <= 0) {
-              req.flash('error', 'ID inválido.');
-              return res.redirect('/castracao/arquivados');
-          }
-          await pool.query(`UPDATE mutirao_inscricao SET arquivado = FALSE WHERE id = $1`, [idNum]);
-          req.flash('success', 'Inscrição de mutirão restaurada com sucesso.');
-          res.redirect('/castracao/arquivados');
-      } catch (error) {
-          console.error(`[castracaoRoutes] Erro ao desarquivar mutirão:`, error);
-          req.flash('error', 'Erro ao restaurar.');
-          res.redirect('/castracao/arquivados');
-      }
-    });
-
-// GET /castracao/arquivados - Lista todos os arquivados
-  router.get('/arquivados', async (req, res) => {
-      try {
-          const castracaoResult = await pool.query(`SELECT * FROM castracao WHERE arquivado = TRUE ORDER BY origem DESC`);
-          const mutiraoResult = await pool.query(`
-              SELECT mi.*, cm.clinica, cm.data_evento 
-              FROM mutirao_inscricao mi 
-              LEFT JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id 
-              WHERE mi.arquivado = TRUE 
-              ORDER BY mi.created_at DESC
-          `);
-          res.render('castracao_arquivados', { 
-            castracao: castracaoResult.rows, 
-            mutirao: mutiraoResult.rows 
-          });
-      } catch (error) {
-          console.error(`[castracaoRoutes] Erro ao buscar arquivados:`, error);
-          req.flash('error', 'Erro ao carregar arquivos.');
-          res.redirect('/home');
-      }
-    });
-
-    
-      
   // Rota generica
    router.get('/:id', async (req, res) => {
    const id = req.params.id;
@@ -1769,108 +1836,6 @@ router.get('/calendario-mutirao/relatorio/:id', isAdmin, async (req, res) => {
     }
 });
 
-// GET /castracao/calendario-mutirao/export/:id/:formato - Exporta lista de inscritos
-router.get('/calendario-mutirao/export/:id/:formato', isAdmin, async (req, res) => {
-    const { id, formato } = req.params;
-    const mutiraoId = parseInt(id);
-    
-    try {
-        // Buscar dados do mutirão
-        const mutiraoResult = await executeQuery('SELECT * FROM calendario_mutirao WHERE id = $1', [mutiraoId]);
-        if (!mutiraoResult || mutiraoResult.length === 0) {
-            req.flash('error', 'Mutirão não encontrado.');
-            return res.redirect('/castracao/calendario-mutirao');
-        }
-        const mutirao = mutiraoResult[0];
-        
-        // Buscar inscritos com pets
-        const inscritosResult = await executeQuery(`
-            SELECT 
-                mi.id as inscricao_id,
-                mi.ticket,
-                mi.nome_responsavel,
-                mi.contato,
-                mi.localidades,
-                mi.created_at,
-                mp.nome as pet_nome,
-                mp.especie,
-                mp.sexo,
-                mp.idade,
-                mp.peso,
-                mp.vacinado,
-                mp.medicamento
-            FROM mutirao_inscricao mi
-            LEFT JOIN mutirao_pet mp ON mi.id = mp.mutirao_inscricao_id
-            WHERE mi.calendario_mutirao_id = $1
-            ORDER BY mi.created_at DESC
-        `, [mutiraoId]);
-        
-        // Preparar dados para exportação
-        const dados = [];
-        for (const ins of inscritosResult) {
-            dados.push({
-                ticket: ins.ticket,
-                responsavel: ins.nome_responsavel,
-                contato: ins.contato,
-                localidades: ins.localidades || '',
-                pet_nome: ins.pet_nome || '',
-                especie: ins.especie === 'cachorro' ? 'Cachorro' : (ins.especie === 'gato' ? 'Gato' : ''),
-                sexo: ins.sexo === 'macho' ? 'Macho' : (ins.sexo === 'femea' ? 'Fêmea' : ''),
-                idade: ins.idade || '',
-                peso: ins.peso || '',
-                vacinado: ins.vacinado ? 'Sim' : 'Não',
-                medicamento: ins.medicamento || '',
-                data_inscricao: ins.created_at ? new Date(ins.created_at).toLocaleString('pt-BR') : ''
-            });
-        }
-        
-        // Gerar nome do arquivo
-        const dataStr = new Date().toISOString().slice(0,10);
-        const filename = `mutirao_${mutiraoId}_inscritos_${dataStr}`;
-        
-        // Salvar na pasta uploads
-        const fs = require('fs');
-        const path = require('path');
-        const uploadsDir = path.join(__dirname, '..', '..', 'amoranimal_uploads', 'mutirao');
-        
-        // Criar diretório se não existir
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-        }
-        
-        if (formato === 'json') {
-            const jsonContent = JSON.stringify(dados, null, 2);
-            const filepath = path.join(uploadsDir, `${filename}.json`);
-            fs.writeFileSync(filepath, jsonContent, 'utf8');
-            
-            res.download(filepath, `${filename}.json`, (err) => {
-                if (err) console.error('Erro ao baixar:', err);
-            });
-        } else if (formato === 'csv') {
-            const headers = ['Ticket', 'Responsável', 'Contato', 'Localidade', 'Pet', 'Espécie', 'Sexo', 'Idade', 'Peso', 'Vacinado', 'Medicamento', 'Data Inscrição'];
-            const rows = dados.map(d => [
-                d.ticket, d.responsavel, d.contato, d.localidades, d.pet_nome, 
-                d.especie, d.sexo, d.idade, d.peso, d.vacinado, d.medicamento, d.data_inscricao
-            ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
-            
-            const csvContent = [headers.join(','), ...rows].join('\n');
-            const filepath = path.join(uploadsDir, `${filename}.csv`);
-            fs.writeFileSync(filepath, '\ufeff' + csvContent, 'utf8'); // BOM para Excel
-            
-            res.download(filepath, `${filename}.csv`, (err) => {
-                if (err) console.error('Erro ao baixar:', err);
-            });
-        } else {
-            req.flash('error', 'Formato inválido.');
-            res.redirect('/castracao/calendario-mutirao');
-        }
-    } catch (error) {
-        console.error(`[castracaoRoutes] Erro ao exportar:`, error);
-        req.flash('error', 'Erro ao exportar dados.');
-        res.redirect('/castracao/calendario-mutirao');
-    }
-});
-
 // DELETE /castracao/calendario-mutirao/delete/:id - Exclui um mutirão (admin)
 router.post('/calendario-mutirao/delete/:id', isAdmin, async (req, res) => {
     const client = await pool.connect();
@@ -1905,34 +1870,6 @@ router.post('/calendario-mutirao/delete/:id', isAdmin, async (req, res) => {
         res.redirect('/castracao/calendario-mutirao');
     } finally {
         client.release();
-    }
-});
-
-// POST /castracao/calendario-mutirao/arquivar/:id - Arquiva um mutirão
-router.post('/calendario-mutirao/arquivar/:id', isAdmin, async (req, res) => {
-    const { id } = req.params;
-    try {
-        await pool.query(`UPDATE calendario_mutirao SET arquivado = TRUE WHERE id = $1`, [id]);
-        req.flash('success', 'Mutirão arquivado com sucesso.');
-        res.redirect('/castracao/calendario-mutirao');
-    } catch (error) {
-        console.error(`[castracaoRoutes] Erro ao arquivar:`, error);
-        req.flash('error', 'Erro ao arquivar.');
-        res.redirect('/castracao/calendario-mutirao');
-    }
-});
-
-// POST /castracao/calendario-mutirao/desarquivar/:id - Desarquiva um mutirão
-router.post('/calendario-mutirao/desarquivar/:id', isAdmin, async (req, res) => {
-    const { id } = req.params;
-    try {
-        await pool.query(`UPDATE calendario_mutirao SET arquivado = FALSE WHERE id = $1`, [id]);
-        req.flash('success', 'Mutirão restaurado com sucesso.');
-        res.redirect('/castracao/calendario-mutirao');
-    } catch (error) {
-        console.error(`[castracaoRoutes] Erro ao desarquivar:`, error);
-        req.flash('error', 'Erro ao restaurar.');
-        res.redirect('/castracao/calendario-mutirao');
     }
 });
 

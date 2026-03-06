@@ -1,12 +1,8 @@
 <%- include("_header") -%>
 
-<style>
-.pet-card { background: #f8f9fa; border-radius: 8px; }
-</style>
-
 <main class="container mt-4">
   <h1>Inscrição para Mutirão de Castração</h1>
-  <p class="text-muted">Preencha os dados abaixo para inscrever-se no mutirão de castração.</p>
+  <p class="text-muted">Preencha os dados abaixo para inscribirse no mutirão de castração.</p>
 
   <% if (error && error.length) { %>
     <div class="alert alert-danger"><%= error %></div>
@@ -19,38 +15,76 @@
     <form action="/castracao/mutirao-inscricao" method="POST" id="formInscricao">
       <input type="hidden" name="calendario_mutirao_id" value="<%= mutirao.id %>">
       
-      <div class="row mb-3">
-        <div class="col-12">
-          <h4>Dados do Responsável</h4>
-        </div>
-      </div>
-
-      <div class="row g-2 mb-4">
-        <div class="col-md-4">
+      <h4>Dados do Responsável</h4>
+      
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
           <label class="form-label">Nome do Responsável *</label>
           <input type="text" name="nome_responsavel" id="nomeResponsavel" class="form-control" required>
         </div>
-        <div class="col-md-4">
-          <label class="form-label">Localidade</label>
-          <input type="text" name="localidades" class="form-control" placeholder="Bairro/Região">
+        
+        <div class="col-md-3">
+          <label class="form-label fw-bold">CPF *</label>
+          <input type="text" name="cpf" id="cpf" class="form-control" placeholder="000.000.000-00" required>
         </div>
-        <div class="col-md-4">
+        
+        <div class="col-md-3">
           <label class="form-label fw-bold">Contato *</label>
-          <input type="tel" name="contato" id="contato" class="form-control phone-input" placeholder="Telefone com DDD" required>
+          <input type="tel" name="contato" id="contato" class="form-control phone-input" placeholder="(00) 00000-0000" required>
+        </div>
+      </div>
+      
+      <div class="row g-3 mb-3">
+        <div class="col-md-3">
+          <label class="form-label">CEP *</label>
+          <div class="input-group">
+            <input type="text" name="cep" id="cep" class="form-control" placeholder="00000-000" required>
+            <button type="button" class="btn btn-outline-secondary" onclick="buscarCep()" title="Buscar CEP">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="col-md-5">
+          <label class="form-label">Endereço</label>
+          <input type="text" name="endereco" id="endereco" class="form-control" placeholder="Rua/Logradouro">
+        </div>
+        
+        <div class="col-md-2">
+          <label class="form-label">Número</label>
+          <input type="text" name="numero" id="numero" class="form-control" placeholder="Nº">
+        </div>
+        
+        <div class="col-md-2">
+          <label class="form-label">Complemento</label>
+          <input type="text" name="complemento" id="complemento" class="form-control" placeholder="Apto/Bloco">
+        </div>
+      </div>
+      
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <label class="form-label">Bairro</label>
+          <input type="text" name="bairro" id="bairro" class="form-control" placeholder="Bairro">
+        </div>
+        
+        <div class="col-md-4">
+          <label class="form-label">Cidade</label>
+          <input type="text" name="cidade" id="cidade" class="form-control" placeholder="Cidade">
+        </div>
+        
+        <div class="col-md-2">
+          <label class="form-label">Estado</label>
+          <input type="text" name="estado" id="estado" class="form-control" placeholder="UF" maxlength="2">
         </div>
       </div>
 
       <hr>
 
-      <div class="row mb-3">
-        <div class="col-12">
-          <h4>Dados dos Pets</h4>
-          <p class="text-muted">Cada pet cadastrado ocupará uma vaga no mutirão.</p>
-        </div>
-      </div>
+      <h4>Dados dos Pets</h4>
+      <p class="text-muted">Cada pet cadastrado ocupará uma vaga no mutirão.</p>
 
       <!-- Formulário para adicionar pet -->
-      <div class="pet-card border rounded p-3 mb-3">
+      <div class="card bg-light p-3 mb-3">
         <div class="row g-2">
           <div class="col-md-3">
             <label class="form-label">Nome do Pet *</label>
@@ -109,24 +143,17 @@
       </div>
 
       <!-- Lista de pets adicionados -->
-      <div class="row mb-3">
-        <div class="col-12">
-          <h4>Pets Cadastrados (<span id="petCount">0</span>)</h4>
-        </div>
-      </div>
+      <h4>Pets Cadastrados (<span id="petCount">0</span>)</h4>
 
       <div class="row mb-3">
         <div class="col-12">
-          <div id="petsTableContainer" class="table-responsive border rounded">
-            <div id="petsSummary" class="p-3 text-muted text-center">
-              <i class="bi bi-paw" style="font-size: 2rem;"></i>
-              <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
-            </div>
+          <div id="petsTableContainer">
+            <p class="text-muted text-center p-3">Nenhum pet cadastrado ainda.</p>
           </div>
         </div>
       </div>
 
-      <!-- Campos ocultos para os pets (serão preenchidos via JS) -->
+      <!-- Campos ocultos para os pets -->
       <input type="hidden" name="pets_json" id="petsJson">
 
       <!-- Botão de submit -->
@@ -157,27 +184,25 @@
 </main>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let pets = [];
+(function() {
+    var pets = [];
     
-    const petTemMedicamento = document.getElementById('petTemMedicamento');
-    const medicamentoField = document.getElementById('medicamentoField');
-    const btnAddPet = document.getElementById('btnAddPet');
-    const btnSubmit = document.getElementById('btnSubmit');
-    const petCount = document.getElementById('petCount');
-    const petsTableContainer = document.getElementById('petsTableContainer');
-    const petsJson = document.getElementById('petsJson');
+    var petTemMedicamento = document.getElementById('petTemMedicamento');
+    var medicamentoField = document.getElementById('medicamentoField');
+    var btnAddPet = document.getElementById('btnAddPet');
+    var btnSubmit = document.getElementById('btnSubmit');
+    var petCount = document.getElementById('petCount');
+    var petsTableContainer = document.getElementById('petsTableContainer');
+    var petsJson = document.getElementById('petsJson');
     
-    // Mostrar/esconder campo medicamento
     petTemMedicamento.addEventListener('change', function() {
         medicamentoField.style.display = this.value === 'sim' ? 'block' : 'none';
     });
     
-    // Adicionar pet
     btnAddPet.addEventListener('click', function() {
-        const nome = document.getElementById('petNome').value.trim();
-        const especie = document.getElementById('petEspecie').value;
-        const sexo = document.getElementById('petSexo').value;
+        var nome = document.getElementById('petNome').value.trim();
+        var especie = document.getElementById('petEspecie').value;
+        var sexo = document.getElementById('petSexo').value;
         
         if (!nome || !especie || !sexo) {
             alert('Preencha: Nome, Espécie e Sexo do pet');
@@ -194,7 +219,6 @@ document.addEventListener('DOMContentLoaded', function() {
             medicamento: petTemMedicamento.value === 'sim' ? document.getElementById('petMedicamento').value : ''
         });
         
-        // Limpar formulário
         document.getElementById('petNome').value = '';
         document.getElementById('petEspecie').value = '';
         document.getElementById('petSexo').value = '';
@@ -210,31 +234,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function atualizarTabela() {
         petCount.textContent = pets.length;
-        
-        // Atualizar campo hidden com JSON
         petsJson.value = JSON.stringify(pets);
-        
-        // Habilitar/desabilitar botão submit
         btnSubmit.disabled = pets.length === 0;
+        btnSubmit.textContent = pets.length === 0 ? 'Adicione um pet primeiro' : 'Realizar Inscrição';
         
         if (pets.length === 0) {
-            petsTableContainer.innerHTML = `
-                <div class="p-3 text-muted text-center">
-                    <i class="bi bi-paw" style="font-size: 2rem;"></i>
-                    <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
-                </div>
-            `;
+            petsTableContainer.innerHTML = '<p class="text-muted text-center p-3">Nenhum pet cadastrado ainda.</p>';
             return;
         }
         
-        let html = '<table class="table table-sm table-hover mb-0"><thead><tr>';
+        var html = '<table class="table table-sm table-hover"><thead><tr>';
         html += '<th>#</th><th>Nome</th><th>Espécie</th><th>Sexo</th><th>Idade</th><th>Peso</th><th>Vacinado</th><th>Ações</th>';
         html += '</tr></thead><tbody>';
         
-        pets.forEach((pet, index) => {
+        pets.forEach(function(pet, index) {
             html += '<tr>';
             html += '<td>' + (index + 1) + '</td>';
-            html += '<td class="fw-bold">' + pet.nome + '</td>';
+            html += '<td><strong>' + pet.nome + '</strong></td>';
             html += '<td>' + pet.especie + '</td>';
             html += '<td>' + pet.sexo + '</td>';
             html += '<td>' + (pet.idade || '-') + '</td>';
@@ -255,18 +271,78 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // Validar submit
     document.getElementById('formInscricao').addEventListener('submit', function(e) {
         if (pets.length === 0) {
             e.preventDefault();
             alert('Adicione pelo menos um pet');
             return;
         }
-        
-        // Garantir que o campo JSON está preenchido
         petsJson.value = JSON.stringify(pets);
     });
-});
+    
+    // Função para buscar CEP
+    window.buscarCep = function() {
+        var cep = document.getElementById('cep').value.replace(/\D/g, '');
+        
+        if (cep.length !== 8) {
+            alert('CEP inválido. Digite 8 dígitos.');
+            return;
+        }
+        
+        fetch('https://viacep.com.br/ws/' + cep + '/json/')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.erro) {
+                    alert('CEP não encontrado.');
+                    return;
+                }
+                document.getElementById('endereco').value = data.logradouro || '';
+                document.getElementById('bairro').value = data.bairro || '';
+                document.getElementById('cidade').value = data.localidade || '';
+                document.getElementById('estado').value = data.uf || '';
+            })
+            .catch(function(error) {
+                console.error('Erro ao buscar CEP:', error);
+                alert('Erro ao buscar CEP. Tente novamente.');
+            });
+    };
+    
+    // Formatar CPF
+    var cpfInput = document.getElementById('cpf');
+    cpfInput.addEventListener('input', function(e) {
+        var value = e.target.value.replace(/\D/g, '');
+        if (value.length > 11) value = value.slice(0, 11);
+        
+        var formatted = '';
+        if (value.length > 0) formatted = value.slice(0, 3);
+        if (value.length > 3) formatted += '.' + value.slice(3, 6);
+        if (value.length > 6) formatted += '.' + value.slice(6, 9);
+        if (value.length > 9) formatted += '-' + value.slice(9, 11);
+        
+        e.target.value = formatted;
+    });
+    
+    // Formatar CEP
+    var cepInput = document.getElementById('cep');
+    cepInput.addEventListener('input', function(e) {
+        var value = e.target.value.replace(/\D/g, '');
+        if (value.length > 8) value = value.slice(0, 8);
+        
+        var formatted = '';
+        if (value.length > 0) formatted = value.slice(0, 5);
+        if (value.length > 5) formatted += '-' + value.slice(5, 8);
+        
+        e.target.value = formatted;
+    });
+    
+    // Buscar CEP ao pressionar Enter
+    document.getElementById('cep').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            buscarCep();
+        }
+    });
+})();
 </script>
 
 <%- include("_footer") -%>
