@@ -98,6 +98,22 @@
   padding: 15px;
 }
 
+
+  .help-content {
+    max-height: 420px; /* limits height inside dropdown */
+    overflow: auto;    /* allow scrolling but hide native scrollbars below */
+    padding: 0;
+    scroll-behavior: smooth;
+
+    /* Hide scrollbars while preserving scroll functionality */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  .help-content::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}
+
 .help-content h4 {
   margin: 0 0 10px 0;
   color: var(--heading-color, #333);
@@ -1306,20 +1322,7 @@ ul.list-checked li::before {
      display: inline-block; /* Or display: flex; if items are flex children */
      /* animation: scroll-x 30s linear infinite; /* Animation applied here */
  }
- /* @keyframes scroll-x {
-     from { transform: translateX(0); }
-     to { transform: translateX(-100%); } /* Will cause a jump */
- /* } */
- /*
- .photobanner:hover .scroll-content,
- .historia-item:hover .scroll-content {
-     animation-play-state: paused;
- }
- */
- /* Consider removing or rethinking the CSS animation if a smooth loop is needed.
-    The overflow-x: auto provides basic horizontal scrolling. */
- 
- 
+  
  /* --- JS-Driven Photobanner (Adoption Section) --- */
  .photobanner-container { /* Main container for the JS carousel */
       position: relative;
