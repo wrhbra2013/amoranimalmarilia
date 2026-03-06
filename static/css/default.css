@@ -55,11 +55,11 @@
 
 .help-label {
   position: fixed;
-  top: 10px;
+  top: 15px;
   left: 50px;
   z-index: 9999;
-  width: 35px;
-  height: 35px;
+  width: 25px;
+  height: 25px;
   background-color: var(--button-bg, #0066cc);
   color: var(--button-text, #fff);
   border-radius: 50%;
@@ -112,7 +112,7 @@
   .help-content::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */
   }
-}
+
 
 .help-content h4 {
   margin: 0 0 10px 0;
