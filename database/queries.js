@@ -51,11 +51,11 @@
 const castracao = `SELECT * FROM castracao ORDER BY origem DESC;`;
 const castracaoCount = `SELECT COUNT(*) AS count FROM castracao;`;
 
-/* tag castracao_total_count - Conta castrações comuns (pets_rua, baixo_custo) + mutirões (inscrições) */
+/* tag castracao_total_count - Conta TODOS os pets: castrações comuns + pets de mutirões */
 const castracao_total_count = `
     SELECT 
         (SELECT COUNT(*) FROM castracao WHERE tipo IN ('pets_rua', 'baixo_custo', 'padrao') OR tipo IS NULL OR tipo = '') +
-        (SELECT COUNT(*) FROM mutirao_inscricao) as total;
+        (SELECT COUNT(*) FROM mutirao_pet) as total;
 `;
 
 /* tag castracao_e_mutirao - UNION de castracao e mutirao_pet para exibir na home */
