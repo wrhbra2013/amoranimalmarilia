@@ -3,11 +3,32 @@ document.addEventListener('DOMContentLoaded', function() {
     
     atualizarResumo();
     
-    document.getElementById('clinica').addEventListener('change', function() {
-        if (this.value === '__nova_clinica__') {
-            window.location.href = '/clinicas/form';
-        }
-    });
+    const clinicaSelect = document.getElementById('clinica');
+    const clinicaEnderecoInput = document.getElementById('clinica_endereco');
+    if (clinicaSelect) {
+        clinicaSelect.addEventListener('change', function() {
+            if (this.value === '__nova_clinica__') {
+                window.location.href = '/clinicas/form';
+                return;
+            }
+            // Preenche o campo de endereço a partir do atributo data-endereco da option
+            const selected = this.options[this.selectedIndex];
+            const endereco = selected ? selected.dataset.endereco || '' : '';
+            if (clinicaEnderecoInput) {
+                clinicaEnderecoInput.value = endereco;
+            } else {
+                // Se não existir input visível (por algum motivo), cria um hidden para envio no form
+                let hidden = document.querySelector('input[name="clinica_endereco"]');
+                if (!hidden) {
+                    hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'clinica_endereco';
+                    document.getElementById('formInscricao').appendChild(hidden);
+                }
+                hidden.value = endereco;
+            }
+        });
+    }
 
     document.getElementById('btnAddPet').addEventListener('click', function() {
         const nome = document.getElementById('petNome').value.trim();

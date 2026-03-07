@@ -114,18 +114,26 @@
                         <!-- Clínica e Dia Preferencial -->
                 <div class="row g-2 mb-4">
                     <div class="col-md-6">
-                        <label for="clinica" class="form-label fw-bold">Clínica *</label>
-                        <select class="form-select" id="clinica" name="clinica" required>
+                        <% if (user && user.isAdmin) { %>
+                        <label for="clinica" class="form-label fw-bold">Clínica</label>
+                        <select class="form-select" id="clinica" name="clinica">
                             <option value="" selected disabled>Selecione uma clínica...</option>
                             <% if (typeof clinicas !== 'undefined' && clinicas.length > 0) { %>
                                 <% clinicas.forEach(function(clinica) { %>
-                                    <option value="<%= clinica.nome %>"><%= clinica.nome %></option>
+                                    <option value="<%= clinica.nome %>" data-endereco="<%= clinica.endereco || '' %>" <%= (formData.clinica === clinica.nome) ? 'selected' : '' %>><%= clinica.nome %></option>
                                 <% }); %>
                             <% } %>
-                            <% if(user) { %>
                             <option value="__nova_clinica__">Cadastrar nova clínica...</option>
-                            <% } %>
                         </select>
+
+                        <label for="clinica_endereco" class="form-label mt-2 fw-bold">Endereço da Clínica</label>
+                        <input type="text" id="clinica_endereco" name="clinica_endereco" class="form-control" placeholder="Endereço da clínica (selecionar acima)" value="<%= formData.clinica_endereco || '' %>">
+                        <% } else { %>
+                        <label class="form-label fw-bold">Clínica</label>
+                        <input type="text" class="form-control" value="<%= defaultClinica || 'A definir' %>" readonly>
+                        <input type="hidden" name="clinica" value="<%= defaultClinica || '' %>">
+                        <input type="hidden" name="clinica_endereco" value="<%= defaultClinicaEndereco || '' %>">
+                        <% } %>
                     </div>
                     <div class="col-md-6">
                         <label for="agenda" class="form-label fw-bold">Dia Preferencial para Agendamento *</label>

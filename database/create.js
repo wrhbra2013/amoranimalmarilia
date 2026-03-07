@@ -113,6 +113,13 @@ const { pool } = require('./database');
     } catch (error) {
         console.log("Erro ao adicionar coluna 'sexo' (pode já existir):", error.message);
     }
+    // Adiciona a coluna 'clinica_endereco' se não existir
+    try {
+        await pool.query(`ALTER TABLE castracao ADD COLUMN IF NOT EXISTS clinica_endereco VARCHAR(255);`);
+        console.log("Coluna 'clinica_endereco' adicionada ou já existe na tabela castracao");
+    } catch (error) {
+        console.log("Erro ao adicionar coluna 'clinica_endereco':", error.message);
+    }
    }
  
  async function create_procura_se() {

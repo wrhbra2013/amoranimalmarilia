@@ -344,6 +344,9 @@ router.post('/mutirao/create', async (req, res) => {
             // Cada pet gera um ticket sequencial único (incluindo o primeiro)
             const ticket = await generateCastracaoTicket(client, 'mutirao');
             
+            // Determina endereço da clínica: prioridade para o mutirão (calendario), senão campo enviado no form
+            const clinicaEndereco = mutirao && mutirao.endereco ? mutirao.endereco : (req.body.clinica_endereco || null);
+
             await insert_castracao(
                 ticket,
                 tutor_nome,
@@ -353,6 +356,7 @@ router.post('/mutirao/create', async (req, res) => {
                 pet.especie || 'não especificado',
                 pet.porte || 'não especificado',
                 req.body.clinica || 'não especificada',
+                clinicaEndereco,
                 req.body.agenda || mutiraoRef,
                 'mutirao',
                 pet.nome || 'Pet do mutirão',
@@ -960,53 +964,33 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
         // ==================== PÁGINA 2: TERMO DE RESPONSABILIDADE ====================
         content.push({ text: '', pageBreak: 'after', margin: [0, 0, 0, 20] });
         
-        // Cabeçalho do termo
-        content.push({
-            text: 'TERMO DE RESPONSABILIDADE - CASTRAÇÃO',
-            style: 'header',
-            alignment: 'center',
-            margin: [0, 0, 0, 20]
-        });
-        
-        content.push({
-            text: `Responsável: ${inscricao.nome_responsavel}`,
-            style: 'subHeader',
-            margin: [0, 0, 0, 10]
-        });
-        
         // Conteúdo do termo
         const termoContent = [
-            { text: 'O responsável abaixo assinado, ao apresentar seu animal para castração no Mutirão de Castração da ONG Amor Animal Marília, compromete-se a:', style: 'value', margin: [0, 0, 0, 10] },
-            { text: '1. Comparecer no dia e horário agendados.', style: 'value', margin: [0, 3, 0, 3] },
-            { text: '2. Apresentar documento de identidade.', style: 'value', margin: [0, 0, 0, 3] },
-            { text: '3. Seguir as orientações pré e pós-operatórias fornecidas.', style: 'value', margin: [0, 0, 0, 3] },
-            { text: '4. Garantir os cuidados necessários com o animal após a cirurgia.', style: 'value', margin: [0, 0, 0, 3] },
-            { text: '5. Comunicar qualquer intercorrência à clínica ou ONG.', style: 'value', margin: [0, 0, 0, 10] },
-            { text: 'OBSERVAÇÕES IMPORTANTES:', style: 'subHeader', margin: [0, 15, 0, 10] },
-            { text: '• O animal deve estar em jejum de 12 horas antes da cirurgia.', style: 'value', margin: [0, 0, 0, 3] },
-            { text: '• Animais com mais de 7 anos necessitam de exame prévio.', style: 'value', margin: [0, 0, 0, 3] },
-            { text: '• A castração é um procedimento irreversível.', style: 'value', margin: [0, 0, 0, 3] },
-            { text: '• O não comparecimento sem justificativa cancela a vaga.', style: 'value', margin: [0, 0, 0, 20] }
+            { text: 'TERMO DE RESPONSABILIDADE', style: 'header', alignment: 'center', margin: [0, 0, 0, 20] },
+            { text: `Cadastro nº ${inscricao.ticket }`, style: 'value', margin: [0, 0, 0, 15] },
+            { text: `Eu, ${inscricao.nome_responsavel}, CPF ${inscricao.cpf}, residente na ${inscricao.endereco}, nº ${inscricao.numero }, bairro ${inscricao.bairro }, telefone ${inscricao.telefone },`, style: 'value', margin: [0, 0, 0, 15] },
+            { text: '1. Por meio deste instrumento, confirmo ciência quanto às obrigações abaixo discriminadas, enquanto proprietário(a) do animal:', style: 'value', margin: [0, 0, 0, 10] },
+            { text: `Nome ${inscricao.pets && inscricao.pets[0] ? inscricao.pets[0].nome : '____________________'}, espécie ${inscricao.pets && inscricao.pets[0] ? inscricao.pets[0].especie : '_______________'}, raça ${inscricao.pets && inscricao.pets[0] ? inscricao.pets[0].raca : '_______________'}, sexo ${inscricao.pets && inscricao.pets[0] ? inscricao.pets[0].sexo : '___________'}, idade ${inscricao.pets && inscricao.pets[0] ? inscricao.pets[0].idade : '______'}, peso ${inscricao.pets && inscricao.pets[0] ? inscricao.pets[0].peso : '________'}, vacinado contra viroses (sim) (não), vacinado contra raiva (sim) (não).`, style: 'value', margin: [0, 0, 0, 10] },
+            { text: 'Nos últimos 10 dias apresentou alguma alteração de comportamento? (sim) (não)', style: 'value', margin: [0, 0, 0, 5] },
+            { text: 'Está tendo vômito ou diarreia? (sim) (não)', style: 'value', margin: [0, 0, 0, 10] },
+            { text: 'O referido animal será contemplado pelo Mutirão de Castração Gratuita da ONG Amor Animal, com cirurgia a ser realizada na Clínica Veterinária É o Bicho, pela Dra. Thais Carvalho Parra CRMV 38659.', style: 'value', margin: [0, 0, 0, 10] },
+            { text: '2. Estar atento(a) e cumprir as orientações de pré e pós-operatório;', style: 'value', margin: [0, 3, 0, 3] },
+            { text: '3. Acatar as orientações pré-operatórias fornecidas pela equipe veterinária;', style: 'value', margin: [0, 0, 0, 3] },
+            { text: '4. Felinas fêmeas deverão retornar após 10 dias para retirada dos pontos;', style: 'value', margin: [0, 0, 0, 3] },
+            { text: '5. É obrigatório o uso de colar elizabetano ou roupa cirúrgica;', style: 'value', margin: [0, 0, 0, 3] },
+            { text: '6. Todos os animais serão medicados no ato da castração, não havendo necessidade de uso de medicação posterior, exceto em casos de dor. Nessa situação recomenda-se administrar 1 gota de dipirona por kg, a cada 8 horas, ou enquanto houver dor ou febre.', style: 'value', margin: [0, 0, 0, 10] },
+            { text: 'Declaro estar ciente de que é direito da equipe médica veterinária suspender a realização do procedimento cirúrgico caso seja identificado algum fator impeditivo, e que a campanha não cobra qualquer tipo de intervenção extra.', style: 'value', margin: [0, 0, 0, 10] },
+            { text: 'Declaro, ainda, estar ciente dos riscos inerentes ao processo de anestesia, bem como de eventuais incompatibilidades orgânicas do animal frente a medicamentos de uso comum.', style: 'value', margin: [0, 0, 0, 10] },
+            { text: 'Declaro e autorizo o procedimento de marcação de orelha no meu gato(a), que se trata de marcação universal para controle populacional.', style: 'value', margin: [0, 0, 0, 10] },
+            { text: 'Qualquer intercorrência que exija atendimento posterior, seja por falha no cumprimento das orientações fornecidas ou por fatores individuais do animal, será de inteira responsabilidade e custeio do(a) proprietário(a).', style: 'value', margin: [0, 0, 0, 10] },
+            { text: 'Para mais informações, entre em contato: (14) 99815-1723 – ONG Amor Animal.', style: 'value', margin: [0, 0, 0, 10] },
+            { text: 'Por expressão da verdade, firmo o presente.', style: 'value', margin: [0, 0, 0, 20] },
+            { text: 'Marília, 28 de Fevereiro de 2026.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] }
         ];
         
         content.push({
             stack: termoContent,
             margin: [20, 0, 20, 0]
-        });
-        
-        // Declaração
-        content.push({
-            text: 'DECLARAÇÃO',
-            style: 'subHeader',
-            alignment: 'center',
-            margin: [0, 30, 0, 15]
-        });
-        
-        content.push({
-            text: 'Declaro que li, compreendi e concordo com os termos acima expostos. Estou ciente de que o não cumprimento das obrigações acima pode resultar no cancelamento da inscrição.',
-            style: 'value',
-            alignment: 'justify',
-            margin: [20, 0, 20, 30]
         });
         
         // Assinaturas
@@ -1019,21 +1003,13 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
                         { text: '', border: [false, true, false, false], margin: [20, 40, 20, 0] }
                     ],
                     [
-                        { text: 'Assinatura do Responsável', alignment: 'center', margin: [0, 5, 0, 0] },
-                        { text: 'Assinatura da ONG', alignment: 'center', margin: [0, 5, 0, 0] }
+                        { text: 'Médico Veterinário Responsável', alignment: 'center', margin: [0, 5, 0, 0] },
+                        { text: 'Assinatura do Proprietário(a)', alignment: 'center', margin: [0, 5, 0, 0] }
                     ]
                 ]
             },
             layout: 'noBorders',
             margin: [0, 0, 0, 20]
-        });
-        
-        // Data
-        content.push({
-            text: `Marília, ${new Date().toLocaleDateString('pt-BR')}`,
-            style: 'value',
-            alignment: 'center',
-            margin: [0, 20, 0, 0]
         });
         
         const logoPath = path.join(__dirname, '..', 'static', 'css', 'imagem', 'ong.jpg');
@@ -1177,18 +1153,24 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
 // GET /castracao/pets-rua - Renderiza o formulário para pets de rua
 router.get('/pets-rua', async (req, res) => {
     try {
-        const clinicas = await executeQuery("SELECT nome FROM clinicas ORDER BY nome;");
+        const clinicas = await executeQuery("SELECT id, nome, endereco FROM clinicas ORDER BY nome;");
         const formData = req.flash('formData')[0] || {};
 
         if (req.query.new_clinic_name) {
             formData.clinica = req.query.new_clinic_name;
         }
-        
+
+        // Determine default clinic for non-admin users: prefer flashed formData, else first clinic in list
+        const defaultClinica = formData.clinica || (clinicas && clinicas.length > 0 ? clinicas[0].nome : '');
+        const defaultClinicaEndereco = (formData.clinica && clinicas ? (clinicas.find(c => c.nome === formData.clinica) || {}).endereco : null) || (clinicas && clinicas.length > 0 ? clinicas[0].endereco : '') || '';
+
         res.render('castracao_rua', { 
             clinicas: clinicas, 
             error: req.flash('error'),
             success: req.flash('success'),
-            formData: formData
+            formData: formData,
+            defaultClinica: defaultClinica,
+            defaultClinicaEndereco: defaultClinicaEndereco
         });
     } catch (error) {
         console.error("[castracaoRoutes GET /pets-rua] Erro ao buscar clínicas:", error.message);
@@ -1202,18 +1184,24 @@ router.get('/pets-rua', async (req, res) => {
 // GET /castracao/baixo-custo - Renderiza o formulário para castração de baixo custo
 router.get('/baixo-custo', async (req, res) => {
     try {
-        const clinicas = await executeQuery("SELECT nome FROM clinicas ORDER BY nome;");
+        const clinicas = await executeQuery("SELECT id, nome, endereco FROM clinicas ORDER BY nome;");
         const formData = req.flash('formData')[0] || {};
 
         if (req.query.new_clinic_name) {
             formData.clinica = req.query.new_clinic_name;
         }
-        
+
+        // Default clinic for non-admin users: prefer flashed value, else first clinic
+        const defaultClinica = formData.clinica || (clinicas && clinicas.length > 0 ? clinicas[0].nome : '');
+        const defaultClinicaEndereco = (formData.clinica && clinicas ? (clinicas.find(c => c.nome === formData.clinica) || {}).endereco : null) || (clinicas && clinicas.length > 0 ? clinicas[0].endereco : '') || '';
+
         res.render('castracao_baixo_custo', { 
             clinicas: clinicas, 
             error: req.flash('error'),
             success: req.flash('success'),
-            formData: formData
+            formData: formData,
+            defaultClinica: defaultClinica,
+            defaultClinicaEndereco: defaultClinicaEndereco
         });
     } catch (error) {
         console.error("[castracaoRoutes GET /baixo-custo] Erro ao buscar clínicas:", error.message);
@@ -1307,6 +1295,7 @@ router.get('/lista', async (req, res) => {
                   Array.isArray(pet_especie) ? pet_especie[arrayIndex] : pet_especie,
                   Array.isArray(pet_porte) ? pet_porte[arrayIndex] : pet_porte,
                   clinica,
+                  req.body.clinica_endereco || null,
                   agenda,
                   tipo,
                   petNomeValido,
