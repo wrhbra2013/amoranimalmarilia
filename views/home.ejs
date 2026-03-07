@@ -335,24 +335,32 @@
                              <h3 class="card-title h4 fw-bold">Castrações Anuais</h3>
 *                             <p class="text-muted mt-n2 mb-3">Progresso do ano atual</p>
 
-                             <%
-                              const annualCounts = {};
-                              if (typeof model8 !== 'undefined' && model8.length > 0) {
-                                  model8.forEach(castracao => {
-                                      const data = castracao.data_evento || castracao.origem;
-                                      if (data) {
-                                          const year = new Date(data).getFullYear();
-                                          annualCounts[year] = (annualCounts[year] || 0) + 1;
-                                      }
-                                  });
-                              }
+                              <%
+                               const annualCounts = {};
+                               const annualUniquePets = {};
+                               if (typeof model8 !== 'undefined' && model8.length > 0) {
+                                   model8.forEach(castracao => {
+                                       const data = castracao.data_evento || castracao.origem;
+                                       const nomePet = castracao.nome_pet ? castracao.nome_pet.trim().toLowerCase() : '';
+                                       if (data && nomePet) {
+                                           const year = new Date(data).getFullYear();
+                                           if (!annualUniquePets[year]) {
+                                               annualUniquePets[year] = new Set();
+                                           }
+                                           annualUniquePets[year].add(nomePet);
+                                           annualCounts[year] = (annualCounts[year] || 0) + 1;
+                                       }
+                                   });
+                               }
 
-                             const sortedYears = Object.keys(annualCounts).map(Number).sort((a, b) => b - a);
-                             const currentYear = sortedYears.length > 0 ? sortedYears[0] : new Date().getFullYear();
-                             const previousYear = sortedYears.length > 1 ? sortedYears[1] : currentYear - 1;
+                               const currentYearUniqueCount = annualUniquePets[new Date().getFullYear()] ? annualUniquePets[new Date().getFullYear()].size : 0;
 
-                             const currentYearCount = annualCounts[currentYear] || 0;
-                             const previousYearCount = annualCounts[previousYear] || 0;
+                              const sortedYears = Object.keys(annualUniquePets).map(Number).sort((a, b) => b - a);
+                              const currentYear = sortedYears.length > 0 ? sortedYears[0] : new Date().getFullYear();
+                              const previousYear = sortedYears.length > 1 ? sortedYears[1] : currentYear - 1;
+
+                              const currentYearCount = currentYearUniqueCount;
+                              const previousYearCount = annualUniquePets[previousYear] ? annualUniquePets[previousYear].size : 0;
 
                              let comparisonText = `Total em ${previousYear}: ${previousYearCount}`;
                              let comparisonColor = 'text-muted';
