@@ -4,6 +4,27 @@
     <header class="dashboard-header">
         <h1>Central de Castração</h1>
         <p>Escolha o tipo de serviço de castração que melhor atende às suas necessidades. Todos os nossos serviços são realizados com profissionais qualificados e acessíveis.</p>
+
+        <% if (user && user.isAdmin) { %>
+        <form action="/castracao/admin/default-clinica" method="POST" class="mt-3 admin-default-clinica">
+            <label class="form-label fw-bold">Clínica padrão para Baixo Custo e Pets de Rua (modo Administrador)</label>
+            <div style="display:flex; gap:8px; align-items:center; max-width:720px;">
+                <select id="select-default-clinica" name="defaultClinica" class="form-select" style="max-width:400px;">
+                    <option value="">-- Nenhuma (A definir) --</option>
+                    <% if (clinicas && clinicas.length) { %>
+                        <% clinicas.forEach(function(c) { %>
+                            <option value="<%= c.nome %>" <%= (defaultClinica === c.nome) ? 'selected' : '' %> data-endereco="<%= c.endereco ? c.endereco.replace(/"/g,'&quot;') : '' %>"><%= c.nome %></option>
+                        <% }); %>
+                    <% } %>
+                </select>
+                <button type="submit" class="btn btn-primary">Salvar clínica padrão</button>
+            </div>
+            <div style="margin-top:6px; max-width:720px;">
+                <small class="text-muted">Endereço da clínica padrão:</small>
+                <div id="default-clinica-endereco" style="font-weight:500;"> <%= (typeof defaultClinicaEndereco !== 'undefined' && defaultClinicaEndereco) ? defaultClinicaEndereco : (defaultClinica ? 'Endereço não cadastrado' : '— A definir —') %> </div>
+            </div>
+        </form>
+        <% } %>
     </header>
 
     <div class="dashboard-buttons">
@@ -61,3 +82,23 @@
         
 
 <%- include("_footer")-%>
+
+<script>
+    (function(){
+        var select = document.getElementById('select-default-clinica');
+        var enderecoEl = document.getElementById('default-clinica-endereco');
+
+        function updateEndereco() {
+            var opt = select.options[select.selectedIndex];
+            var endereco = opt && opt.dataset ? opt.dataset.endereco : (opt && opt.getAttribute ? opt.getAttribute('data-endereco') : '');
+            if (!endereco) endereco = (select.value ? 'Endereço não cadastrado' : '— A definir —');
+            enderecoEl.textContent = endereco;
+        }
+
+        if (select && enderecoEl) {
+            select.addEventListener('change', updateEndereco);
+            // inicializa
+            updateEndereco();
+        }
+    })();
+</script>

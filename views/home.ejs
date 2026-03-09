@@ -1,729 +1,404 @@
-  <%-include("_header")-%>
-
-  <script>
-  function toggleArchivedRows(show) {
-      document.querySelectorAll('.archived-row').forEach(function(row) {
-          row.style.display = show ? 'table-row' : 'none';
-      });
-  }
-  function toggleAttendedRows(show) {
-      document.querySelectorAll('.attended-row').forEach(function(row) {
-          row.style.display = show ? 'table-row' : 'none';
-      });
-  }
-  // Inicialmente esconder as linhas arquivadas e atendidas
-  document.addEventListener('DOMContentLoaded', function() {
-      toggleArchivedRows(false);
-      toggleAttendedRows(false);
-  });
-  </script>
-
-  <main class="main-content">
-
-
-     <% if (typeof errorLoadingData !== 'undefined' && errorLoadingData) { %>
-         <div class="alert alert-danger" role="alert">
-             Ocorreu um erro ao carregar alguns dados da página. Por favor, tente novamente mais tarde.
-         </div>
-     <% } %>
-
-     <% if (success_msg) { %>
-         <div class="alert alert-success alert-dismissible fade show" role="alert">
-             <%= success_msg %>
-
-     <% } %>
-
-         </div>
-
-      <!-- ==========================================================================
-          1. Hero Section (Destaque Principal)
-          ========================================================================== -->
-      <section class="hero-section text-center py-5" style="background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/static/css/imagem/ong_hero_background.jpg') no-repeat center center; background-size: cover;">
-          <div class="container" style="background-color: transparent; box-shadow: none; border: none;">
-              <h1 style="color: white; font-size: 2.8em; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">Amor que Transforma Vidas</h1>
-              <p style="color: #f0f0f0; font-size: 1.3em; margin-bottom: 1.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">
-                  Junte-se a nós na missão de resgatar, cuidar e encontrar lares amorosos para animais abandonados..
-              </p>
-              <a href="/doacao" class="button me-2" style="background-color: var(--hc-button-text); color: var(--hc-bg-color); padding: 12px 25px; font-size: 1.1em;">Quero Doar</a>
-              <a href="/adocao" class="button" style="background-color: transparent; border: 2px solid var(--hc-button-text); color: var(--hc-button-text); padding: 10px 23px; font-size: 1.1em;">Adote um Amigo</a>
-          </div>
-      </section>
-
-          <!-- ==========================================================================
-              Eventos (Carousel)
-              ========================================================================== -->
-          <section id="eventos" class="py-5">
-              <div class="container">
-                  <div class="d-flex align-items-center justify-content-between mb-4">
-                      <h2 class="mb-0">Eventos</h2>
-                      <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-                          <a href="/eventos/form" class="button btn-sm">+ Adicionar novo evento</a>
-                      <% } %>
-                  </div>
-
-                  <% const eventsList = (typeof modelEventos !== 'undefined' && modelEventos.length) ? modelEventos : ((typeof model1 !== 'undefined' && model1.length) ? model1 : []); %>
-                  <% const totalEventos = typeof modelEventosCount !== 'undefined' ? modelEventosCount : eventsList.length; %>
-                  <% if (eventsList && eventsList.length > 0) { %>
-                      <div class="evt-cards-grid">
-                          <div class="text-center mb-4">
-                              <span class="badge bg-primary" style="font-size: 14px;">
-                                  <i class="fas fa-calendar-alt me-1"></i>Total de <%= totalEventos %> evento<%= totalEventos !== 1 ? 's' : '' %> cadastrado<%= totalEventos !== 1 ? 's' : '' %>
-                              </span>
-                          </div>
-                          <div class="evt-cards-scroll">
-                              <% eventsList.slice(0, 6).forEach(function(event, i) {
-                                  const imgSrc = event.arquivo ? ('/uploads/eventos/' + event.arquivo) : ('/uploads/home/' + (event.arquivo || 'placeholder-event.jpg'));
-                                  const linkUrl = event.arquivo ? `/eventos/${event.id}` : `/campanha/${event.id}`;
-                                  const eventDate = event.data_evento ? new Date(event.data_evento).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
-                              %>
-                                  <a href="<%= linkUrl %>" class="evt-card-link">
-                                      <div class="evt-card">
-                                          <div class="evt-card-img-wrapper">
-                                              <img src="<%= imgSrc %>" alt="<%= event.titulo %>">
-                                          </div>
-                                          <div class="evt-card-body">
-                                              <h5 class="evt-card-title"><%= event.titulo %></h5>
-                                              <% if (eventDate) { %>
-                                                  <span class="evt-card-date"><i class="fas fa-calendar-alt me-1"></i><%= eventDate %></span>
-                                              <% } %>
-                                          </div>
-                                      </div>
-                                  </a>
-                              <% }); %>
-                          </div>
-                      </div>
-                  <% } else { %>
-                      <p class="text-center text-muted">Nenhum evento cadastrado.</p>
-                  <% } %>
-              </div>
-          </section>
-
-          <style>
-              .evt-cards-grid {
-                  max-width: 100%;
-              }
-              .evt-cards-scroll {
-                  display: flex;
-                  overflow-x: auto;
-                  gap: 20px;
-                  padding-bottom: 15px;
-                  scroll-behavior: smooth;
-                  -webkit-overflow-scrolling: touch;
-              }
-              .evt-cards-scroll::-webkit-scrollbar {
-                  height: 8px;
-              }
-              .evt-cards-scroll::-webkit-scrollbar-track {
-                  background: #f1f1f1;
-                  border-radius: 4px;
-              }
-              .evt-cards-scroll::-webkit-scrollbar-thumb {
-                  background: #888;
-                  border-radius: 4px;
-              }
-              .evt-cards-scroll::-webkit-scrollbar-thumb:hover {
-                  background: #555;
-              }
-              
-              .evt-card-link {
-                  text-decoration: none;
-                  display: block;
-                  flex: 0 0 320px;
-              }
-              .evt-card {
-                  background: transparent;
-                  border-radius: 12px;
-                  overflow: hidden;
-                  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-                      transition: transform 0.3s ease, box-shadow 0.3s ease;
-                      height: 100%;
-                  }
-                  .evt-card:hover {
-                      transform: translateY(-5px);
-                      box-shadow: 0 8px 30px rgba(0,0,0,0.25);
-                  }
-              .evt-card-img-wrapper {
-                  position: relative;
-                  width: 100%;
-                  height: 350px;
-                  overflow: hidden;
-              }
-              .evt-card-img-wrapper img {
-                  width: 100%;
-                  height: 100%;
-                  object-fit: cover;
-                  transition: transform 0.4s ease;
-              }
-              .evt-card:hover .evt-card-img-wrapper img {
-                  transform: scale(1.15);
-              }
-              .evt-card-body {
-                  padding: 15px;
-                  color: var(--text-color, #333);
-              }
-              .evt-card-title {
-                      margin: 0 0 8px 0;
-                      font-size: 1.1rem;
-                      font-weight: 600;
-                  }
-              .evt-card-date {
-                  font-size: 0.85rem;
-                  opacity: 0.8;
-              }
-              @media (max-width: 576px) {
-                  .evt-card-img-wrapper { height: 280px; }
-              }
-          </style>
-
-
-
-
-
-
-      <!-- ==========================================================================
-          2. Sobre Nós (Resumido)
-          ========================================================================== -->
-      <section id="sobre-resumo" class="py-5">
-          <div class="container">
-              <div class="row align-items-center">
-                  <div class="col-md-7">
-                      <h2>Nossa Missão</h2>
-                      <p>A ONG Amor Animal é dedicada ao resgate, reabilitação e realocação de animais em situação de vulnerabilidade. Movidos pela compaixão, trabalhamos incansavelmente para oferecer uma segunda chance a cada um deles, promovendo a posse responsável e o bem-estar animal em nossa comunidade.</p>
-                         <div class="col-md-5 text-center">
-                             <!-- QR CODE PORTAL DA TRANSPARENCIA -->
-           <!-- <div class="container"> -->
-              <fieldset style="border: 1px solid var(--border-color);  border-radius: 5px; max-width: 300px; margin: 0px auto; ">
-                  <legend style="padding: 0 10px; font-weight: bold; color: var(--heading-color);">Acesse nosso Portal da Transparência</legend>
-                  <img src="/static/css/imagem/transparencia.png" alt="QR Code para o Portal da Transparência" style="width: 150px; height: 150px;">
-                  <p style="margin-top: 10px; color: var(--text-color);">Escaneie o QR Code ou visite <a href="https://amoranimal.ong.br/transparencia" target="_blank" style="color: var(--brand-teal); text-decoration: underline;">amoranimal.ong.br/transparencia</a></p>
-              </fieldset>
-           <!-- </div> -->
-                     <span>Equipe ONG Amor Animal</span>
-                  </div>
-
-                      <div class="text-center">
-                        <a href="/sobre" class="button"" >Saiba Mais Sobre Nós</a>
-                      </div>
-
-
-                  </div>
-
-              </div>
-
-          </div>
-
-      </section>
-
-      <!-- ==========================================================================
-          3. Adoção em Destaque
-          ========================================================================== -->
-      <section id="adocao-destaque" class="py-5">
-          <div class="container">
-              <h2 class="text-center mb-4">Esperando por um Lar</h2>
-              <% if (typeof model2 !== 'undefined' && model2.length > 0) { %>
-              <div class="home-cards-container">
-                  <% model2.slice(0, 4).forEach(adocao => { %>
-                  <div class="home-card card">
-                      <a href="/adocao/<%= adocao.id %>">
-                          <img src="/uploads/adocao/<%= adocao.arquivo || 'placeholder-pet.jpg' %>"
-                               alt="Foto de <%= adocao.nome || 'pet' %> para adoção"
-                               class="card-img-top home-card-img">
-                      </a>
-                      <div class="card-body text-center">
-                          <%# Se o nome não existir, exibe a espécie com a primeira letra maiúscula. %>
-                          <h5 class="card-title"><%= adocao.nome || (adocao.especie ? adocao.especie.charAt(0).toUpperCase() + adocao.especie.slice(1) : 'Pet para adoção') %></h5>
-
-                          <%# Exibe a idade como vem do banco (ex: "1 ano e 2 meses") ou um texto padrão. %>
-                          <p class="text-muted small"><%= adocao.especie %> - <%= adocao.idade || 'Idade não informada' %></p>
-
-                          <%# O link "Conhecer" agora funciona mesmo sem nome e tem um texto alternativo. %>
-                          <a href="/adocao/<%= adocao.id %>" class="button btn-sm">Conhecer <%= adocao.nome ? adocao.nome.split(' ')[0] : 'o pet' %></a>
-                      </div>
-                  </div>
-                  <% }); %>
-              </div>
-              <div class="text-center mt-4">
-                  <a href="/adocao" class="button">Ver Todos os Pets</a>
-              </div>
-              <% } else { %>
-              <p class="text-center text-muted">Nenhum pet disponível para adoção no momento. Volte em breve!</p>
-              <% } %>
-
-          </div>
-      </section>
-
-
-
-      <!-- ==========================================================================
-          5. Nossos Números / Impacto
-          ========================================================================== -->
-      <section id="numeros" class="py-5" style="background-color: var(--bg-color);">
-          <div class="container">
-              <h2 class="text-center mb-5">Nosso Impacto</h2>
-             <div class="row text-center gy-4 justify-content-center">
-                  <div class="col-lg-3 col-md-6">
-                      <div class="card card-impact h-100" style="border: none; background: transparent;">
-                          <div class="card-body">
-                              <i class="fas fa-users fa-3x mb-3" style="color: var(--heading-color);"></i>
-                              <h3 class="card-title display-4 fw-bold"><%= model15 %></h3>
-                              <p class="text-muted">Voluntários</p>
-                              <a href="/doacao/voluntario">Seja um.</a><br><br>
-
-
-                          </div>
-                      </div>
-                  </div>
-
-
-             <div class="row text-center gy-4 justify-content-center">
-                  <div class="col-lg-3 col-md-6">
-                      <div class="card card-impact h-100" style="border: none; background: transparent;">
-                          <div class="card-body">
-                              <i class="fas fa-users fa-3x mb-3" style="color: var(--heading-color);"></i>
-                              <h3 class="card-title display-4 fw-bold"><%= model17 %></h3>
-                              <p class="text-muted">Suprimentos</p>
-                              <a href="/doacao/coleta/form">Doe suprimentos</a>
-                          </div>
-                      </div>
-                  </div>
-
-                  <div class="col-lg-3 col-md-6">
-                      <div class="card card-impact h-100" style="border: none; background: transparent;">
-                          <div class="card-body">
-                              <i class="fas fa-paw fa-3x mb-3" style="color: var(--heading-color);"></i>
-                              <h3 class="card-title display-4 fw-bold"><%= model3 %></h3>
-                              <p class="text-muted">Aguardando adoção</p>
-                              <a href="/adocao">Veja Mais</a>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="col-lg-3 col-md-6">
-                      <div class="card card-impact h-100" style="border: none; background: transparent;">
-                          <div class="card-body">
-                              <i class="fas fa-heart fa-3x mb-3" style="color: var(--heading-color);"></i>
-                              <h3 class="card-title display-4 fw-bold"><%= model7 %></h3>
-                              <p class="text-muted"> Já Adotados</p>
-                              <a href="/adotado">Veja Mais</a>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="col-lg-3 col-md-6">
-                      <div class="card card-impact h-100" style="border: none; background: transparent;">
-                          <div class="card-body">
-                              <i class="fas fa-users fa-3x mb-3" style="color: var(--heading-color);"></i>
-                              <h3 class="card-title display-4 fw-bold"><%= model11 %></h3>
-                              <p class="text-muted"> Desaparecidos </p>
-                                <a href="/procura_se">Veja Mais</a>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="col-lg-3 col-md-6">
-                      <div class="card card-impact h-100" style="border: none; background: transparent;">
-                          <div class="card-body">
-                              <i class="fas fa-hands-helping fa-3x mb-3" style="color: var(--heading-color);"></i>
-                              <h3 class="card-title display-4 fw-bold"><%= model13 %></h3>
-                              <p class="text-muted">Parcerias</p>
-                              <a href="/parceria">Veja Mais</a>
-                          </div>
-                      </div>
-                  </div>
-
-                  <div class="col-lg-3 col-md-6">
-                     <div class="card card-impact h-100" style="border: none; background: transparent;">
-                         <div class="card-body d-flex flex-column text-center">
-                             <i class="fas fa-syringe fa-3x mb-3" style="color: var(--heading-color);"></i>
-                             <h3 class="card-title h4 fw-bold">Castrações Anuais</h3>
-*                             <p class="text-muted mt-n2 mb-3">Progresso do ano atual</p>
-
-                              <%
-                               const annualCounts = {};
-                               const annualUniquePets = {};
-                               if (typeof model8 !== 'undefined' && model8.length > 0) {
-                                   model8.forEach(castracao => {
-                                       const data = castracao.data_evento || castracao.origem;
-                                       const nomePet = castracao.nome_pet ? castracao.nome_pet.trim().toLowerCase() : '';
-                                       if (data && nomePet) {
-                                           const year = new Date(data).getFullYear();
-                                           if (!annualUniquePets[year]) {
-                                               annualUniquePets[year] = new Set();
-                                           }
-                                           annualUniquePets[year].add(nomePet);
-                                           annualCounts[year] = (annualCounts[year] || 0) + 1;
-                                       }
-                                   });
-                               }
-
-                               const currentYearUniqueCount = annualUniquePets[new Date().getFullYear()] ? annualUniquePets[new Date().getFullYear()].size : 0;
-
-                              const sortedYears = Object.keys(annualUniquePets).map(Number).sort((a, b) => b - a);
-                              const currentYear = sortedYears.length > 0 ? sortedYears[0] : new Date().getFullYear();
-                              const previousYear = sortedYears.length > 1 ? sortedYears[1] : currentYear - 1;
-
-                              const currentYearCount = currentYearUniqueCount;
-                              const previousYearCount = annualUniquePets[previousYear] ? annualUniquePets[previousYear].size : 0;
-
-                             let comparisonText = `Total em ${previousYear}: ${previousYearCount}`;
-                             let comparisonColor = 'text-muted';
-                             let icon = '';
-
-                             if (previousYearCount > 0) {
-                                 const percentageChange = ((currentYearCount - previousYearCount) / previousYearCount) * 100;
-                                 if (percentageChange > 0) {
-                                     icon = '<i class="fas fa-arrow-up"></i> ';
-                                     comparisonText = `${icon}${percentageChange.toFixed(0)}% vs ${previousYear}`;
-                                     comparisonColor = 'text-success';
-                                 } else if (percentageChange < 0) {
-                                     icon = '<i class="fas fa-arrow-down"></i> ';
-                                     comparisonText = `${icon}${Math.abs(percentageChange.toFixed(0))}% vs ${previousYear}`;
-                                     comparisonColor = 'text-danger';
-                                 } else {
-                                     comparisonText = `Igual a ${previousYear}`;
-                                 }
-                             } else if (currentYearCount > 0) {
-                                 comparisonText = `Primeiros registros em ${currentYear}`;
-                             } else {
-                                 comparisonText = "Sem dados para comparar";
-                             }
-                             %>
-
-                             <div class="my-auto">
-                                 <div class="display-4 fw-bold" style="color: var(--heading-color);"><%= currentYearCount %></div>
-                                 <div class="fw-bold <%= comparisonColor %>"><%- comparisonText %></div>
-                                 <small class="text-muted">em <%= currentYear %></small>
-                                 </div>
-                              <a href="/castracao/lista" class="mt-3">Veja Mais</a>
-                         </div>
-                     </div>
-                 </div>
-
-                 <div class="col-lg-3 col-md-6">
-                     <div class="card card-impact h-100" style="border: none; background: transparent;">
-                           <div class="card-body">
-                               <i class="fas fa-ticket-alt fa-3x mb-3" style="color: var(--heading-color);"></i> <!-- Ícone alterado para ticket -->
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                   <a href="/castracao/" class="btn btn-primary">
-                                   <i class="fas fa-plus me-1"></i> Agendar Nova Castração
-                                   </a>
-                                   <div>
-                                       <% if (user) { %>
-                                           <a href="/castracao/arquivados" class="btn btn-warning me-2">
-                                               <i class="bi bi-archive"></i> Arquivados
-                                           </a>
-                                       <% } %>
-                                       <% if (user && typeof model8 !== 'undefined' && model8.length > 0) { %>
-                                           <form action="/castracao/updateStatusAll" method="post" class="d-inline" onsubmit="return confirm('ATENÇÃO: Todos os agendamentos pendentes serão marcados como ATENDIDOS. Continuar?');">
-                                               <button type="submit" class="btn btn-success">
-                                                   <i class="fas fa-check-double me-1"></i> Atender Todos
-                                               </button>
-                                           </form>
-                                       <% } %>
-                                   </div>
-                                </div>
-
-                               <h3 class="card-title h4 fw-bold">Agendamentos de Castração</h3> <!-- Ajustado para h4 para não competir com os números grandes -->
-                               <div class="mb-3 d-flex justify-content-between align-items-center">
-                                   <input type="text" id="searchCastracao" class="form-control form-control-sm" placeholder="Pesquisar por ticket, nome responsável ou pet..." onkeyup="filterTableCastracao()" style="max-width: 300px;">
-                                   <% if (user) { %>
-                                       <div class="form-check">
-                                           <input type="checkbox" class="form-check-input" id="showAttended" onchange="toggleAttendedRows(this.checked);">
-                                           <label class="form-check-label" for="showAttended">Mostrar atendidos</label>
-                                       </div>
-                                   <% } %>
-                               </div>
-                               <div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
-                                   <table class="table table-striped table-hover table-sm caption-top" id="tableCastracao">
-                                       <thead style="position: sticky; top: 0; z-index: 1; background: white;">
-                                          <tr>
-                                              <th>Ticket</th>
-                                              <th>Nome</th>
-                                              <th>Nome Pet</th>
-                                              <th>Sexo</th>
-                                              <th>Espécie</th>
-                                              <th>Clínica</th>
-                                              <th>Data</th>
-                                               <th>Status</th>
-                                               <th>Ações</th>
-                                               <th>Detalhes</th>
-                                               <th>Comprovante</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                             <% if (typeof model8 !== 'undefined' && model8.length > 0) { %>
-                                                <% model8.forEach((castracao, index) => { %>
-                                                     <% const statusUpper = castracao.status ? String(castracao.status).trim().toUpperCase() : 'PENDENTE'; %>
-                                                     <% const isAttendedRow = statusUpper === 'ATENDIDO'; %>
-                                                     <tr class="<%= castracao.arquivado ? 'archived-row' : '' %> <%= isAttendedRow ? 'attended-row' : '' %>" style="<%= castracao.arquivado ? 'opacity: 0.6;' : '' %> <%= isAttendedRow ? 'background-color: #d4edda;' : '' %>">
-                                                        <td>
-                                                            <a href="javascript:void(0)" style="cursor:pointer; color:brown; font-size:large;" onclick="this.closest('tr').nextElementSibling.style.display = this.closest('tr').nextElementSibling.style.display === 'none' ? 'table-row' : 'none';">
-                                                                <%= castracao.ticket %>
-                                                            </a>
-                                                        </td>
-                                                        <td><%= castracao.nome %></td>
-                                                        <td><%= castracao.nome_pet || '-' %></td>
-                                                        <td><%= castracao.sexo || '-' %></td>
-                                                        <td><%= castracao.especie %></td>
-                                                        <td><%= castracao.clinica %></td>
-                                                        <td><%= castracao.data_evento ? new Date(castracao.data_evento).toLocaleDateString('pt-BR') : 'N/A' %></td>
-                                                        <%
-                                                            const rawStatus = (castracao && castracao.status) ? String(castracao.status).trim().toUpperCase() : 'PENDENTE';
-                                                            const isPending = rawStatus === 'PENDENTE';
-                                                            const isAttended = rawStatus === 'ATENDIDO';
-                                                        %>
-                                                        <td>
-                                                            <% if (isAttended) { %>
-                                                                <span class="badge bg-success">ATENDIDO</span>
-                                                            <% } else { %>
-                                                                <span class="badge bg-warning text-dark">PENDENTE</span>
-                                                            <% } %>
-                                                        </td>
-                                                        <td>
-                                                            <% if (castracao.tipo === 'mutirao') { %>
-                                                                <% if (user) { %>
-                                                                    <form action="/castracao/mutirao/delete/<%= castracao.inscricao_id %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
-                                                                        <button type="submit" class="btn btn-danger btn-sm" title="Excluir">
-                                                                            <i class="bi bi-trash"></i>
-                                                                        </button>
-                                                                    </form>
-                                                                <% } else { %>
-                                                                    <form action="/castracao/mutirao/updateStatus/<%= castracao.id %>" method="post">
-                                                                        <button type="submit" class="btn btn-success btn-sm" title="Atender">Atender</button>
-                                                                    </form>
-                                                                <% } %>
-                                                            <% } else { %>
-                                                                <% if (user) { %>
-                                                                    <form action="/castracao/delete/<%= castracao.id %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir este agendamento?')">
-                                                                        <button type="submit" class="btn btn-danger btn-sm" title="Excluir">
-                                                                            <i class="bi bi-trash"></i>
-                                                                        </button>
-                                                                    </form>
-                                                                <% } else { %>
-                                                                    <form action="/castracao/updateStatus/<%= castracao.id %>" method="post">
-                                                                        <button type="submit" class="btn btn-success btn-sm" title="Atender">Atender</button>
-                                                                    </form>
-                                                                <% } %>
-                                                            <% } %>
-                                                        </td>
-
-                                                        <td>
-                                                            <% if (castracao.tipo === 'mutirao') { %>
-                                                                <a href="/castracao/mutirao-inscricao/sucesso/<%= castracao.inscricao_id || castracao.id %>" class="btn btn-info btn-sm">Detalhes</a>
-                                                            <% } else { %>
-                                                                <a href="/castracao/<%= castracao.id %>" class="btn btn-info btn-sm">Detalhes</a>
-                                                            <% } %>
-                                                        </td>
-
-                                                        <td>
-                                                            <% if (castracao.tipo === 'mutirao') { %>
-                                                                <a href="/castracao/mutirao/comprovante/<%= castracao.ticket %>" class="btn btn-primary btn-sm" target="_blank" title="Baixar Comprovante">
-                                                                    <i class="bi bi-file-earmark-pdf"></i> PDF
-                                                                </a>
-                                                            <% } else { %>
-                                                                <a href="/castracao/comprovante/<%= castracao.ticket %>" class="btn btn-primary btn-sm" target="_blank" title="Baixar Comprovante">
-                                                                    <i class="bi bi-file-earmark-pdf"></i> PDF
-                                                                </a>
-                                                            <% } %>
-                                                        </td>
-                                                   </tr>
-                                                   <!-- Hidden Details Row -->
-                                                   <tr class="details-row" id="details-<%= index %>" style="display:none;">
-                                                       <td colspan="9" style="background:#f8f9fa; padding:15px;">
-                                                           <strong>Detalhes do Agendamento:</strong><br>
-                                                           <div class="row mt-2">
-                                                               <div class="col-md-4">
-                                                                   <small><strong>Contato:</strong> <%= castracao.contato || '-' %></small><br>
-                                                                   <small><strong>WhatsApp:</strong> <%= castracao.whatsapp || '-' %></small><br>
-                                                                   <small><strong>Endereço da Clínica:</strong> <%= castracao.clinica_endereco || castracao.endereco || '-' %></small>
-                                                               </div>
-                                                               <div class="col-md-4">
-                                                                   <small><strong>Espécie:</strong> <%= castracao.especie %></small><br>
-                                                                   <small><strong>Porte:</strong> <%= castracao.porte || '-' %></small><br>
-                                                                   <small><strong>Idade:</strong> <%= castracao.idade || '-' %></small>
-                                                               </div>
-                                                               <div class="col-md-4">
-                                                                   <small><strong>Observações:</strong> <%= castracao.observacoes || 'Nenhuma' %></small>
-                                                               </div>
-                                                           </div>
-                                                       </td>
-                                                   </tr>
-
-                                               <% }); %>
-                                           <% } else { %>
-                                               <tr><td colspan="10" class="text-center text-muted">Nenhum ticket de castração para exibir no momento.</td></tr>
-                                           <% } %>
-                                       </tbody>
-                                  </table>
-
-
-                      </div>
-                  </div>
-                  <script>
-                  function filterTableCastracao() {
-                      var input, filter, table, tr, td, i, j, txtValue;
-                      input = document.getElementById('searchCastracao');
-                      filter = input.value.toUpperCase();
-                      table = document.getElementById('tableCastracao');
-                      if (!table) return;
-                      tr = table.getElementsByTagName('tr');
-                      for (i = 1; i < tr.length; i++) {
-                          var found = false;
-                          var tds = tr[i].getElementsByTagName('td');
-                          for (j = 0; j < tds.length; j++) {
-                              if (tds[j]) {
-                                  txtValue = tds[j].textContent || tds[j].innerText;
-                                  if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                                      found = true;
-                                      break;
-                                  }
-                              }
-                          }
-                          tr[i].style.display = found ? '' : 'none';
-                      }
-                  }
-                  </script>
-                   <style>
-                     .table-responsive { overflow-x: auto; }
-                    </style>
-
-
-              </div> <!-- Fechamento do .row principal da seção de impacto -->
-          </div>
-      </section>
-
-      <!-- ==========================================================================
-          6. Histórias de Adotados
-          ========================================================================== -->
-      <section id="historias-adotados" class="py-5">
-          <div class="container">
-              <h2 class="text-center mb-4">Histórias que Inspiram</h2>
-              <% if (typeof model6 !== 'undefined' && model6.length > 0) { %>
-              <div class="adotados-cards-container">
-                  <% model6.slice(0, 3).forEach(adotado => { %>
-                  <div class="adotado-card card">
-                      <img src="/uploads/adotado/<%= adotado.arquivo || 'placeholder-pet-story.jpg' %>"
-                           alt="Foto de <%= adotado.pet %>, adotado por <%= adotado.tutor %>"
-                           class="card-img-top adotado-card-img">
-                      <div class="card-body">
-                          <h5 class="card-title"><%= adotado.pet %></h5>
-                          <h6 class="card-subtitle mb-2 text-muted">Adotado por: <%= adotado.tutor %></h6>
-                          <p class="card-text adotado-historia-texto">"<%= adotado.historia %>"</p>
-                          <small class="text-muted">Em: <%= adotado.origem ? new Date(adotado.origem).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Data não informada' %></small>
-                      </div>
-                  </div>
-                  <% }); %>
-              </div>
-              <div class="text-center mt-4">
-                  <a href="/adotado" class="button">Ver Todas as Histórias</a>
-                  <a href="/adotado/form" class="button ms-2">Adicionar História</a>
-              </div>
-              <% } else { %>
-              <p class="text-center text-muted">Ainda não temos histórias de adoção para compartilhar. Seja o primeiro!</p>
-              <% if (user) { %>
-                  <div class="text-center mt-3"><a href="/adotado/form" class="button">Adicionar História</a></div>
-              <% } %>
-              <% } %>
-
-          </div>
-      </section>
-
-       <!-- ==========================================================================
-          7. Procura-se
-          ========================================================================== -->
-
-          <section id="procura_se" class="py-5 bg-light"> <!-- Adicionado bg-light para alternar cor -->
-              <div class="container">
-                  <h2 class="text-center mb-4">Procura-se!</h2>
-
-                  <% if (typeof model10 !== 'undefined' && model10.length > 0) { %>
-                  <div class="procura-se-cards-container">
-                      <% model10.slice(0, 3).forEach(procura_se => { %>
-                      <div class="procura-se-card card">
-                          <img src="/uploads/procura_se/<%= procura_se.arquivo || 'placeholder-procura-se.jpg' %>"
-                               alt="Foto de <%= procura_se.nomePet %>, animal desaparecido"
-                               class="card-img-top procura-se-card-img">
-                          <div class="card-body text-center">
-                              <h5 class="card-title"><%= procura_se.nomePet %></h5>
-                              <p class="text-muted small"><%= procura_se.especie %> - <%= procura_se.caracteristicas %></p>
-                              <p><%= procura_se.descricao %></p>
-                              <a href="/procura_se/<%= procura_se.id %>" class="button btn-sm">Mais Detalhes</a>
-                          </div>
-                      </div>
-                      <% }); %>
-                  </div>
-                  <div class="text-center mt-4">
-                      <a href="/procura_se" class="button">Ver Todos</a>
-                  </div>
-                  <% } else { %>
-                  <p class="text-center text-muted">Nenhum animal desaparecido listado no momento.</p>
-                  <% } %>
-              </div>
-          </section>
-
-          <!-- ==========================================================================
-          8. Parcerias
-          ========================================================================== -->
-
-
-         <section id="parcerias" class="py-5"> <!-- Removido bg-light para alternar cor -->
-             <div class="container">
-                 <div class="d-flex justify-content-between align-items-center mb-4">
-                     <h2 class="text-center flex-grow-1 mb-0">Nossos Parceiros</h2> <!-- flex-grow-1 e mb-0 para centralizar melhor com o botão -->
-
-                 </div>
-
-                 <% if (typeof model12 !== 'undefined' && model12.length > 0) { %>
-                 <div class="parcerias-scroll-container">
-                     <div class="scroll-content">
-                     <% model12.forEach(parceria => { %>
-                         <div class="card parceria-item d-inline-block me-3 shadow-sm" style="width: 250px; vertical-align: top;">
-                             <!-- Se houver imagem da parceria, poderia ser adicionada aqui -->
-                             <!-- <img src="/uploads/parceria/<%= parceria.arquivo %>" class="card-img-top" alt="Logo <%= parceria.empresa %>"> -->
-                             <div class="card-body text-center">
-                                 <h5 class="card-title"><%= parceria.empresa %></h5>
-                                 <p class="card-text text-muted small"><%= parceria.proposta %></p>
-                                 <% if (parceria.link) { %>
-                                     <a href="<%= parceria.link.startsWith('http') ? parceria.link : '//' + parceria.link %>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary mt-2">Visitar Site</a>
-                                 <% } %>
-                                  <% if (user) { %>
-                                     <div class="mt-2">
-                                         <form action="/delete/parceria/<%= parceria.id %>/<%= parceria.arquivo %>" method="post" class="d-inline" onsubmit="return confirm('Deseja realmente excluir esta parceria?')">
-                                         <button type="submit" class="btn btn-danger btn-sm" title="Excluir Parceria">
-                                             <i class="bi bi-trash"></i>
-                                             <span class="visually-hidden">Excluir</span>
-                                         </button>
-                                         </form>
-                                     </div>
-                                 <% } %>
-                             </div>
-                         </div>
-                     <% }); %>
-                     </div>
-                 </div>
-                 <% } else { %>
-                 <p class="text-center text-muted">Ainda não temos parceiros listados.</p>
-                  <% if (user) { %>
-                          <div class="text-center mt-3"><a href="/parceria/form" class="button">Adicionar Parceria</a></div>
-                      <% } %>
-                 <% } %>
-             </div>
-         </section>
-
-          <!-- ==========================================================================
-          9. Como Ajudar / Chamada Final
-          ========================================================================== -->
-          <section id="como-ajudar-final" class="py-5 bg-light">
-             <div class="container text-center">
-                 <h2 class="mb-4">Faça Parte da Mudança</h2>
-                 <p style="font-size: 1.1em; margin-bottom: 2rem;">
-                     Sua ajuda, seja como voluntário, parceiro ou doador, é fundamental para continuarmos nosso trabalho.
-                 </p>
-                 <div>
-                     <a href="/doacao/voluntario/interesse/form" class="button me-2">Quero ser Voluntário</a>
-                     <a href="/parceria/form" class="button me-2">Seja um Parceiro</a>
-                     <a href="/doacao" class="button">Faça uma Doação</a>
-                 </div>
-             </div>
-         </section>
-
-  </main>
-
-  <%- include("_footer") -%>  
+<%-include("_header")-%>
+
+<script>
+function toggleArchivedRows(show) {
+    document.querySelectorAll('.archived-row').forEach(function(row) {
+        row.style.display = show ? 'table-row' : 'none';
+    });
+}
+function toggleAttendedRows(show) {
+    document.querySelectorAll('.attended-row').forEach(function(row) {
+        row.style.display = show ? 'table-row' : 'none';
+    });
+}
+function scrollEventFotos(index, direction) {
+    const container = document.getElementById('event-fotos-' + index);
+    if (container) {
+        const scrollAmount = 400;
+        container.scrollBy({
+            left: direction * scrollAmount,
+            behavior: 'smooth'
+        });
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    toggleArchivedRows(false);
+    toggleAttendedRows(false);
+});
+</script>
+
+<link rel="stylesheet" href="/static/css/home.css">
+
+<main class="main-content">
+
+<% if (typeof errorLoadingData !== 'undefined' && errorLoadingData) { %>
+    <div class="alert alert-danger" role="alert">
+        Ocorreu um erro ao carregar alguns dados da página. Por favor, tente novamente mais tarde.
+    </div>
+<% } %>
+
+<% if (success_msg) { %>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= success_msg %>
+    </div>
+<% } %>
+
+<!-- ==========================================================================
+    HERO SECTION - Landing Page Moderna
+========================================================================== -->
+<section class="hero-landing">
+    <div class="landing-container">
+        <h1>Amor que Transforma Vidas</h1>
+        <p>Junte-se a nós na missão de resgatar, cuidar e encontrar lares amorosos para animais abandonados.</p>
+        <div>
+            <a href="/doacao" class="btn btn-primary">Quero Doar</a>
+            <a href="/adocao" class="btn btn-outline">Adote um Amigo</a>
+        </div>
+    </div>
+</section>
+
+<% 
+const hasStats = (typeof model15 !== 'undefined' && model15 > 0) || 
+                (typeof model3 !== 'undefined' && model3 > 0) || 
+                (typeof model7 !== 'undefined' && model7 > 0) || 
+                (typeof model11 !== 'undefined' && model11 > 0);
+%>
+
+<% if (hasStats) { %>
+<!-- ==========================================================================
+    ESTATÍSTICAS / IMPACTO
+======================================================================== -->
+<section class="landing-section landing-section-alt">
+    <div class="landing-container">
+        <h2 class="text-center mb-4" style="color: var(--heading-color);">Nosso Impacto</h2>
+        <div class="stats-grid">
+            <% if (typeof model15 !== 'undefined' && model15 > 0) { %>
+            <div class="stat-card">
+                <div class="stat-card-icon" style="color: var(--brand-teal);">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-card-number"><%= model15 %></div>
+                <div class="stat-card-label">Voluntários</div>
+            </div>
+            <% } %>
+            <% if (typeof model3 !== 'undefined' && model3 > 0) { %>
+            <div class="stat-card">
+                <div class="stat-card-icon" style="color: var(--brand-coral);">
+                    <i class="fas fa-paw"></i>
+                </div>
+                <div class="stat-card-number"><%= model3 %></div>
+                <div class="stat-card-label">Aguardando Adoção</div>
+            </div>
+            <% } %>
+            <% if (typeof model7 !== 'undefined' && model7 > 0) { %>
+            <div class="stat-card">
+                <div class="stat-card-icon" style="color: var(--brand-purple);">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="stat-card-number"><%= model7 %></div>
+                <div class="stat-card-label">Adotados</div>
+            </div>
+            <% } %>
+            <% if (typeof model11 !== 'undefined' && model11 > 0) { %>
+            <div class="stat-card">
+                <div class="stat-card-icon" style="color: var(--brand-blue);">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="stat-card-number"><%= model11 %></div>
+                <div class="stat-card-label">Desaparecidos</div>
+                    </div>
+                    <% } %>
+    </div>
+</section>
+<% } %>
+
+<% const eventsList = (typeof modelEventos !== 'undefined' && modelEventos.length) ? modelEventos : ((typeof model1 !== 'undefined' && model1.length) ? model1 : []); %>
+
+<% if (eventsList && eventsList.length > 0) { %>
+<!-- ==========================================================================
+    EVENTOS - Cards com Carrossel de Fotos, Descrição e Comentários
+========================================================================== -->
+<section class="landing-section landing-section-white">
+    <div class="landing-container">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h2 style="color: var(--heading-color);">Eventos</h2>
+            <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                <a href="/eventos/form" class="button btn-sm">+ Adicionar Evento</a>
+            <% } %>
+        </div>
+
+        <div class="events-grid">
+        <% eventsList.slice(0, 4).forEach(function(event, i) { 
+            const imgSrc = event.arquivo ? ('/uploads/eventos/' + event.arquivo) : ('/uploads/home/' + (event.arquivo || 'placeholder-event.jpg'));
+            const linkUrl = event.arquivo ? `/eventos/${event.id}` : `/campanha/${event.id}`;
+            const eventDate = event.data_evento ? new Date(event.data_evento).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+            const hasFotos = event.fotos && event.fotos.length > 0;
+        %>
+        <div class="event-full-card">
+            <div class="event-info">
+                <h3 class="event-titulo"><%= event.titulo %></h3>
+                <div class="event-meta">
+                    <span><i class="fas fa-calendar-alt"></i> <%= eventDate %></span>
+                    <% if (event.local) { %>
+                    <span><i class="fas fa-map-marker-alt"></i> <%= event.local %></span>
+                    <% } %>
+                </div>
+                <p class="event-descricao"><%= event.descricao ? event.descricao.substring(0, 600) + (event.descricao.length > 600 ? '...' : '') : 'Descrição não disponível.' %></p>
+                
+                <% if (event.comentarios && event.comentarios.length > 0) { %>
+                <div class="event-comentarios">
+                    <div class="event-comentarios-titulo">
+                        <i class="fas fa-comments"></i> Comentários (<%= event.comentarios.length %>)
+                    </div>
+                    <% event.comentarios.slice(0, 2).forEach(function(comment) { %>
+                    <div class="event-comment">
+                        <div class="event-comment-autor"><%= comment.nome || 'Anônimo' %></div>
+                        <div class="event-comment-texto"><%= comment.comentario %></div>
+                    </div>
+                    <% }); %>
+                </div>
+                <% } %>
+            </div>
+            <div class="event-fotos-carrossel">
+                <div class="event-fotos-scroll" id="event-fotos-<%= i %>">
+                    <% if (hasFotos) { %>
+                        <% event.fotos.forEach(function(foto) { %>
+                        <a href="/eventos/<%= event.id %>" class="event-foto-item">
+                            <img src="/uploads/eventos/<%= foto.arquivo %>" alt="<%= event.titulo %>">
+                        </a>
+                        <% }); %>
+                    <% } else { %>
+                        <a href="<%= linkUrl %>" class="event-foto-item">
+                            <img src="<%= imgSrc %>" alt="<%= event.titulo %>">
+                        </a>
+                    <% } %>
+                </div>
+                <% if (hasFotos && event.fotos.length > 1) { %>
+                <button class="evt-foto-btn evt-foto-prev" onclick="scrollEventFotos(<%= i %>, -1)">‹</button>
+                <button class="evt-foto-btn evt-foto-next" onclick="scrollEventFotos(<%= i %>, 1)">›</button>
+                <% } %>
+            </div>
+        </div>
+        <% }); %>
+        </div>
+    </div>
+</section>
+<% } %>
+
+<% const hasCastracao = typeof model8 !== 'undefined' && model8.length > 0; %>
+
+<% if (hasCastracao) { %>
+<!-- ==========================================================================
+    AGENDAMENTOS DE CASTRACÃO
+========================================================================== -->
+<section class="landing-section landing-section-alt">
+    <div class="landing-container">
+        <h2 class="text-center mb-4" style="color: var(--heading-color);">Agendamentos de Castração</h2>
+        
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto; border-radius: 12px; box-shadow: var(--container-shadow);">
+            <table class="table table-striped table-hover mb-0">
+                <thead style="position: sticky; top: 0; background: var(--brand-teal); color: white;">
+                    <tr>
+                        <th>Ticket</th>
+                        <th>Nome Pet</th>
+                        <th>Responsável</th>
+                        <th>Espécie</th>
+                        <th>Clínica</th>
+                        <th>Data</th>
+                        <th>Status</th>
+                        <th>Comprovante</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% model8.slice(0, 10).forEach(function(castracao) { 
+                        const statusUpper = castracao.status ? String(castracao.status).trim().toUpperCase() : 'PENDENTE';
+                        const isAttended = statusUpper === 'ATENDIDO';
+                    %>
+                    <tr>
+                        <td><strong>#<%= castracao.ticket %></strong></td>
+                        <td><%= castracao.nome_pet || '-' %></td>
+                        <td><%= castracao.nome %></td>
+                        <td><%= castracao.especie %></td>
+                        <td><%= castracao.clinica %></td>
+                        <td><%= castracao.data_evento ? new Date(castracao.data_evento).toLocaleDateString('pt-BR') : 'N/A' %></td>
+                        <td>
+                            <% if (isAttended) { %>
+                                <span class="badge" style="background: #10b981; color: white;">ATENDIDO</span>
+                            <% } else { %>
+                                <span class="badge" style="background: #f59e0b; color: white;">PENDENTE</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <% if (castracao.ticket) { %>
+                            <a href="/castracao/comprovante/<%= castracao.ticket %>" target="_blank" class="btn btn-sm" style="background: var(--brand-teal); color: white; padding: 4px 8px; font-size: 0.75rem;">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </a>
+                            <% } else { %>
+                            <span class="text-muted">-</span>
+                            <% } %>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="/castracao/" class="button">+ Novo Agendamento</a>
+        </div>
+    </div>
+</section>
+<% } %>
+
+<% if (typeof model2 !== 'undefined' && model2.length > 0) { %>
+<!-- ==========================================================================
+    ADOÇÃO - Carrossel de Fotos
+========================================================================== -->
+<section id="adocao-destaque" class="landing-section landing-section-white">
+    <div class="landing-container">
+        <h2 class="text-center mb-4" style="color: var(--heading-color);">Esperando por um Lar</h2>
+        
+        <div class="adocao-carrossel">
+            <% model2.forEach(adocao => { %>
+            <a href="/adocao/<%= adocao.id %>" class="adocao-card-simple">
+                <img src="/uploads/adocao/<%= adocao.arquivo || 'placeholder-pet.jpg' %>"
+                     alt="<%= adocao.nome || 'Pet para adoção' %>">
+            </a>
+            <% }); %>
+        </div>
+    </div>
+</section>
+<% } %>
+
+<!-- ==========================================================================
+    VOLUNTÁRIOS - Carrossel da Página Sobre
+========================================================================== -->
+<% if (typeof model14 !== 'undefined' && model14 && model14.length > 0) { %>
+<section class="landing-section landing-section-alt">
+    <div class="landing-container">
+        <h2 class="text-center mb-4" style="color: var(--heading-color);">
+            <i class="fas fa-hands-helping"></i> Nossos Voluntários
+        </h2>
+        <p class="text-center text-muted mb-4">Conheça as pessoas que fazem essa obra acontecer</p>
+        
+        <div class="voluntarios-carrossel">
+            <% model14.slice(0, 12).forEach(function(v) { %>
+            <a href="/doacao/voluntario" class="voluntario-card" style="text-decoration: none;">
+                <div class="voluntario-card-avatar">
+                    <% if (v.arquivo) { %>
+                        <img src="/uploads/voluntario/<%= v.arquivo %>" alt="<%= v.nome %>">
+                    <% } else { %>
+                        <div class="avatar-initials"><%= v.nome ? v.nome.charAt(0).toUpperCase() : 'V' %></div>
+                    <% } %>
+                </div>
+                <div class="voluntario-card-body">
+                    <div class="voluntario-card-name"><%= v.nome ? (v.nome.length > 25 ? v.nome.slice(0, 23) + '..' : v.nome) : 'Voluntário' %></div>
+                    <div class="voluntario-card-funcao"><%= v.funcao || 'Voluntário' %></div>
+                    <% if (v.localidade) { %>
+                    <div class="voluntario-card-location">
+                        <i class="fas fa-map-marker-alt"></i> <%= v.localidade %>
+                    </div>
+                    <% } %>
+                    <% if (v.mensagem) { %>
+                    <div class="voluntario-card-message">
+                        "<%= v.mensagem.length > 80 ? v.mensagem.slice(0, 77) + '...' : v.mensagem %>"
+                    </div>
+                    <% } %>
+                </div>
+            </a>
+            <% }); %>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="/doacao/voluntario" class="button">Ver Todos os Voluntários</a>
+        </div>
+    </div>
+</section>
+<% } %>
+
+<!-- ==========================================================================
+    HISTÓRIAS DE ADOTADOS
+========================================================================== -->
+<% if (typeof model6 !== 'undefined' && model6.length > 0) { %>
+<section class="landing-section landing-section-white">
+    <div class="landing-container">
+        <h2 class="text-center mb-4" style="color: var(--heading-color);">Histórias que Inspiram</h2>
+        
+        <div class="landing-grid">
+            <% model6.slice(0, 3).forEach(adotado => { %>
+            <div class="landing-card">
+                <div class="landing-card-header" style="background: linear-gradient(135deg, var(--brand-purple), var(--brand-pink));">
+                    <h3><%= adotado.pet %></h3>
+                </div>
+                <div class="landing-card-body" style="padding: 0;">
+                    <img src="/uploads/adotado/<%= adotado.arquivo || 'placeholder-pet-story.jpg' %>"
+                         alt="<%= adotado.pet %>"
+                         style="width: 100%; height: 200px; object-fit: cover;">
+                    <div style="padding: 1.25rem;">
+                        <p class="text-muted small">Adotado por: <%= adotado.tutor %></p>
+                        <p style="font-style: italic; color: var(--text-color);">"<%= adotado.historia ? adotado.historia.substring(0, 120) + (adotado.historia.length > 120 ? '...' : '') : '' %>"</p>
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="/adotado" class="button">Ver Todas as Histórias</a>
+            <% if (user) { %>
+            <a href="/adotado/form" class="button ms-2" style="background: var(--brand-purple);">Adicionar História</a>
+            <% } %>
+        </div>
+    </div>
+</section>
+<% } %>
+
+<!-- ==========================================================================
+    MISSÃO / SOBRE RESUMO
+========================================================================== -->
+<section class="landing-section landing-section-alt">
+    <div class="landing-container">
+        <div class="landing-grid" style="grid-template-columns: 1fr 1fr; align-items: center;">
+            <div>
+                <h2 style="color: var(--heading-color);">Nossa Missão</h2>
+                <p style="line-height: 1.8; color: var(--text-color);">
+                    A ONG Amor Animal é dedicada ao resgate, reabilitação e realocação de animais em situação de vulnerabilidade. 
+                    Movidos pela compaixão, trabalhamos incansavelmente para oferecer uma segunda chance a cada um deles, 
+                    promovendo a posse responsável e o bem-estar animal em nossa comunidade.
+                </p>
+                <a href="/sobre" class="button">Saiba Mais Sobre Nós</a>
+            </div>
+            <div style="text-align: center;">
+                <fieldset style="border: 2px solid var(--brand-teal); border-radius: 12px; padding: 1.5rem; max-width: 300px; margin: 0 auto;">
+                    <legend style="padding: 0 10px; font-weight: bold; color: var(--heading-color);">Portal da Transparência</legend>
+                    <img src="/static/css/imagem/transparencia.png" alt="QR Code Transparência" style="width: 150px; height: 150px; border-radius: 8px;">
+                    <p style="margin-top: 1rem; color: var(--text-color); font-size: 0.9rem;">
+                        Escaneie ou visite<br>
+                        <a href="https://amoranimal.ong.br/transparencia" target="_blank" style="color: var(--brand-teal);">amoranimal.ong.br/transparencia</a>
+                    </p>
+                </fieldset>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==========================================================================
+    CHAMADA FINAL / COMO AJUDAR
+========================================================================== -->
+<section class="landing-section landing-section-white">
+    <div class="landing-container text-center">
+        <h2 style="color: var(--heading-color); margin-bottom: 1rem;">Faça Parte da Mudança</h2>
+        <p style="font-size: 1.1rem; color: var(--text-color); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+            Sua ajuda, seja como voluntário, parceiro ou doador, é fundamental para continuarmos nosso trabalho.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="/doacao/voluntario/interesse/form" class="button">Quero ser Voluntário</a>
+            <a href="/parceria/form" class="button" style="background: var(--brand-coral);">Seja um Parceiro</a>
+            <a href="/doacao" class="button" style="background: var(--brand-purple);">Faça uma Doação</a>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<%- include("_footer") -%>

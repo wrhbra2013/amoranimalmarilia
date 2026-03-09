@@ -39,6 +39,36 @@
             eventos = await executeQuery('SELECT * FROM eventos ORDER BY origem DESC LIMIT 6');
             const countResult = await executeQuery('SELECT COUNT(*) as count FROM eventos');
             eventosCount = countResult.length > 0 ? parseInt(countResult[0].count, 10) : 0;
+            // Buscar fotos associadas a esses eventos (em lote)
+            if (eventos && eventos.length > 0) {
+                try {
+                    const ids = eventos.map(e => e.id);
+                    const fotosRows = await executeQuery('SELECT * FROM evento_fotos WHERE evento_id = ANY($1::int[]) ORDER BY evento_id, id DESC', [ids]);
+                    const fotosMap = {};
+                    (fotosRows || []).forEach(f => {
+                        if (!fotosMap[f.evento_id]) fotosMap[f.evento_id] = [];
+                        fotosMap[f.evento_id].push(f);
+                    });
+                    eventos = eventos.map(ev => { ev.fotos = fotosMap[ev.id] || []; return ev; });
+                } catch (pfErr) {
+                    console.warn('Não foi possível carregar fotos dos eventos para a home:', pfErr.message || pfErr);
+                    eventos = eventos.map(ev => { ev.fotos = []; return ev; });
+                }
+                // Buscar comentários dos eventos
+                try {
+                    const ids = eventos.map(e => e.id);
+                    const commentsRows = await executeQuery('SELECT * FROM evento_comments WHERE evento_id = ANY($1::int[]) ORDER BY created_at DESC', [ids]);
+                    const commentsMap = {};
+                    (commentsRows || []).forEach(c => {
+                        if (!commentsMap[c.evento_id]) commentsMap[c.evento_id] = [];
+                        commentsMap[c.evento_id].push(c);
+                    });
+                    eventos = eventos.map(ev => { ev.comentarios = commentsMap[ev.id] || []; return ev; });
+                } catch (pcErr) {
+                    console.warn('Não foi possível carregar comentários dos eventos para a home:', pcErr.message || pcErr);
+                    eventos = eventos.map(ev => { ev.comentarios = []; return ev; });
+                }
+            }
         } catch (evErr) {
             console.error('Erro ao buscar eventos para home:', evErr);
             eventos = [];

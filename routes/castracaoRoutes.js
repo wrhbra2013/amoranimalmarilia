@@ -10,6 +10,49 @@
   
 const router = express.Router();
 
+// Middleware local para carregar listas e configuração de clínica padrão em res.locals
+router.use(async (req, res, next) => {
+    try {
+        // carregar clínicas (pode falhar se DB indisponível)
+        let clinicas = [];
+        try {
+            clinicas = await executeQuery("SELECT id, nome, endereco FROM clinicas ORDER BY nome;");
+        } catch (e) {
+            clinicas = [];
+        }
+        res.locals.clinicas = clinicas;
+
+        // carregar configuração de clínica padrão de arquivo
+        const configPath = path.join(__dirname, '..', 'config', 'castracao_settings.json');
+        try {
+            const cfgRaw = await fs.readFile(configPath, 'utf8');
+            const cfg = JSON.parse(cfgRaw);
+            res.locals.defaultClinica = cfg.defaultClinica || '';
+            res.locals.defaultClinicaEndereco = cfg.defaultClinicaEndereco || '';
+        } catch (e) {
+            // se não houver config, tentar derivar do primeiro registro de clinicas
+            res.locals.defaultClinica = '';
+            res.locals.defaultClinicaEndereco = '';
+        }
+
+        // se houver clinicas e defaultClinica vazio, tenta preencher endereco pela busca
+        if ((!res.locals.defaultClinicaEndereco || res.locals.defaultClinicaEndereco === '') && res.locals.defaultClinica && res.locals.clinicas && res.locals.clinicas.length) {
+            const found = res.locals.clinicas.find(c => c.nome === res.locals.defaultClinica);
+            if (found) res.locals.defaultClinicaEndereco = found.endereco || '';
+        }
+
+        // expor usuário na view
+        res.locals.user = req.session && req.session.user;
+        next();
+    } catch (err) {
+        console.warn('[castracaoRoutes middleware] erro ao carregar dados locais:', err.message);
+        res.locals.clinicas = [];
+        res.locals.defaultClinica = '';
+        res.locals.user = req.session && req.session.user;
+        next();
+    }
+});
+
 // Rota para exibir página de sucesso após cadastro de castração
 router.get('/sucesso/:ticket', async (req, res) => {
     const { ticket } = req.params;
@@ -272,10 +315,64 @@ async function generateCastracaoTicket(client, tipo = 'baixo_custo') {
 // GET /castracao - Exibe o dashboard de castração
 router.get('/', async (req, res) => {
     try {
-        res.render('castracao_dashboard');
+        // Buscar lista de clínicas para o select do administrador
+        let clinicas = [];
+        try {
+            clinicas = await executeQuery("SELECT id, nome, endereco FROM clinicas ORDER BY nome;");
+        } catch (e) {
+            console.warn('[castracaoRoutes GET /] Não foi possível carregar clínicas:', e.message);
+            clinicas = [];
+        }
+
+        // Carregar clínica padrão (arquivo de configuração simples)
+        const configPath = path.join(__dirname, '..', 'config', 'castracao_settings.json');
+        let defaultClinica = '';
+        let defaultClinicaEndereco = '';
+        try {
+            const cfgRaw = await fs.readFile(configPath, 'utf8');
+            const cfg = JSON.parse(cfgRaw);
+            defaultClinica = cfg.defaultClinica || '';
+            defaultClinicaEndereco = cfg.defaultClinicaEndereco || '';
+        } catch (e) {
+            // arquivo pode não existir — ignora
+            defaultClinica = '';
+            defaultClinicaEndereco = '';
+        }
+
+        res.render('castracao_dashboard', { clinicas: clinicas, defaultClinica: defaultClinica, defaultClinicaEndereco: defaultClinicaEndereco, user: req.session && req.session.user });
     } catch (error) {
         console.error("[castracaoRoutes GET /] Erro ao renderizar dashboard:", error.message);
         res.status(500).render('error', { error: error.message || 'Não foi possível carregar o dashboard de castração.' });
+    }
+});
+
+
+// POST /castracao/admin/default-clinica - salva a clínica padrão usada para baixo custo/pets-rua (admin)
+router.post('/admin/default-clinica', isAdmin, async (req, res) => {
+    try {
+        const { defaultClinica } = req.body;
+        // tentar obter endereco da tabela de clinicas
+        let endereco = '';
+        try {
+            const rows = await executeQuery('SELECT endereco FROM clinicas WHERE nome = $1 LIMIT 1', [defaultClinica]);
+            if (rows && rows.length) endereco = rows[0].endereco || '';
+        } catch (e) {
+            // fallback: tentar encontrar em res.locals.clinicas
+            const found = (res.locals && res.locals.clinicas) ? res.locals.clinicas.find(c => c.nome === defaultClinica) : null;
+            if (found) endereco = found.endereco || '';
+        }
+
+        const configDir = path.join(__dirname, '..', 'config');
+        const configPath = path.join(configDir, 'castracao_settings.json');
+        try { await fs.mkdir(configDir, { recursive: true }); } catch (e) {}
+        const cfg = { defaultClinica: defaultClinica || '', defaultClinicaEndereco: endereco || '' };
+        await fs.writeFile(configPath, JSON.stringify(cfg, null, 2), 'utf8');
+        req.flash('success', 'Clínica padrão atualizada com sucesso.');
+        res.redirect('/castracao');
+    } catch (error) {
+        console.error('[castracaoRoutes POST /admin/default-clinica] Erro:', error);
+        req.flash('error', 'Não foi possível salvar a clínica padrão.');
+        res.redirect('/castracao');
     }
 });
 
