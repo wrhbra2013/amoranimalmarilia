@@ -12,7 +12,7 @@
  
  // --- Express App Setup ---
  const app = express();
- const PORT = process.env.PORT || 3001;
+ const PORT = process.env.PORT || 3000;
  
  // --- Middleware ---
  // Substitui bodyParser.urlencoded e bodyParser.json
