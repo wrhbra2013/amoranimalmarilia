@@ -21,6 +21,31 @@ function scrollEventFotos(index, direction) {
         });
     }
 }
+function atenderCastracao(url, rowId) {
+    if (!confirm('Confirmar atendimento?')) return;
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            var row = document.getElementById('castracao-row-' + rowId);
+            if (row) {
+                var statusCell = row.querySelector('.status-cell');
+                var acoesCell = row.querySelector('.acoes-cell');
+                if (statusCell) {
+                    statusCell.innerHTML = '<span class="badge" style="background: #10b981; color: white;">ATENDIDO</span>';
+                }
+                if (acoesCell) {
+                    acoesCell.innerHTML = '<span class="text-muted">-</span>';
+                }
+            }
+        } else {
+            alert('Erro ao processar atendimento.');
+        }
+    };
+    xhr.send();
+}
 document.addEventListener('DOMContentLoaded', function() {
     toggleArchivedRows(false);
     toggleAttendedRows(false);
@@ -61,7 +86,10 @@ document.addEventListener('DOMContentLoaded', function() {
 const hasStats = (typeof model15 !== 'undefined' && model15 > 0) || 
                 (typeof model3 !== 'undefined' && model3 > 0) || 
                 (typeof model7 !== 'undefined' && model7 > 0) || 
-                (typeof model11 !== 'undefined' && model11 > 0);
+                (typeof model11 !== 'undefined' && model11 > 0) ||
+                (typeof model9 !== 'undefined' && model9 > 0) ||
+                (typeof model13 !== 'undefined' && model13 > 0) ||
+                (typeof model17 !== 'undefined' && model17 > 0);
 %>
 
 <% if (hasStats) { %>
@@ -106,8 +134,36 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                 </div>
                 <div class="stat-card-number"><%= model11 %></div>
                 <div class="stat-card-label">Desaparecidos</div>
-                    </div>
-                    <% } %>
+            </div>
+            <% } %>
+            <% if (typeof model9 !== 'undefined' && model9 > 0) { %>
+            <div class="stat-card">
+                <div class="stat-card-icon" style="color: var(--brand-green);">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="stat-card-number"><%= model9 %></div>
+                <div class="stat-card-label">Castrações</div>
+            </div>
+            <% } %>
+            <% if (typeof model13 !== 'undefined' && model13 > 0) { %>
+            <div class="stat-card">
+                <div class="stat-card-icon" style="color: var(--brand-yellow);">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <div class="stat-card-number"><%= model13 %></div>
+                <div class="stat-card-label">Parcerias</div>
+            </div>
+            <% } %>
+            <% if (typeof model17 !== 'undefined' && model17 > 0) { %>
+            <div class="stat-card">
+                <div class="stat-card-icon" style="color: var(--brand-pink);">
+                    <i class="fas fa-tint"></i>
+                </div>
+                <div class="stat-card-number"><%= model17 %></div>
+                <div class="stat-card-label">Doações Sangue</div>
+            </div>
+            <% } %>
+        </div>
     </div>
 </section>
 <% } %>
@@ -206,6 +262,7 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                         <th>Clínica</th>
                         <th>Data</th>
                         <th>Status</th>
+                        <th>Ações</th>
                         <th>Comprovante</th>
                     </tr>
                 </thead>
@@ -213,24 +270,35 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                     <% model8.slice(0, 10).forEach(function(castracao) { 
                         const statusUpper = castracao.status ? String(castracao.status).trim().toUpperCase() : 'PENDENTE';
                         const isAttended = statusUpper === 'ATENDIDO';
+                        const rotaAtender = castracao.tipo === 'mutirao' ? '/castracao/mutirao/updateStatus/' + castracao.id : '/castracao/updateStatus/' + castracao.id;
+                        const rotaComprovante = castracao.tipo === 'mutirao' ? '/castracao/mutirao/comprovante/' + castracao.ticket : '/castracao/comprovante/' + castracao.ticket;
                     %>
-                    <tr>
+                    <tr id="castracao-row-<%= castracao.id %>">
                         <td><strong>#<%= castracao.ticket %></strong></td>
                         <td><%= castracao.nome_pet || '-' %></td>
                         <td><%= castracao.nome %></td>
                         <td><%= castracao.especie %></td>
                         <td><%= castracao.clinica %></td>
                         <td><%= castracao.data_evento ? new Date(castracao.data_evento).toLocaleDateString('pt-BR') : 'N/A' %></td>
-                        <td>
+                        <td class="status-cell">
                             <% if (isAttended) { %>
                                 <span class="badge" style="background: #10b981; color: white;">ATENDIDO</span>
                             <% } else { %>
                                 <span class="badge" style="background: #f59e0b; color: white;">PENDENTE</span>
                             <% } %>
                         </td>
-                        <td>
+                        <td class="acoes-cell">
+                            <% if (!isAttended) { %>
+                            <button type="button" class="btn btn-sm" style="background: #10b981; color: white; padding: 4px 8px; font-size: 0.75rem;" onclick="atenderCastracao('<%= rotaAtender %>', '<%= castracao.id %>')">
+                                <i class="fas fa-check"></i> Atender
+                            </button>
+                            <% } else { %>
+                            <span class="text-muted">-</span>
+                            <% } %>
+                        </td>
+                        <td class="comprovante-cell">
                             <% if (castracao.ticket) { %>
-                            <a href="/castracao/comprovante/<%= castracao.ticket %>" target="_blank" class="btn btn-sm" style="background: var(--brand-teal); color: white; padding: 4px 8px; font-size: 0.75rem;">
+                            <a href="<%= rotaComprovante %>" target="_blank" class="btn btn-sm" style="background: var(--brand-teal); color: white; padding: 4px 8px; font-size: 0.75rem;">
                                 <i class="fas fa-file-pdf"></i> PDF
                             </a>
                             <% } else { %>

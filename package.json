@@ -26,8 +26,5 @@
         "pdfmake": "^0.2.20",
         "pg": "^8.16.3",
         "prompt-sync": "^4.2.0"
-    },
-    "devDependencies": {
-        "nodemon": "^3.1.10"
     }
 }

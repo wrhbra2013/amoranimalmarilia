@@ -901,7 +901,7 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
     
     try {
         const inscricaoResult = await executeQuery(`
-            SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco 
+            SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco as clinica_endereco 
             FROM mutirao_inscricao mi
             JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
             WHERE mi.ticket = $1
@@ -916,6 +916,9 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
         const pets = await executeQuery(`
             SELECT * FROM mutirao_pet WHERE mutirao_inscricao_id = $1
         `, [inscricao.id]);
+        
+        const pet = pets && pets.length > 0 ? pets[0] : {};
+        const petInfo = pet.nome ? `Nome: ${pet.nome}, Espécie: ${pet.especie || '-'}, Raça: ${pet.raca || '-'}, Sexo: ${pet.sexo || '-'}, Idade: ${pet.idade || '-'}, Peso: ${pet.peso || '-'}, Vacinado contra viroses: ( ) sim ( ) não, Vacinado contra raiva: ( ) sim ( ) não.` : 'Nenhum pet cadastrado.';
         
         const fontDescriptors = {
             Roboto: {
@@ -1064,12 +1067,12 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
         // Conteúdo do termo
         const termoContent = [
             { text: 'TERMO DE RESPONSABILIDADE', style: 'header', alignment: 'center', margin: [0, 0, 0, 20] },
-            { text: `Cadastro nº ${inscricao.ticket }`, style: 'value', margin: [0, 0, 0, 15] },
-            { text: `Eu, ${inscricao.nome_responsavel}, CPF ${inscricao.cpf}, residente na ${inscricao.endereco}, nº ${inscricao.numero }, bairro ${inscricao.bairro }, telefone ${inscricao.telefone },`, style: 'value', margin: [0, 0, 0, 15] },
-            { text: '1. Por meio deste instrumento, confirmo ciência quanto às obrigações abaixo discriminadas, enquanto proprietário(a) do animal:', style: 'value', margin: [0, 0, 0, 10] },
-            { text: `Nome ${inscricao.pets && inscricao.pets[0] ? inscricao.pets[0].nome : '____________________'}, espécie ${inscricao.pets && inscricao.pets[0] ? inscricao.pets[0].especie : '_______________'}, raça ${inscricao.pets && inscricao.pets[0] ? inscricao.pets[0].raca : '_______________'}, sexo ${inscricao.pets && inscricao.pets[0] ? inscricao.pets[0].sexo : '___________'}, idade ${inscricao.pets && inscricao.pets[0] ? inscricao.pets[0].idade : '______'}, peso ${inscricao.pets && inscricao.pets[0] ? inscricao.pets[0].peso : '________'}, vacinado contra viroses (sim) (não), vacinado contra raiva (sim) (não).`, style: 'value', margin: [0, 0, 0, 10] },
-            { text: 'Nos últimos 10 dias apresentou alguma alteração de comportamento? (sim) (não)', style: 'value', margin: [0, 0, 0, 5] },
-            { text: 'Está tendo vômito ou diarreia? (sim) (não)', style: 'value', margin: [0, 0, 0, 10] },
+            { text: `Cadastro nº ${inscricao.ticket}`, style: 'value', margin: [0, 0, 0, 15] },
+            { text: `Eu, ${inscricao.nome_responsavel}, CPF ${inscricao.cpf || 'Não informado'}, residente na ${inscricao.endereco || 'Não informado'}, nº ${inscricao.numero || 'S/N'}, bairro ${inscricao.bairro || 'Não informado'}, ${inscricao.cidade || ''}/${inscricao.estado || ''}, CEP ${inscricao.cep || 'Não informado'}, telefone ${inscricao.contato || 'Não informado'}.`, style: 'value', margin: [0, 0, 0, 15] },
+            { text: '1. Por meio deste instrumento, confirmo ciência quanto às obrigações abaixo discriminadas, enquanto proprietário(a) do(s) animal(is) abaixo descrito(s):', style: 'value', margin: [0, 0, 0, 10] },
+            { text: petInfo, style: 'value', margin: [0, 0, 0, 10] },
+            { text: 'Nos últimos 10 dias apresentou alguma alteração de comportamento? (  ) sim (  ) não', style: 'value', margin: [0, 0, 0, 5] },
+            { text: 'Está tendo vômito ou diarreia? (  ) sim (  ) não', style: 'value', margin: [0, 0, 0, 10] },
             { text: 'O referido animal será contemplado pelo Mutirão de Castração Gratuita da ONG Amor Animal, com cirurgia a ser realizada na Clínica Veterinária É o Bicho, pela Dra. Thais Carvalho Parra CRMV 38659.', style: 'value', margin: [0, 0, 0, 10] },
             { text: '2. Estar atento(a) e cumprir as orientações de pré e pós-operatório;', style: 'value', margin: [0, 3, 0, 3] },
             { text: '3. Acatar as orientações pré-operatórias fornecidas pela equipe veterinária;', style: 'value', margin: [0, 0, 0, 3] },
@@ -1082,7 +1085,7 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
             { text: 'Qualquer intercorrência que exija atendimento posterior, seja por falha no cumprimento das orientações fornecidas ou por fatores individuais do animal, será de inteira responsabilidade e custeio do(a) proprietário(a).', style: 'value', margin: [0, 0, 0, 10] },
             { text: 'Para mais informações, entre em contato: (14) 99815-1723 – ONG Amor Animal.', style: 'value', margin: [0, 0, 0, 10] },
             { text: 'Por expressão da verdade, firmo o presente.', style: 'value', margin: [0, 0, 0, 20] },
-            { text: 'Marília, 28 de Fevereiro de 2026.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] }
+            { text: 'Marília, ' + (inscricao.data_evento ? new Date(inscricao.data_evento).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })) + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] }
         ];
         
         content.push({
