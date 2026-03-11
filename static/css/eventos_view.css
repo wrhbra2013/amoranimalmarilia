@@ -38,7 +38,7 @@
 }
 .evt-feature-slide.active { opacity: 1; z-index: 2; }
 
-.featured-image { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center center; background: transparent; }
+.featured-image { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center center; background: transparent; }
 
 .evt-nav-btn {
     position: absolute;
@@ -80,8 +80,8 @@
 }
 
 .evt-feature-slide { overflow: hidden; }
-.featured-image { transition: transform 0.3s ease; }
-.evt-feature-slide:hover .featured-image { transform: scale(1.05); }
+.featured-image { transition: none; }
+.evt-feature-slide:hover .featured-image { transform: none; }
 
 .evt-lightbox { position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:1200; padding:20px; }
 .evt-lightbox img { max-width:95%; max-height:85%; border-radius:6px; }

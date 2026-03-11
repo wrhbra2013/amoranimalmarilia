@@ -199,7 +199,7 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                     <span><i class="fas fa-map-marker-alt"></i> <%= event.local %></span>
                     <% } %>
                 </div>
-                <p class="event-descricao"><%= event.descricao ? event.descricao.substring(0, 600) + (event.descricao.length > 600 ? '...' : '') : 'Descrição não disponível.' %></p>
+                <p class="event-descricao"><%= event.descricao && event.descricao.trim() ? event.descricao.substring(0, 600) + (event.descricao.length > 600 ? '...' : '') : 'Descrição não disponível.' %></p>
                 
                 <% if (event.comentarios && event.comentarios.length > 0) { %>
                 <div class="event-comentarios">
@@ -312,7 +312,7 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
         </div>
         
         <div class="text-center mt-4">
-            <a href="/castracao/" class="button">+ Novo Agendamento</a>
+            <a href="/castracao/" class="button button-highlight">+ Novo Agendamento</a>
         </div>
     </div>
 </section>

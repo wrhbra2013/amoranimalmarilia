@@ -122,7 +122,8 @@
 }
 
 .event-full-card:hover .event-foto-item img {
-    transform: scale(1.05);
+    /* Remove zoom effect */
+    transform: none;
 }
 
 @media (max-width: 1100px) {
@@ -161,8 +162,14 @@
 
 .event-info {
     order: 1;
+    flex: 1;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
     max-height: 320px;
-    overflow-y: auto;
+    justify-content: flex-start;
+    overflow: hidden;
+    min-height: 0;
 }
 
 .event-fotos-carrossel {
@@ -242,15 +249,6 @@
 .evt-foto-prev { left: 10px; }
 .evt-foto-next { right: 10px; }
 
-.event-info {
-    flex: 1;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    justify-content: flex-start;
-}
-
 .event-info .button {
     align-self: flex-start;
     margin-top: auto;
@@ -272,11 +270,25 @@
 
 .event-descricao {
     color: var(--text-color);
-    line-height: 1.6;
+    line-height: 1.8;
     flex-grow: 1;
     font-size: 0.95rem;
-    max-height: 120px;
+    text-align: justify;
+    hyphens: auto;
+    word-wrap: break-word;
+    padding-right: 8px;
     overflow-y: auto;
+    min-height: 0;
+    margin: 0;
+}
+
+.event-descricao::-webkit-scrollbar {
+    width: 6px;
+}
+
+.event-descricao::-webkit-scrollbar-thumb {
+    background: var(--brand-teal);
+    border-radius: 3px;
 }
 
 .event-comentarios {
@@ -873,3 +885,23 @@
 .landing-card:nth-child(4), .castracao-card:nth-child(4) { animation-delay: 0.4s; }
 
 .table-responsive { overflow-x: auto; }
+
+/* Botão "+ Novo Agendamento" destacado */
+.button-highlight {
+    background: linear-gradient(135deg, var(--brand-teal), var(--brand-teal-dark)) !important;
+    color: white !important;
+    padding: 12px 30px !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 15px rgba(13, 148, 136, 0.4) !important;
+    transition: all 0.3s ease !important;
+    border: none !important;
+    text-decoration: none !important;
+}
+
+.button-highlight:hover {
+    background: linear-gradient(135deg, var(--brand-teal-dark), #0f5950) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.5) !important;
+}

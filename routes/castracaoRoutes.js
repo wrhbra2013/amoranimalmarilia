@@ -235,21 +235,21 @@ router.get('/comprovante/:ticket', async (req, res) => {
                     color: '#666666'
                 },
                 value: {
-                    fontSize: 10,
+                    fontSize: 8,
                     color: '#333333'
                 },
                 tableHeader: {
-                    fontSize: 9,
+                    fontSize: 8,
                     bold: true,
                     color: '#ffffff',
                     fillColor: '#0066CC'
                 },
                 tableCell: {
-                    fontSize: 9,
+                    fontSize: 8,
                     color: '#333333'
                 },
                 footer: {
-                    fontSize: 10,
+                    fontSize: 9,
                     italics: true,
                     color: '#666666'
                 }
@@ -1062,7 +1062,6 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
         });
         
         // ==================== PÁGINA 2: TERMO DE RESPONSABILIDADE ====================
-        content.push({ text: '', pageBreak: 'after', margin: [0, 0, 0, 20] });
         
         // Conteúdo do termo
         const termoContent = [
@@ -1090,7 +1089,8 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
         
         content.push({
             stack: termoContent,
-            margin: [20, 0, 20, 0]
+            margin: [20, 0, 20, 0],
+            pageBreak: 'before'
         });
         
         // Assinaturas
@@ -1099,12 +1099,12 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
                 widths: ['*', '*'],
                 body: [
                     [
-                        { text: '', border: [false, true, false, false], margin: [20, 40, 20, 0] },
-                        { text: '', border: [false, true, false, false], margin: [20, 40, 20, 0] }
+                        { text: '', border: [false, true, false, false], margin: [20, 20, 20, 0] },
+                        { text: '', border: [false, true, false, false], margin: [20, 20, 20, 0] }
                     ],
                     [
-                        { text: 'Médico Veterinário Responsável', alignment: 'center', margin: [0, 5, 0, 0] },
-                        { text: 'Assinatura do Proprietário(a)', alignment: 'center', margin: [0, 5, 0, 0] }
+                        { text: 'Médico Veterinário Responsável', alignment: 'center', margin: [0, 5, 0, 0], fontSize: 8 },
+                        { text: 'Assinatura do Proprietário(a)', alignment: 'center', margin: [0, 5, 0, 0], fontSize: 8 }
                     ]
                 ]
             },
@@ -1163,7 +1163,7 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
             },
             styles: {
                 header: {
-                    fontSize: 16,
+                    fontSize: 13,
                     bold: true,
                     color: '#333333'
                 },
@@ -1174,37 +1174,37 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
                     background: '#f5f5f5'
                 },
                 subHeader: {
-                    fontSize: 12,
+                    fontSize: 10,
                     bold: true,
                     color: '#0066CC',
                     margin: [0, 10, 0, 5]
                 },
                 label: {
-                    fontSize: 10,
+                    fontSize: 8,
                     bold: true,
                     color: '#666666'
                 },
                 value: {
-                    fontSize: 10,
+                    fontSize: 8,
                     color: '#333333'
                 },
                 tableHeader: {
-                    fontSize: 9,
+                    fontSize: 8,
                     bold: true,
                     color: '#ffffff',
                     fillColor: '#0066CC'
                 },
                 tableCell: {
-                    fontSize: 9,
+                    fontSize: 8,
                     color: '#333333'
                 },
                 footer: {
-                    fontSize: 10,
+                    fontSize: 8,
                     italics: true,
                     color: '#666666'
                 },
                 footerSmall: {
-                    fontSize: 8,
+                    fontSize: 7,
                     color: '#999999'
                 },
                 addressHeader: {
@@ -1228,9 +1228,9 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
                     color: '#555555'
                 },
                 value: {
-                    fontSize: 11,
+                    fontSize: 8,
                     color: '#333333',
-                    lineHeight: 1.5
+                    lineHeight: 1.3
                 }
             }
         };
@@ -1260,9 +1260,37 @@ router.get('/pets-rua', async (req, res) => {
             formData.clinica = req.query.new_clinic_name;
         }
 
-        // Determine default clinic for non-admin users: prefer flashed formData, else first clinic in list
-        const defaultClinica = formData.clinica || (clinicas && clinicas.length > 0 ? clinicas[0].nome : '');
-        const defaultClinicaEndereco = (formData.clinica && clinicas ? (clinicas.find(c => c.nome === formData.clinica) || {}).endereco : null) || (clinicas && clinicas.length > 0 ? clinicas[0].endereco : '') || '';
+        // Load default clinic from config file
+        const configPath = path.join(__dirname, '..', 'config', 'castracao_settings.json');
+        let defaultClinicaConfig = '';
+        let defaultClinicaEnderecoConfig = '';
+        try {
+            const cfgRaw = await fs.readFile(configPath, 'utf8');
+            const cfg = JSON.parse(cfgRaw);
+            defaultClinicaConfig = cfg.defaultClinica || '';
+            defaultClinicaEnderecoConfig = cfg.defaultClinicaEndereco || '';
+        } catch (e) {
+            // arquivo pode não existir — ignora
+            defaultClinicaConfig = '';
+            defaultClinicaEnderecoConfig = '';
+        }
+
+        // Determine default clinic for non-admin users: prefer flashed value, else config default, else first clinic in list
+        const defaultClinica = formData.clinica || defaultClinicaConfig || (clinicas && clinicas.length > 0 ? clinicas[0].nome : '');
+        
+        // Determine default clinic address: prefer flashed clinic, else config default, else first clinic in list
+        let defaultClinicaEndereco = '';
+        if (formData.clinica && clinicas) {
+            const foundForm = clinicas.find(c => c.nome === formData.clinica);
+            if (foundForm) defaultClinicaEndereco = foundForm.endereco || '';
+        }
+        if (!defaultClinicaEndereco && defaultClinicaConfig && clinicas) {
+            const foundConfig = clinicas.find(c => c.nome === defaultClinicaConfig);
+            if (foundConfig) defaultClinicaEndereco = foundConfig.endereco || '';
+        }
+        if (!defaultClinicaEndereco && clinicas && clinicas.length > 0) {
+            defaultClinicaEndereco = clinicas[0].endereco || '';
+        }
 
         res.render('castracao_rua', { 
             clinicas: clinicas, 
@@ -1291,9 +1319,37 @@ router.get('/baixo-custo', async (req, res) => {
             formData.clinica = req.query.new_clinic_name;
         }
 
-        // Default clinic for non-admin users: prefer flashed value, else first clinic
-        const defaultClinica = formData.clinica || (clinicas && clinicas.length > 0 ? clinicas[0].nome : '');
-        const defaultClinicaEndereco = (formData.clinica && clinicas ? (clinicas.find(c => c.nome === formData.clinica) || {}).endereco : null) || (clinicas && clinicas.length > 0 ? clinicas[0].endereco : '') || '';
+        // Load default clinic from config file
+        const configPath = path.join(__dirname, '..', 'config', 'castracao_settings.json');
+        let defaultClinicaConfig = '';
+        let defaultClinicaEnderecoConfig = '';
+        try {
+            const cfgRaw = await fs.readFile(configPath, 'utf8');
+            const cfg = JSON.parse(cfgRaw);
+            defaultClinicaConfig = cfg.defaultClinica || '';
+            defaultClinicaEnderecoConfig = cfg.defaultClinicaEndereco || '';
+        } catch (e) {
+            // arquivo pode não existir — ignora
+            defaultClinicaConfig = '';
+            defaultClinicaEnderecoConfig = '';
+        }
+
+        // Determine default clinic for non-admin users: prefer flashed value, else config default, else first clinic in list
+        const defaultClinica = formData.clinica || defaultClinicaConfig || (clinicas && clinicas.length > 0 ? clinicas[0].nome : '');
+        
+        // Determine default clinic address: prefer flashed clinic, else config default, else first clinic in list
+        let defaultClinicaEndereco = '';
+        if (formData.clinica && clinicas) {
+            const foundForm = clinicas.find(c => c.nome === formData.clinica);
+            if (foundForm) defaultClinicaEndereco = foundForm.endereco || '';
+        }
+        if (!defaultClinicaEndereco && defaultClinicaConfig && clinicas) {
+            const foundConfig = clinicas.find(c => c.nome === defaultClinicaConfig);
+            if (foundConfig) defaultClinicaEndereco = foundConfig.endereco || '';
+        }
+        if (!defaultClinicaEndereco && clinicas && clinicas.length > 0) {
+            defaultClinicaEndereco = clinicas[0].endereco || '';
+        }
 
         res.render('castracao_baixo_custo', { 
             clinicas: clinicas, 
