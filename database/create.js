@@ -67,44 +67,27 @@ const { pool } = require('./database');
   await executeDDL(ddl, 'adotado');
  }
  
-    async function create_castracao() {
-        const ddl = `CREATE TABLE IF NOT EXISTS castracao (
-            id SERIAL PRIMARY KEY,
-            origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            ticket VARCHAR(50) UNIQUE NOT NULL,
-            nome VARCHAR(255),
-            contato VARCHAR(100),
-            whatsapp VARCHAR(20),
-            idade INT,
-            especie VARCHAR(100),
-            porte VARCHAR(50),
-            sexo VARCHAR(10),
-            clinica VARCHAR(255),
-            agenda VARCHAR(255),
-            status VARCHAR(50) DEFAULT 'PENDENTE',
-            atendimento TIMESTAMP NULL,
-            tipo VARCHAR(50) DEFAULT 'padrao',
-            nome_pet VARCHAR(255),
-            locality VARCHAR(255),
-            arquivado BOOLEAN DEFAULT FALSE
-        );`;
-    await executeDDL(ddl, 'castracao');
-    
-    // Adiciona coluna 'arquivado' se não existir
-    try {
-        await pool.query(`ALTER TABLE castracao ADD COLUMN IF NOT EXISTS arquivado BOOLEAN DEFAULT FALSE;`);
-        console.log("Coluna 'arquivado' adicionada ou já existe na tabela castracao");
-    } catch (error) {
-        console.log("Erro ao adicionar coluna 'arquivado':", error.message);
-    }
-    
-    // Adiciona a coluna 'tipo' se não existir
-   try {
-       await pool.query(`ALTER TABLE castracao ADD COLUMN IF NOT EXISTS tipo VARCHAR(50) DEFAULT 'padrao';`);
-        console.log("Coluna 'tipo' adicionada ou já existe na tabela castracao");
-    } catch (error) {
-        console.log("Erro ao adicionar coluna 'tipo' (pode já existir):", error.message);
-    }
+     async function create_castracao() {
+         const ddl = `CREATE TABLE IF NOT EXISTS castracao (
+             id SERIAL PRIMARY KEY,
+             origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+             ticket VARCHAR(50) UNIQUE NOT NULL,
+             nome VARCHAR(255),
+             contato VARCHAR(100),
+             whatsapp VARCHAR(20),
+             idade INT,
+             especie VARCHAR(100),
+             porte VARCHAR(50),
+             sexo VARCHAR(10),
+             clinica VARCHAR(255),
+             agenda VARCHAR(255),
+             status VARCHAR(50) DEFAULT 'PENDENTE',
+             atendimento TIMESTAMP NULL,
+             tipo VARCHAR(50) DEFAULT 'padrao',
+             nome_pet VARCHAR(255),
+             locality VARCHAR(255)
+         );`;
+     await executeDDL(ddl, 'castracao');
 
     // Adiciona a coluna 'sexo' se não existir
     try {
@@ -167,40 +150,26 @@ async function create_clinicas() {
 }
 
 async function create_mutirao_inscricao() {
-    const ddl = `CREATE TABLE IF NOT EXISTS mutirao_inscricao (
-        id SERIAL PRIMARY KEY,
-        calendario_mutirao_id INTEGER REFERENCES calendario_mutirao(id),
-        ticket VARCHAR(50) UNIQUE NOT NULL,
-        nome_responsavel VARCHAR(255) NOT NULL,
-        localidades VARCHAR(255),
-        contato VARCHAR(50),
-        status VARCHAR(20) DEFAULT 'PENDENTE',
-        arquivado BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );`;
-    await executeDDL(ddl, 'mutirao_inscricao');
+     const ddl = `CREATE TABLE IF NOT EXISTS mutirao_inscricao (
+         id SERIAL PRIMARY KEY,
+         calendario_mutirao_id INTEGER REFERENCES calendario_mutirao(id),
+         ticket VARCHAR(50) UNIQUE NOT NULL,
+         nome_responsavel VARCHAR(255) NOT NULL,
+         localidades VARCHAR(255),
+         contato VARCHAR(50),
+         status VARCHAR(20) DEFAULT 'PENDENTE',
+         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+     );`;
+     await executeDDL(ddl, 'mutirao_inscricao');
     
-    // Adiciona coluna 'status' se não existir
-    try {
-        await pool.query(`ALTER TABLE mutirao_inscricao ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'PENDENTE';`);
-        console.log("Coluna 'status' adicionada ou já existe na tabela mutirao_inscricao");
-    } catch (error) {
-        console.log("Erro ao adicionar coluna 'status' em mutirao_inscricao:", error.message);
-    }
-    
-    // Adiciona coluna 'arquivado' se não existir
-    try {
-        await pool.query(`ALTER TABLE mutirao_inscricao ADD COLUMN IF NOT EXISTS arquivado BOOLEAN DEFAULT FALSE;`);
-        console.log("Coluna 'arquivado' adicionada ou já existe na tabela mutirao_inscricao");
-    } catch (error) {
-        console.log("Erro ao adicionar coluna 'arquivado' em mutirao_inscricao:", error.message);
-    }
+
 }
 
 async function create_mutirao_pet() {
     const ddl = `CREATE TABLE IF NOT EXISTS mutirao_pet (
         id SERIAL PRIMARY KEY,
         mutirao_inscricao_id INTEGER REFERENCES mutirao_inscricao(id) ON DELETE CASCADE,
+        ticket VARCHAR(50) UNIQUE,
         nome VARCHAR(255) NOT NULL,
         especie VARCHAR(20) CHECK (especie IN ('gato', 'cachorro')),
         sexo VARCHAR(10) CHECK (sexo IN ('macho', 'femea')),
@@ -211,6 +180,37 @@ async function create_mutirao_pet() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );`;
     await executeDDL(ddl, 'mutirao_pet');
+    
+    try {
+        await pool.query(`ALTER TABLE mutirao_pet ADD COLUMN IF NOT EXISTS ticket VARCHAR(50) UNIQUE;`);
+        console.log("Coluna 'ticket' adicionada ou já existe na tabela mutirao_pet");
+        
+        const migrateTickets = async () => {
+            const result = await pool.query(`
+                SELECT mi.id as inscricao_id, mi.ticket as ticket_base, array_agg(mp.id ORDER BY mp.id) as pet_ids
+                FROM mutirao_inscricao mi
+                JOIN mutirao_pet mp ON mi.id = mp.mutirao_inscricao_id
+                WHERE mp.ticket IS NULL
+                GROUP BY mi.id, mi.ticket
+            `);
+            
+            if (result.rows.length > 0) {
+                console.log(`Migrando ${result.rows.length} inscrições para tickets únicos por pet...`);
+                for (const row of result.rows) {
+                    const petIds = row.pet_ids;
+                    for (let i = 0; i < petIds.length; i++) {
+                        const petTicket = row.ticket_base + '-' + (i + 1);
+                        await pool.query('UPDATE mutirao_pet SET ticket = $1 WHERE id = $2', [petTicket, petIds[i]]);
+                    }
+                }
+                console.log('Migração de tickets concluída!');
+            }
+        };
+        
+        await migrateTickets();
+    } catch (error) {
+        console.log("Erro ao adicionar coluna 'ticket' (pode já existir):", error.message);
+    }
 }
  
 async function create_voluntario() {
@@ -319,24 +319,15 @@ async function create_mutirao_castracao() {
 }
 
 async function create_calendario_mutirao() {
-    const ddl = `CREATE TABLE IF NOT EXISTS calendario_mutirao (
-        id SERIAL PRIMARY KEY,
-        data_evento DATE NOT NULL,
-        clinica VARCHAR(255) NOT NULL,
-        vagas INT DEFAULT 0,
-        criado_por VARCHAR(255),
-        arquivado BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );`;
-    await executeDDL(ddl, 'calendario_mutirao');
-    
-    // Adiciona coluna 'arquivado' se não existir
-    try {
-        await pool.query(`ALTER TABLE calendario_mutirao ADD COLUMN IF NOT EXISTS arquivado BOOLEAN DEFAULT FALSE;`);
-        console.log("Coluna 'arquivado' adicionada ou já existe na tabela calendario_mutirao");
-    } catch (error) {
-        console.log("Erro ao adicionar coluna 'arquivado':", error.message);
-    }
+     const ddl = `CREATE TABLE IF NOT EXISTS calendario_mutirao (
+         id SERIAL PRIMARY KEY,
+         data_evento DATE NOT NULL,
+         clinica VARCHAR(255) NOT NULL,
+         vagas INT DEFAULT 0,
+         criado_por VARCHAR(255),
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+     );`;
+     await executeDDL(ddl, 'calendario_mutirao');
 }
 
 async function migrateCalendarioMutiraoEndereco() {

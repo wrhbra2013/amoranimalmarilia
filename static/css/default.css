@@ -22,29 +22,7 @@
   padding: 5px;
 }
 
-#contrast-toggle:checked ~ body {
-  --bg-color: var(--hc-bg-color);
-  --text-color: var(--hc-text-color);
-  --container-bg: var(--hc-container-bg);
-  --container-shadow: var(--hc-container-shadow);
-  --container-border: var(--hc-container-border);
-  --heading-color: var(--hc-heading-color);
-  --paragraph-color: var(--hc-paragraph-color);
-  --link-color: var(--hc-link-color);
-  --link-hover-decoration: var(--hc-link-hover-decoration);
-  --border-color: var(--hc-border-color);
-  --table-header-bg: var(--hc-table-header-bg);
-  --nav-bg: var(--hc-nav-bg);
-  --nav-text: var(--hc-nav-text);
-  --footer-bg: var(--hc-footer-bg);
-  --footer-text: var(--hc-footer-text);
-  --input-bg: var(--hc-input-bg);
-  --input-text: var(--hc-input-text);
-  --input-border: var(--hc-input-border);
-  --button-bg: var(--hc-button-bg);
-  --button-text: var(--hc-button-text);
-  --button-hover-bg: var(--hc-button-hover-bg);
-}
+
 
 /* Help Button - CSS Pure Dropdown */
 .help-checkbox {
@@ -60,8 +38,8 @@
   z-index: 9999;
   width: 25px;
   height: 25px;
-  background-color: var(--button-bg, #0066cc);
-  color: var(--button-text, #fff);
+  background-color: #ff6600;
+  color: #fff;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -73,7 +51,7 @@
 }
 
 .help-label:hover {
-  background-color: var(--button-hover-bg, #004499);
+  background-color: #cc5200;
 }
 
 .help-dropdown {

@@ -14,7 +14,11 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Ticket:</strong> <span class="text-danger fw-bold" style="font-size: 2rem; border: 2px solid #dc3545; padding: 5px 15px; border-radius: 5px;"><%= inscricao.ticket %></span></p>
+                    <p><strong>Ticket(s):</strong> 
+                        <span class="text-danger fw-bold" style="font-size: 1.5rem; border: 2px solid #dc3545; padding: 5px 15px; border-radius: 5px;">
+                            <%= pets.map(p => p.ticket).filter(t => t).join(' & ') || inscricao.ticket %>
+                        </span>
+                    </p>
                     <p><strong>Responsável:</strong> <%= inscricao.nome_responsavel %></p>
                     <p><strong>Contato:</strong> <%= inscricao.contato %></p>
                     <% if (inscricao.localidades) { %>
@@ -37,7 +41,7 @@
                 <table class="table table-striped" style="background-color: #000; color: #fff;">
                     <thead style="background-color: #333; color: #fff;">
                         <tr>
-                            <th>#</th>
+                            <th>Ticket</th>
                             <th>Nome</th>
                             <th>Espécie</th>
                             <th>Sexo</th>
@@ -50,7 +54,7 @@
                     <tbody style="background-color: #000; color: #fff;">
                         <% pets.forEach((pet, index) => { %>
                             <tr style="background-color: <%= index % 2 === 0 ? '#000' : '#1a1a1a' %>; color: #fff;">
-                                <td><%= index + 1 %></td>
+                                <td><span class="badge bg-danger"><%= pet.ticket || inscricao.ticket %></span></td>
                                 <td><strong><%= pet.nome %></strong></td>
                                 <td><%= pet.especie === 'gato' ? 'Gato' : 'Cachorro' %></td>
                                 <td><%= pet.sexo === 'macho' ? 'Macho' : 'Fêmea' %></td>
@@ -90,7 +94,7 @@
             </div>
             <div class="modal-body text-center">
                 <p class="lead">Sua inscrição foi realizada com sucesso!</p>
-                <p><strong>Ticket:</strong> <span class="text-danger fw-bold" style="font-size: 2rem; border: 2px solid #dc3545; padding: 5px 15px; border-radius: 5px; display: inline-block;"><%= inscricao.ticket %></span></p>
+                <p><strong>Ticket(s):</strong> <span class="text-danger fw-bold" style="font-size: 1.5rem; border: 2px solid #dc3545; padding: 5px 15px; border-radius: 5px; display: inline-block;"><%= pets.map(p => p.ticket).filter(t => t).join(' & ') || inscricao.ticket %></span></p>
                 <p class="text-muted"><%= pets.length %> pet(s) cadastrado(s)</p>
             </div>
             <div class="modal-footer justify-content-center">

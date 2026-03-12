@@ -235,7 +235,7 @@ router.get('/comprovante/:ticket', async (req, res) => {
                     color: '#666666'
                 },
                 value: {
-                    fontSize: 8,
+                    fontSize: 10,
                     color: '#333333'
                 },
                 tableHeader: {
@@ -697,9 +697,65 @@ router.post('/mutirao-inscricao', async (req, res) => {
             throw new Error('É necessário cadastrar pelo menos um pet para realizar a inscrição.');
         }
         
-        // Extrair nomes dos pets
-        const nomesPets = pets.map(p => p.nome).filter(n => n && String(n).trim() !== '');
-        console.log('[DEBUG] nomesPets:', nomesPets);
+        // Gerar ticket sequencial para a inscrição (para referência)
+        let ticketReferencia;
+        let tentativa = 0;
+        const maxTentativas = 10;
+        
+        while (tentativa < maxTentativas) {
+            const prefixo = 'M';
+            const result = await client.query(`
+                SELECT ticket FROM mutirao_inscricao 
+                WHERE ticket LIKE $1
+                ORDER BY ticket DESC LIMIT 1
+            `, [prefixo + '%']);
+            
+            let nextNumber = 1;
+            if (result.rows.length > 0) {
+                const lastTicket = result.rows[0].ticket;
+                const match = lastTicket.match(/^M(\d{4})/);
+                if (match) {
+                    const lastNumber = parseInt(match[1], 10);
+                    if (!isNaN(lastNumber)) {
+                        nextNumber = lastNumber + 1;
+                    }
+                }
+            }
+            ticketReferencia = prefixo + String(nextNumber).padStart(4, '0');
+            
+            const checkTicket = await client.query('SELECT 1 FROM mutirao_inscricao WHERE ticket = $1', [ticketReferencia]);
+            if (checkTicket.rows.length === 0) {
+                break;
+            }
+            tentativa++;
+        }
+        
+        if (tentativa >= maxTentativas) {
+            throw new Error('Erro ao gerar ticket. Tente novamente.');
+        }
+        
+        // Inserir inscrição do responsável com ticket de referência
+        const inscricaoResult = await client.query(`
+            INSERT INTO mutirao_inscricao (calendario_mutirao_id, ticket, nome_responsavel, cpf, contato, cep, endereco, numero, complemento, bairro, cidade, estado) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id
+        `, [calendario_mutirao_id, ticketReferencia, nome_responsavel, cpf, contato, cep, endereco, numero, complemento, bairro, cidade, estado]);
+        
+        const inscricaoId = inscricaoResult.rows[0].id;
+        
+        // Usar o array de pets do JSON
+        const petsSincronizados = pets.map(pet => ({
+            nome: pet.nome || '',
+            especie: pet.especie || '',
+            sexo: pet.sexo || '',
+            idade: pet.idade || '',
+            peso: pet.peso || '',
+            vacinado: pet.vacinado || false,
+            medicamento: pet.medicamento || ''
+        })).filter(p => p.nome && p.nome.trim() !== '');
+        
+        if (petsSincronizados.length === 0) {
+            throw new Error('É necessário cadastrar pelo menos um pet válido para realizar a inscrição.');
+        }
         
         // Verificar se há vagas disponíveis
         const mutiraoResult = await client.query('SELECT vagas, clinica, data_evento FROM calendario_mutirao WHERE id = $1', [calendario_mutirao_id]);
@@ -725,95 +781,72 @@ router.post('/mutirao-inscricao', async (req, res) => {
             `, [calendario_mutirao_id]);
             
             const vagasDisponiveis = mutirao.vagas - parseInt(vagasUsadas.rows[0].total);
-            const totalPets = nomesPets.length;
+            const totalPets = petsSincronizados.length;
             
             if (vagasDisponiveis < totalPets) {
                 throw new Error(`Não há vagas suficientes. Disponíveis: ${vagasDisponiveis}, Solicitadas: ${totalPets}`);
             }
         }
         
-        // Verificar se tutor já está cadastrado neste mutirão (pelo contato)
-        const tutorExistente = await client.query(`
-            SELECT id, nome_responsavel, ticket 
-            FROM mutirao_inscricao 
-            WHERE calendario_mutirao_id = $1 AND contato = $2
-        `, [calendario_mutirao_id, contato]);
-        
-        if (tutorExistente.rows.length > 0) {
-            const tutor = tutorExistente.rows[0];
-            throw new Error(`Tutor "${tutor.nome_responsavel}" já cadastrado neste mutirão! Ticket: ${tutor.ticket}`);
-        }
-        
-        // Gerar ticket sequencial de forma segura
-        let ticket;
-        let tentativa = 0;
-        const maxTentativas = 10;
-        
-        while (tentativa < maxTentativas) {
+        // Função auxiliar para gerar próximo ticket sequencial
+        async function getNextPetTicket(client) {
             const prefixo = 'M';
-            const result = await client.query(`
-                SELECT ticket FROM mutirao_inscricao 
-                WHERE ticket LIKE $1
-                ORDER BY ticket DESC LIMIT 1
-            `, [prefixo + '%']);
+            let tentativa = 0;
+            const maxTentativas = 20;
             
-            let nextNumber = 1;
-            if (result.rows.length > 0) {
-                const lastTicket = result.rows[0].ticket;
-                const match = lastTicket.match(/^M(\d{4})/);
-                if (match) {
-                    const lastNumber = parseInt(match[1], 10);
-                    if (!isNaN(lastNumber)) {
-                        nextNumber = lastNumber + 1;
+            while (tentativa < maxTentativas) {
+                // Busca o maior ticket atual (de qualquer tabela: mutirao_inscricao ou mutirao_pet)
+                const result = await client.query(`
+                    SELECT ticket FROM (
+                        SELECT ticket FROM mutirao_inscricao WHERE ticket LIKE $1
+                        UNION ALL
+                        SELECT ticket FROM mutirao_pet WHERE ticket LIKE $1
+                    ) AS all_tickets
+                    ORDER BY ticket DESC LIMIT 1
+                `, [prefixo + '%']);
+                
+                let nextNumber = 1;
+                if (result.rows.length > 0) {
+                    const lastTicket = result.rows[0].ticket;
+                    const match = lastTicket.match(/^M(\d{4})/);
+                    if (match) {
+                        const lastNumber = parseInt(match[1], 10);
+                        if (!isNaN(lastNumber)) {
+                            nextNumber = lastNumber + 1;
+                        }
                     }
                 }
+                const newTicket = prefixo + String(nextNumber).padStart(4, '0');
+                
+                // Verificar se ticket já existe em qualquer tabela
+                const checkInscricao = await client.query('SELECT 1 FROM mutirao_inscricao WHERE ticket = $1', [newTicket]);
+                const checkPet = await client.query('SELECT 1 FROM mutirao_pet WHERE ticket = $1', [newTicket]);
+                
+                if (checkInscricao.rows.length === 0 && checkPet.rows.length === 0) {
+                    return newTicket;
+                }
+                tentativa++;
             }
-            ticket = prefixo + String(nextNumber).padStart(4, '0');
-            
-            // Verificar se ticket já existe
-            const checkTicket = await client.query('SELECT 1 FROM mutirao_inscricao WHERE ticket = $1', [ticket]);
-            if (checkTicket.rows.length === 0) {
-                break; // Ticket disponível
-            }
-            tentativa++;
+            throw new Error('Erro ao gerar ticket único para pet.');
         }
         
-        if (tentativa >= maxTentativas) {
-            throw new Error('Erro ao gerar ticket. Tente novamente.');
-        }
-        
-        // Inserir inscrição do responsável com ticket
-        const inscricaoResult = await client.query(`
-            INSERT INTO mutirao_inscricao (calendario_mutirao_id, ticket, nome_responsavel, cpf, contato, cep, endereco, numero, complemento, bairro, cidade, estado) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id
-        `, [calendario_mutirao_id, ticket, nome_responsavel, cpf, contato, cep, endereco, numero, complemento, bairro, cidade, estado]);
-        
-        const inscricaoId = inscricaoResult.rows[0].id;
-        
-        // Usar o array de pets do JSON
-        const petsSincronizados = pets.map(pet => ({
-            nome: pet.nome || '',
-            especie: pet.especie || '',
-            sexo: pet.sexo || '',
-            idade: pet.idade || '',
-            peso: pet.peso || '',
-            vacinado: pet.vacinado || false,
-            medicamento: pet.medicamento || ''
-        })).filter(p => p.nome && p.nome.trim() !== '');
-        
-        // Inserir pets
+        // Inserir pets com ticket único para cada pet (M0001, M0002, etc)
         for (const pet of petsSincronizados) {
             if (!pet.especie || !pet.sexo) {
                 throw new Error('Pet ' + pet.nome + ' está com espécie ou sexo vazio.');
             }
             
+            // Gerar ticket único sequencial para cada pet
+            const petTicket = await getNextPetTicket(client);
+            
             await client.query(`
                 INSERT INTO mutirao_pet (
-                    mutirao_inscricao_id, nome, especie, sexo, idade, peso, 
+                    mutirao_inscricao_id, ticket, nome, especie, sexo, idade, peso, 
                     vacinado, medicamento
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             `, [
                 inscricaoId,
+                petTicket,
                 pet.nome,
                 pet.especie,
                 pet.sexo,
@@ -878,14 +911,23 @@ router.get('/mutirao-inscricao/comprovante/:id', async (req, res) => {
     const { id } = req.params;
     
     try {
-        const result = await executeQuery('SELECT ticket FROM mutirao_inscricao WHERE id = $1', [id]);
+        // Primeiro tenta pegar o ticket do primeiro pet
+        const petResult = await executeQuery('SELECT ticket FROM mutirao_pet WHERE mutirao_inscricao_id = $1 ORDER BY id LIMIT 1', [id]);
         
-        if (!result || result.length === 0) {
-            req.flash('error', 'Inscrição não encontrada.');
-            return res.redirect('/castracao/calendario-mutirao');
+        let ticketRedirect;
+        if (petResult && petResult.length > 0 && petResult[0].ticket) {
+            ticketRedirect = petResult[0].ticket;
+        } else {
+            // Fallback para tickets antigos (sem ticket por pet)
+            const result = await executeQuery('SELECT ticket FROM mutirao_inscricao WHERE id = $1', [id]);
+            if (!result || result.length === 0) {
+                req.flash('error', 'Inscrição não encontrada.');
+                return res.redirect('/castracao/calendario-mutirao');
+            }
+            ticketRedirect = result[0].ticket;
         }
         
-        res.redirect(`/castracao/mutirao/comprovante/${result[0].ticket}`);
+        res.redirect(`/castracao/mutirao/comprovante/${ticketRedirect}`);
     } catch (error) {
         console.error('[castracaoRoutes GET /mutirao-inscricao/comprovante] Erro:', error);
         req.flash('error', 'Erro ao gerar comprovante.');
@@ -900,12 +942,24 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
     const path = require('path');
     
     try {
-        const inscricaoResult = await executeQuery(`
-            SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco as clinica_endereco 
-            FROM mutirao_inscricao mi
+        // Primeiro tenta encontrar pela ticket do pet (novo formato M0001-1)
+        let inscricaoResult = await executeQuery(`
+            SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco as clinica_endereco, mp.ticket as pet_ticket, mp.nome as pet_nome, mp.especie as pet_especie, mp.sexo as pet_sexo, mp.idade as pet_idade, mp.peso as pet_peso
+            FROM mutirao_pet mp
+            JOIN mutirao_inscricao mi ON mp.mutirao_inscricao_id = mi.id
             JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
-            WHERE mi.ticket = $1
+            WHERE mp.ticket = $1
         `, [ticket]);
+        
+        // Se não encontrar pelo ticket do pet, tenta pelo ticket da inscrição (formato antigo)
+        if (!inscricaoResult || inscricaoResult.length === 0) {
+            inscricaoResult = await executeQuery(`
+                SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco as clinica_endereco 
+                FROM mutirao_inscricao mi
+                JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
+                WHERE mi.ticket = $1
+            `, [ticket]);
+        }
         
         if (!inscricaoResult || inscricaoResult.length === 0) {
             req.flash('error', 'Inscrição não encontrada.');
@@ -913,12 +967,26 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
         }
         
         const inscricao = inscricaoResult[0];
-        const pets = await executeQuery(`
-            SELECT * FROM mutirao_pet WHERE mutirao_inscricao_id = $1
-        `, [inscricao.id]);
+        
+        // Se encontrou pelo ticket do pet, usa os dados do pet encontrado
+        let pets;
+        if (inscricao.pet_ticket) {
+            pets = [{
+                nome: inscricao.pet_nome,
+                especie: inscricao.pet_especie,
+                sexo: inscricao.pet_sexo,
+                idade: inscricao.pet_idade,
+                peso: inscricao.pet_peso
+            }];
+        } else {
+            // Modo legacy: busca todos os pets da inscrição
+            pets = await executeQuery(`
+                SELECT * FROM mutirao_pet WHERE mutirao_inscricao_id = $1
+            `, [inscricao.id]);
+        }
         
         const pet = pets && pets.length > 0 ? pets[0] : {};
-        const petInfo = pet.nome ? `Nome: ${pet.nome}, Espécie: ${pet.especie || '-'}, Raça: ${pet.raca || '-'}, Sexo: ${pet.sexo || '-'}, Idade: ${pet.idade || '-'}, Peso: ${pet.peso || '-'}, Vacinado contra viroses: ( ) sim ( ) não, Vacinado contra raiva: ( ) sim ( ) não.` : 'Nenhum pet cadastrado.';
+        const petInfo = pet.nome ? `Nome: ${pet.nome}, Espécie: ${pet.especie || '-'}, Sexo: ${pet.sexo || '-'}, Idade: ${pet.idade || '-'}, Peso: ${pet.peso || '-'}, Vacinado contra viroses: ( ) sim ( ) não, Vacinado contra raiva: ( ) sim ( ) não.` : 'Nenhum pet cadastrado.';
         
         const fontDescriptors = {
             Roboto: {
@@ -941,9 +1009,10 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
             margin: [0, 0, 0, 10]
         });
         
-        // Ticket em destaque
+        // Ticket em destaque - usa ticket do pet se disponível, senão usa ticket da inscrição
+        const ticketExibir = inscricao.pet_ticket || inscricao.ticket;
         content.push({
-            text: `TICKET: ${inscricao.ticket}`,
+            text: `TICKET: ${ticketExibir}`,
             style: 'ticket',
             alignment: 'center',
             margin: [0, 10, 0, 20]
@@ -1068,8 +1137,7 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
             { text: 'TERMO DE RESPONSABILIDADE', style: 'header', alignment: 'center', margin: [0, 0, 0, 20] },
             { text: `Cadastro nº ${inscricao.ticket}`, style: 'value', margin: [0, 0, 0, 15] },
             { text: `Eu, ${inscricao.nome_responsavel}, CPF ${inscricao.cpf || 'Não informado'}, residente na ${inscricao.endereco || 'Não informado'}, nº ${inscricao.numero || 'S/N'}, bairro ${inscricao.bairro || 'Não informado'}, ${inscricao.cidade || ''}/${inscricao.estado || ''}, CEP ${inscricao.cep || 'Não informado'}, telefone ${inscricao.contato || 'Não informado'}.`, style: 'value', margin: [0, 0, 0, 15] },
-            { text: '1. Por meio deste instrumento, confirmo ciência quanto às obrigações abaixo discriminadas, enquanto proprietário(a) do(s) animal(is) abaixo descrito(s):', style: 'value', margin: [0, 0, 0, 10] },
-            { text: petInfo, style: 'value', margin: [0, 0, 0, 10] },
+            { text: '1. Por meio deste instrumento, confirmo ciência quanto às obrigações abaixo discriminadas, enquanto proprietário(a) do(s) animal(is) descrito(s) no ticket: ' + inscricao.ticket, style: 'value', margin: [0, 0, 0, 10] },
             { text: 'Nos últimos 10 dias apresentou alguma alteração de comportamento? (  ) sim (  ) não', style: 'value', margin: [0, 0, 0, 5] },
             { text: 'Está tendo vômito ou diarreia? (  ) sim (  ) não', style: 'value', margin: [0, 0, 0, 10] },
             { text: 'O referido animal será contemplado pelo Mutirão de Castração Gratuita da ONG Amor Animal, com cirurgia a ser realizada na Clínica Veterinária É o Bicho, pela Dra. Thais Carvalho Parra CRMV 38659.', style: 'value', margin: [0, 0, 0, 10] },
@@ -1185,7 +1253,7 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
                     color: '#666666'
                 },
                 value: {
-                    fontSize: 8,
+                    fontSize: 10,
                     color: '#333333'
                 },
                 tableHeader: {
@@ -1406,78 +1474,95 @@ router.get('/lista', async (req, res) => {
       }
   });
   
-  // POST /castracao/form - Processa o formulário de novo registro de castração (múltiplos pets)
-  router.post('/form', async (req, res) => {
-      const client = await pool.connect();
-      const { 
-          nome, contato, whatsapp, clinica, agenda, 
-          tipo_castracao,
-          pet_nome, pet_especie, pet_porte, pet_idade, pet_sexo,
-          locality
-      } = req.body;
+   // POST /castracao/form - Processa o formulário de novo registro de castração (múltiplos pets)
+   router.post('/form', async (req, res) => {
+       const client = await pool.connect();
+       const { 
+           nome, contato, whatsapp, clinica, agenda, 
+           tipo_castracao,
+           pet_nome, pet_especie, pet_porte, pet_idade, pet_sexo,
+           locality
+       } = req.body;
 
-      const nomesPets = Array.isArray(pet_nome) ? pet_nome.filter(nome => nome && nome.trim() !== '') : [pet_nome];
-      
-      if (!nomesPets || nomesPets.length === 0) {
-          req.flash('error', 'É necessário cadastrar pelo menos um pet.');
-          return res.redirect('/castracao/baixo-custo');
-      }
+       // Normalizar pet_nome para array
+       const petNomeArray = Array.isArray(pet_nome) ? pet_nome : [pet_nome];
+       const petEspecieArray = Array.isArray(pet_especie) ? pet_especie : [pet_especie];
+       const petPorteArray = Array.isArray(pet_porte) ? pet_porte : [pet_porte];
+       const petIdadeArray = Array.isArray(pet_idade) ? pet_idade : [pet_idade];
+       const petSexoArray = Array.isArray(pet_sexo) ? pet_sexo : [pet_sexo];
+       
+       // Contar pets válidos (com nome não vazio)
+       let validPetCount = 0;
+       for (let i = 0; i < petNomeArray.length; i++) {
+           if (petNomeArray[i] && petNomeArray[i].trim() !== '') {
+               validPetCount++;
+           }
+       }
+       
+       if (validPetCount === 0) {
+           req.flash('error', 'É necessário cadastrar pelo menos um pet.');
+           return res.redirect('/castracao/baixo-custo');
+       }
 
-      try {
-          const tipo = tipo_castracao || 'baixo_custo';
-          
-          // Normalizar pet_sexo para array
-          const sexoArray = Array.isArray(pet_sexo) ? pet_sexo : [pet_sexo];
-          
-          // Primeiro ticket para redirecionar
-          let firstTicket = '';
-          
-          // Gera um ticket único para cada pet
-          for (let i = 0; i < nomesPets.length; i++) {
-              const petNomeValido = nomesPets[i];
-              const arrayIndex = Array.isArray(pet_nome) ? pet_nome.indexOf(petNomeValido) : 0;
-              
-              // Cada pet gera um ticket sequencial único
-              const ticket = await generateCastracaoTicket(client, tipo);
-              
-              if (i === 0) firstTicket = ticket;
-              
-              await insert_castracao(
-                  ticket,
-                  nome,
-                  contato,
-                  whatsapp,
-                  Array.isArray(pet_idade) ? pet_idade[arrayIndex] : pet_idade,
-                  Array.isArray(pet_especie) ? pet_especie[arrayIndex] : pet_especie,
-                  Array.isArray(pet_porte) ? pet_porte[arrayIndex] : pet_porte,
-                  clinica,
-                  req.body.clinica_endereco || null,
-                  agenda,
-                  tipo,
-                  petNomeValido,
-                  locality,
-                  sexoArray[i] || null
-              );
-          }
-          
-          console.log('[castracaoRoutes POST /form] Dados de castração inseridos:', nomesPets.length, 'pets');
-          req.flash('success', `Agendamento de castração solicitado com sucesso! ${nomesPets.length} pet(s) inscrito(s).`);
-          res.redirect('/castracao/sucesso/' + firstTicket);
-
-      } catch (error) {
-          console.error("[castracaoRoutes POST /form] Erro ao processar formulário de castração:", error);
-          
-          let errorMessage = 'Erro ao salvar os dados de castração. Tente novamente.';
-          if (error.code === '23505') {
-              errorMessage = 'Erro: O número do ticket já existe. Tente enviar o formulário novamente.';
-          }
-          req.flash('error', errorMessage);
-          req.flash('formData', req.body);
-          res.redirect('/castracao/baixo-custo');
-      } finally {
-          client.release();
-      }
-  });
+       try {
+           const tipo = tipo_castracao || 'baixo_custo';
+           
+           // Primeiro ticket para redirecionar
+           let firstTicket = '';
+           
+           // Gera um ticket único para cada pet válido
+           let validPetsProcessed = 0;
+           for (let i = 0; i < petNomeArray.length; i++) {
+               // Pular pets com nome vazio
+               if (!petNomeArray[i] || petNomeArray[i].trim() === '') {
+                   continue;
+               }
+               
+               const petNomeValido = petNomeArray[i];
+               
+               // Cada pet gera um ticket sequencial único
+               const ticket = await generateCastracaoTicket(client, tipo);
+               
+               if (validPetsProcessed === 0) firstTicket = ticket;
+               
+               await insert_castracao(
+                   ticket,
+                   nome,
+                   contato,
+                   whatsapp,
+                   petIdadeArray[i],
+                   petEspecieArray[i],
+                   petPorteArray[i],
+                   clinica,
+                   req.body.clinica_endereco || null,
+                   agenda,
+                   tipo,
+                   petNomeValido,
+                   locality,
+                   petSexoArray[i] || null
+               );
+               
+               validPetsProcessed++;
+           }
+           
+           console.log('[castracaoRoutes POST /form] Dados de castração inseridos:', validPetCount, 'pets');
+           req.flash('success', `Agendamento de castração solicitado com sucesso! ${validPetCount} pet(s) inscrito(s).`);
+           res.redirect('/castracao/sucesso/' + firstTicket);
+ 
+       } catch (error) {
+           console.error("[castracaoRoutes POST /form] Erro ao processar formulário de castração:", error);
+           
+           let errorMessage = 'Erro ao salvar os dados de castração. Tente novamente.';
+           if (error.code === '23505') {
+               errorMessage = 'Erro: O número do ticket já existe. Tente enviar o formulário novamente.';
+           }
+           req.flash('error', errorMessage);
+           req.flash('formData', req.body);
+           res.redirect('/castracao/baixo-custo');
+       } finally {
+           client.release();
+       }
+   });
   
   // POST /castracao/delete/:id - Deleta um registro de castração
   router.post('/delete/:id', isAdmin, async (req, res) => {
@@ -1596,7 +1681,7 @@ router.get('/lista', async (req, res) => {
               req.flash('error', 'ID inválido.');
               return res.redirect('/home');
           }
-          await pool.query(`UPDATE castracao SET arquivado = TRUE WHERE id = $1`, [idNum]);
+
           req.flash('success', 'Castração arquivada com sucesso.');
           res.redirect('/home');
       } catch (error) {
@@ -1615,7 +1700,7 @@ router.get('/lista', async (req, res) => {
               req.flash('error', 'ID inválido.');
               return res.redirect('/home');
           }
-          await pool.query(`UPDATE castracao SET arquivado = FALSE WHERE id = $1`, [idNum]);
+
           req.flash('success', 'Castração desarquivada com sucesso.');
           res.redirect('/home');
       } catch (error) {

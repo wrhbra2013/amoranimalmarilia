@@ -33,22 +33,27 @@
  // Para simplificar e manter a compatibilidade com as colunas existentes, vamos apenas selecionar *
  // e formatar a data no backend se necessário.
  
- /* tag home */
- const home = `SELECT * FROM home;`;
- /* tag adoção*/
- const adocao = `SELECT * FROM adocao;`;
+/* tag home */
+const home = `SELECT *, TO_CHAR(origem, 'DD/MM/YYYY HH24:MI:SS') AS origem_formatada FROM home;`;
+/* tag adoção*/
+const adocao = `SELECT *, TO_CHAR(origem, 'DD/MM/YYYY HH24:MI:SS') AS origem_formatada FROM adocao;`;
  const adocaoCount = `SELECT COUNT(*) AS count FROM adocao;`;
  
- /* tag adotante */
- const adotante = `SELECT * FROM adotante;`;
+/* tag adotante */
+const adotante = `SELECT *, TO_CHAR(origem, 'DD/MM/YYYY HH24:MI:SS') AS origem_formatada FROM adotante;`;
  const adotanteCount = `SELECT COUNT(*) AS count FROM adotante;`;
  
- /* tag adotado */
- const adotado = `SELECT * FROM adotado;`;
+/* tag adotado */
+const adotado = `SELECT *, TO_CHAR(origem, 'DD/MM/YYYY HH24:MI:SS') AS origem_formatada FROM adotado;`;
   const adotadoCount = `SELECT COUNT(*) AS count FROM adotado;`;
   
 /* tag castracao */
-const castracao = `SELECT * FROM castracao ORDER BY origem DESC;`;
+const castracao = `SELECT *, 
+    TO_CHAR(origem, 'DD/MM/YYYY HH24:MI:SS') AS origem_formatada,
+    TO_CHAR(atendido_em, 'DD/MM/YYYY HH24:MI:SS') AS atendido_em_formatado,
+    TO_CHAR(atendimento, 'DD/MM/YYYY HH24:MI:SS') AS atendimento_formatado,
+    TO_CHAR(data_evento, 'DD/MM/YYYY') AS data_evento_formatado
+FROM castracao ORDER BY origem DESC;`;
 const castracaoCount = `SELECT COUNT(*) AS count FROM castracao;`;
 
 /* tag castracao_total_count - Conta TODOS os pets: castrações comuns + pets de mutirões */
@@ -56,6 +61,26 @@ const castracao_total_count = `
     SELECT 
         (SELECT COUNT(*) FROM castracao WHERE tipo IN ('pets_rua', 'baixo_custo', 'padrao') OR tipo IS NULL OR tipo = '') +
         (SELECT COUNT(*) FROM mutirao_pet) as total;
+`;
+
+/* tag castracao_count_by_year - Conta castrações por ano */
+const castracao_count_by_year = `
+    SELECT ano, SUM(total) as total FROM (
+        SELECT EXTRACT(YEAR FROM data_evento)::int as ano, COUNT(*) as total 
+        FROM castracao 
+        WHERE data_evento IS NOT NULL 
+        GROUP BY EXTRACT(YEAR FROM data_evento)
+        UNION ALL
+        SELECT EXTRACT(YEAR FROM cm.data_evento)::int as ano, COUNT(*) as total 
+        FROM mutirao_pet mp 
+        JOIN mutirao_inscricao mi ON mp.mutirao_inscricao_id = mi.id
+        JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
+        WHERE cm.data_evento IS NOT NULL 
+        GROUP BY EXTRACT(YEAR FROM cm.data_evento)
+    ) AS combined 
+    GROUP BY ano 
+    ORDER BY ano DESC 
+    LIMIT 5;
 `;
 
 /* tag castracao_e_mutirao - UNION de castracao e mutirao_pet para exibir na home */
@@ -70,15 +95,16 @@ const castracao_e_mutirao = `
         c.clinica,
         c.clinica_endereco,
         c.origem as data_evento,
+        TO_CHAR(c.origem, 'DD/MM/YYYY HH24:MI:SS') as data_evento_formatado,
         c.status,
-        COALESCE(c.arquivado, FALSE) as arquivado,
+        FALSE as arquivado,
         COALESCE(c.tipo, 'padrao') as tipo,
         NULL as inscricao_id
     FROM castracao c
     UNION ALL
     SELECT 
         mp.id,
-        mi.ticket,
+        COALESCE(mp.ticket, mi.ticket) as ticket,
         mi.nome_responsavel as nome,
         mp.nome as nome_pet,
         mp.sexo,
@@ -86,8 +112,9 @@ const castracao_e_mutirao = `
         cm.clinica,
         cm.endereco as clinica_endereco,
         cm.data_evento,
+        TO_CHAR(cm.data_evento, 'DD/MM/YYYY HH24:MI:SS') as data_evento_formatado,
         mi.status,
-        COALESCE(mi.arquivado, FALSE) as arquivado,
+        FALSE as arquivado,
         'mutirao' as tipo,
         mi.id as inscricao_id
     FROM mutirao_inscricao mi
@@ -97,32 +124,39 @@ const castracao_e_mutirao = `
 `;
 
 /* tag mutirao_inscricao */
-const mutirao_inscricao = `SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco 
+const mutirao_inscricao = `SELECT mi.*, 
+    TO_CHAR(mi.created_at, 'DD/MM/YYYY HH24:MI:SS') AS criado_em_formatado,
+    TO_CHAR(cm.data_evento, 'DD/MM/YYYY HH24:MI:SS') AS data_evento_formatada,
+    cm.clinica,
+    cm.endereco
     FROM mutirao_inscricao mi 
     LEFT JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
     ORDER BY mi.created_at DESC;`;
 const mutirao_inscricaoCount = `SELECT COUNT(*) AS count FROM mutirao_inscricao;`;
 
 /* tag mutirao_pet */
-const mutirao_pet = `SELECT mp.*, mi.ticket as inscricao_ticket, mi.nome_responsavel 
+const mutirao_pet = `SELECT mp.*, 
+    TO_CHAR(mp.created_at, 'DD/MM/YYYY HH24:MI:SS') AS criado_em_formatado,
+    mi.ticket as inscricao_ticket, 
+    mi.nome_responsavel 
     FROM mutirao_pet mp 
     LEFT JOIN mutirao_inscricao mi ON mp.mutirao_inscricao_id = mi.id
     ORDER BY mp.created_at DESC;`;
 const mutirao_petCount = `SELECT COUNT(*) AS count FROM mutirao_pet;`;
  
- /* tag procura_se */
- const procura_se = `SELECT * FROM procura_se;`;
+/* tag procura_se */
+const procura_se = `SELECT *, TO_CHAR(origem, 'DD/MM/YYYY HH24:MI:SS') AS origem_formatada FROM procura_se;`;
  const procura_seCount = `SELECT COUNT(*) AS count FROM procura_se;`;
  
- /* tag parceria */
- const parceria = `SELECT * FROM parceria;`;
+/* tag parceria */
+const parceria = `SELECT *, TO_CHAR(origem, 'DD/MM/YYYY HH24:MI:SS') AS origem_formatada FROM parceria;`;
  const parceriaCount = `SELECT COUNT(*) AS count FROM parceria;`;
  
 // tag doação
-const voluntario = `SELECT * FROM voluntario;`;
+const voluntario = `SELECT *, TO_CHAR(origem, 'DD/MM/YYYY HH24:MI:SS') AS origem_formatada FROM voluntario;`;
 const voluntarioCount = `SELECT COUNT(*) AS count FROM voluntario;`;
 
-const coleta = 'SELECT  * FROM coleta;';
+const coleta = 'SELECT *, TO_CHAR(origem, \'DD/MM/YYYY HH24:MI:SS\') AS origem_formatada FROM coleta;';
 const coletaCount = `SELECT COUNT(*) AS count FROM coleta;`;
  
  /**
@@ -142,10 +176,11 @@ const coletaCount = `SELECT COUNT(*) AS count FROM coleta;`;
           { name: 'adotado', query: adotado },
           { name: 'adotadoCount', query: adotadoCount },
            { name: 'castracao', query: castracao },
-            { name: 'castracaoCount', query: castracaoCount },
-            { name: 'castracaoTotalCount', query: castracao_total_count },
-            { name: 'castracao_e_mutirao', query: castracao_e_mutirao },
-           { name: 'mutirao_inscricao', query: mutirao_inscricao },
+             { name: 'castracaoCount', query: castracaoCount },
+             { name: 'castracaoTotalCount', query: castracao_total_count },
+             { name: 'castracao_e_mutirao', query: castracao_e_mutirao },
+             { name: 'castracao_count_by_year', query: castracao_count_by_year },
+            { name: 'mutirao_inscricao', query: mutirao_inscricao },
           { name: 'mutirao_inscricaoCount', query: mutirao_inscricaoCount },
           { name: 'mutirao_pet', query: mutirao_pet },
           { name: 'mutirao_petCount', query: mutirao_petCount },

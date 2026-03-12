@@ -61,43 +61,108 @@
     }
   }
  
-  async function fetchReportData(tabela) {
+async function fetchReportData(tabela) {
     const allTables = await getAllTables();
     if (!allTables.includes(tabela)) {
      const error = new Error(`Nome de tabela inválido: ${tabela}`);
      error.status = 400;
      throw error;
     }
-  
+   
     let sql;
     let selectFields = "*";
-  
-    if (TABELAS_COM_COLUNA_ORIGEM.includes(tabela.toLowerCase())) {
-  
-     selectFields = `*,
-                             TO_CHAR(origem, 'DD/MM/YYYY HH24:MI:SS') AS data,
-                             CAST(EXTRACT(YEAR FROM origem) AS INTEGER) AS ANO,
-                             CAST(EXTRACT(MONTH FROM origem) AS INTEGER) AS MES_NUM,
-                             CASE EXTRACT(MONTH FROM origem)
-                                 WHEN 1 THEN 'Janeiro'
-                                 WHEN 2 THEN 'Fevereiro'
-                                 WHEN 3 THEN 'Março'
-                                 WHEN 4 THEN 'Abril'
-                                 WHEN 5 THEN 'Maio'
-                                 WHEN 6 THEN 'Junho'
-                                 WHEN 7 THEN 'Julho'
-                                 WHEN 8 THEN 'Agosto'
-                                 WHEN 9 THEN 'Setembro'
-                                 WHEN 10 THEN 'Outubro'
-                                 WHEN 11 THEN 'Novembro'
-                                 WHEN 12 THEN 'Dezembro'
-                                 ELSE ''
-                             END AS MES_NOME`;
-     sql = `SELECT ${selectFields} FROM ${tabela}`;
+   
+    // Define timestamp columns for each table with their formats
+    const timestampColumns = {
+        // Tables with origem TIMESTAMP
+        'home': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        'adocao': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        'adotante': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        'adotado': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        'procura_se': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        'parceria': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        'voluntario': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        'interesse_voluntario': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        'coleta': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        
+        // Tables with created_at TIMESTAMP WITH TIME ZONE
+        'clinicas': [{column: 'created_at', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        'mutirao_inscricao': [{column: 'created_at', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        'mutirao_pet': [{column: 'created_at', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        
+        // Tables with data_evento DATE
+        'castracao': [
+            {column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'},
+            {column: 'atendimento', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'},
+            {column: 'atendido_em', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'},
+            {column: 'data_evento', format: 'DD/MM/YYYY', type: 'date'}
+        ],
+        
+        // Add other tables as needed
+    };
+   
+    // Check if we have special formatting for this table
+    if (timestampColumns[tabela]) {
+        // Start with all columns
+        let fields = ['*'];
+        
+        // Add formatted versions of timestamp columns
+        timestampColumns[tabela].forEach(colInfo => {
+            const formattedColumnName = `${colInfo.column}_formatado`;
+            fields.push(`TO_CHAR(${colInfo.column}, '${colInfo.format}') AS ${formattedColumnName}`);
+        });
+        
+        // Also keep the existing year/month extraction for origem if it exists (for backward compatibility)
+        if (tabela === 'home' || tabela === 'adocao' || tabela === 'adotante' || tabela === 'adotado' || 
+            tabela === 'procura_se' || tabela === 'parceria' || tabela === 'voluntario' || 
+            tabela === 'interesse_voluntario' || tabela === 'coleta') {
+            fields.push(`CAST(EXTRACT(YEAR FROM origem) AS INTEGER) AS ANO`);
+            fields.push(`CAST(EXTRACT(MONTH FROM origem) AS INTEGER) AS MES_NUM`);
+            fields.push(`CASE EXTRACT(MONTH FROM origem)
+                            WHEN 1 THEN 'Janeiro'
+                            WHEN 2 THEN 'Fevereiro'
+                            WHEN 3 THEN 'Março'
+                            WHEN 4 THEN 'Abril'
+                            WHEN 5 THEN 'Maio'
+                            WHEN 6 THEN 'Junho'
+                            WHEN 7 THEN 'Julho'
+                            WHEN 8 THEN 'Agosto'
+                            WHEN 9 THEN 'Setembro'
+                            WHEN 10 THEN 'Outubro'
+                            WHEN 11 THEN 'Novembro'
+                            WHEN 12 THEN 'Dezembro'
+                            ELSE ''
+                        END AS MES_NOME`);
+        }
+        
+        selectFields = fields.join(', ');
+        sql = `SELECT ${selectFields} FROM ${tabela}`;
+    } else if (TABELAS_COM_COLUNA_ORIGEM.includes(tabela.toLowerCase())) {
+        // Fallback to original logic for backward compatibility
+        selectFields = `*,
+                              TO_CHAR(origem, 'DD/MM/YYYY HH24:MI:SS') AS data,
+                              CAST(EXTRACT(YEAR FROM origem) AS INTEGER) AS ANO,
+                              CAST(EXTRACT(MONTH FROM origem) AS INTEGER) AS MES_NUM,
+                              CASE EXTRACT(MONTH FROM origem)
+                                  WHEN 1 THEN 'Janeiro'
+                                  WHEN 2 THEN 'Fevereiro'
+                                  WHEN 3 THEN 'Março'
+                                  WHEN 4 THEN 'Abril'
+                                  WHEN 5 THEN 'Maio'
+                                  WHEN 6 THEN 'Junho'
+                                  WHEN 7 THEN 'Julho'
+                                  WHEN 8 THEN 'Agosto'
+                                  WHEN 9 THEN 'Setembro'
+                                  WHEN 10 THEN 'Outubro'
+                                  WHEN 11 THEN 'Novembro'
+                                  WHEN 12 THEN 'Dezembro'
+                                  ELSE ''
+                              END AS MES_NOME`;
+        sql = `SELECT ${selectFields} FROM ${tabela}`;
     } else {
      sql = `SELECT ${selectFields} FROM ${tabela};`;
     }
-  
+   
     try {
      //  Adapt to use a generalized query function from database.js
      const result = await pool.query(sql);
@@ -108,7 +173,7 @@
     errorToThrow.status = dbError.status || 500;
     throw errorToThrow;
    }
-  }
+   }
  
  
   router.get('/', isAdmin, async (req, res) => {
