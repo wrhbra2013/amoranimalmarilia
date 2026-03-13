@@ -1,5 +1,49 @@
  // /home/wander/amor.animal2/database/queries.js
  const { pool } = require('./database');
+
+function toBrazilianDate(value) {
+    if (value instanceof Date) {
+        const day = String(value.getDate()).padStart(2, '0');
+        const month = String(value.getMonth() + 1).padStart(2, '0');
+        const year = value.getFullYear();
+        const hours = String(value.getHours()).padStart(2, '0');
+        const minutes = String(value.getMinutes()).padStart(2, '0');
+        const seconds = String(value.getSeconds()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    }
+    return value;
+}
+
+function toBrazilianDateOnly(value) {
+    if (value instanceof Date) {
+        const day = String(value.getDate()).padStart(2, '0');
+        const month = String(value.getMonth() + 1).padStart(2, '0');
+        const year = value.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+    return value;
+}
+
+function convertTimestampsToBrazilian(rows) {
+    if (!Array.isArray(rows)) return rows;
+    
+    return rows.map(row => {
+        const converted = {};
+        for (const [key, value] of Object.entries(row)) {
+            if (value instanceof Date) {
+                const columnName = key.toLowerCase();
+                if (columnName.includes('data') && (columnName.includes('evento') || columnName.includes('agenda') || columnName.includes('nascimento'))) {
+                    converted[key] = toBrazilianDateOnly(value);
+                } else {
+                    converted[key] = toBrazilianDate(value);
+                }
+            } else {
+                converted[key] = value;
+            }
+        }
+        return converted;
+    });
+}
  
  /**
   * Executa uma query SQL usando o pool de conexões do PostgreSQL.
@@ -7,14 +51,14 @@
   * @param {Array<any>} [params=[]] - Um array opcional de parâmetros para a query.
   * @returns {Promise<Array<object>>} - Uma promessa que resolve para um array de linhas.
   */
- async function executeQuery(query, params = []) {
-    // pool.query é um atalho que obtém um cliente do pool, executa a query e o libera de volta.
-    // É a forma recomendada para executar uma única query.
+async function executeQuery(query, params = []) {
+     // pool.query é um atalho que obtém um cliente do pool, executa a query e o libera de volta.
+     // É a forma recomendada para executar uma única query.
     try {
         const result = await pool.query(query, params);        // Log the query and parameters for debugging
                 // console.log(`Executing query: ${query} with params: ${JSON.stringify(params)}`);
                 
-        return result.rows; // A biblioteca 'pg' retorna os resultados dentro da propriedade 'rows'.
+        return convertTimestampsToBrazilian(result.rows); // A biblioteca 'pg' retorna os resultados dentro da propriedade 'rows'.
     } catch (err) {
         console.error(`Error executing query: "${query}" with params: ${JSON.stringify(params)}`, err.stack);
         throw err; // Lança o erro para que a função chamadora (ex: executeAllQueries) possa tratá-lo.

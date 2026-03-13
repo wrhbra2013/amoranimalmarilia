@@ -67,27 +67,31 @@ const { pool } = require('./database');
   await executeDDL(ddl, 'adotado');
  }
  
-     async function create_castracao() {
-         const ddl = `CREATE TABLE IF NOT EXISTS castracao (
-             id SERIAL PRIMARY KEY,
-             origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-             ticket VARCHAR(50) UNIQUE NOT NULL,
-             nome VARCHAR(255),
-             contato VARCHAR(100),
-             whatsapp VARCHAR(20),
-             idade INT,
-             especie VARCHAR(100),
-             porte VARCHAR(50),
-             sexo VARCHAR(10),
-             clinica VARCHAR(255),
-             agenda VARCHAR(255),
-             status VARCHAR(50) DEFAULT 'PENDENTE',
-             atendimento TIMESTAMP NULL,
-             tipo VARCHAR(50) DEFAULT 'padrao',
-             nome_pet VARCHAR(255),
-             locality VARCHAR(255)
-         );`;
-     await executeDDL(ddl, 'castracao');
+      async function create_castracao() {
+          const ddl = `CREATE TABLE IF NOT EXISTS castracao (
+              id SERIAL PRIMARY KEY,
+              origem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              ticket VARCHAR(50) UNIQUE NOT NULL,
+              nome VARCHAR(255),
+              contato VARCHAR(100),
+              whatsapp VARCHAR(20),
+              idade INT,
+              especie VARCHAR(100),
+              porte VARCHAR(50),
+              sexo VARCHAR(10),
+              clinica VARCHAR(255),
+              agenda VARCHAR(255),
+              status VARCHAR(50) DEFAULT 'PENDENTE',
+              atendimento TIMESTAMP NULL,
+              tipo VARCHAR(50) DEFAULT 'padrao',
+              nome_pet VARCHAR(255),
+              locality VARCHAR(255),
+              atendido_em TIMESTAMP NULL,
+              arquivo VARCHAR(255),
+              data_evento DATE,
+              clinica_endereco VARCHAR(255)
+          );`;
+      await executeDDL(ddl, 'castracao');
 
     // Adiciona a coluna 'sexo' se não existir
     try {
@@ -102,6 +106,20 @@ const { pool } = require('./database');
         console.log("Coluna 'clinica_endereco' adicionada ou já existe na tabela castracao");
     } catch (error) {
         console.log("Erro ao adicionar coluna 'clinica_endereco':", error.message);
+    }
+    // Adiciona a coluna 'atendido_em' se não existir
+    try {
+        await pool.query(`ALTER TABLE castracao ADD COLUMN IF NOT EXISTS atendido_em TIMESTAMP;`);
+        console.log("Coluna 'atendido_em' adicionada ou já existe na tabela castracao");
+    } catch (error) {
+        console.log("Erro ao adicionar coluna 'atendido_em' (pode já existir):", error.message);
+    }
+    // Adiciona a coluna 'data_evento' se não existir
+    try {
+        await pool.query(`ALTER TABLE castracao ADD COLUMN IF NOT EXISTS data_evento DATE;`);
+        console.log("Coluna 'data_evento' adicionada ou já existe na tabela castracao");
+    } catch (error) {
+        console.log("Erro ao adicionar coluna 'data_evento' (pode já existir):", error.message);
     }
    }
  
