@@ -69,9 +69,22 @@ app.use((req, res, next) => {
 });
 
  
- // --- View Engine Setup ---
- app.set('view engine', 'ejs');
- app.set('views', path.join(__dirname, 'views')); // Corrigido: app.set('views', ...)
+// --- View Engine Setup ---
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views')); // Corrigido: app.set('views', ...)
+
+// Helper global para formatar datas de forma segura
+app.locals.formatDate = function(date, format = 'date') {
+    if (!date) return '';
+    if (typeof date === 'string') return date;
+    if (date instanceof Date && !isNaN(date.getTime())) {
+        if (format === 'datetime') {
+            return date.toLocaleString('pt-BR');
+        }
+        return date.toLocaleDateString('pt-BR');
+    }
+    return '';
+};
  
  // --- Static Files ---
  // Servir arquivos estáticos da aplicação (CSS, JS, imagens do tema)

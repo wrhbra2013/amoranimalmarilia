@@ -30,12 +30,14 @@ function convertTimestampsToBrazilian(rows) {
     return rows.map(row => {
         const converted = {};
         for (const [key, value] of Object.entries(row)) {
-            if (value instanceof Date) {
+            if (value instanceof Date && !isNaN(value.getTime())) {
                 const columnName = key.toLowerCase();
                 if (columnName.includes('data') && (columnName.includes('evento') || columnName.includes('agenda') || columnName.includes('nascimento'))) {
                     converted[key] = toBrazilianDateOnly(value);
+                    converted[key + '_original'] = value;
                 } else {
                     converted[key] = toBrazilianDate(value);
+                    converted[key + '_original'] = value;
                 }
             } else {
                 converted[key] = value;

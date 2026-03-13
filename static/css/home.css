@@ -145,7 +145,8 @@
         min-height: auto;
     }
     .event-info {
-        max-height: 250px;
+        max-height: none;
+        height: auto;
     }
     .event-fotos-carrossel {
         min-height: 200px;
@@ -166,10 +167,11 @@
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    max-height: 320px;
+    max-height: none;
+    height: auto;
     justify-content: flex-start;
-    overflow: hidden;
-    min-height: 0;
+    overflow: visible;
+    min-height: auto;
 }
 
 .event-fotos-carrossel {
@@ -277,9 +279,10 @@
     hyphens: auto;
     word-wrap: break-word;
     padding-right: 8px;
-    overflow-y: auto;
-    min-height: 0;
+    overflow-y: visible;
+    min-height: auto;
     margin: 0;
+    max-height: none;
 }
 
 .event-descricao::-webkit-scrollbar {
@@ -674,10 +677,11 @@
 .voluntarios-carrossel {
     display: flex;
     gap: 1.5rem;
-    overflow-x: auto;
+    overflow-x: visible;
     padding: 1rem 0;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+    flex-wrap: wrap;
 }
 
 .voluntarios-carrossel::-webkit-scrollbar {
@@ -695,12 +699,15 @@
 }
 
 .voluntario-card {
-    flex: 0 0 260px;
+    flex: 0 0 auto;
+    min-width: 260px;
     background: var(--container-bg);
     border-radius: 16px;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: var(--container-shadow);
     transition: all 0.3s ease;
+    width: auto;
+    max-width: none;
 }
 
 .voluntario-card:hover {
@@ -732,6 +739,9 @@
 
 .voluntario-card-body {
     padding: 1.25rem;
+    overflow-x: visible;
+    width: auto;
+    max-width: none;
 }
 
 .voluntario-card-name {
@@ -758,6 +768,13 @@
     font-style: italic;
     margin-top: 0.5rem;
     line-height: 1.4;
+    white-space: normal;
+    overflow-x: visible;
+    text-overflow: clip;
+    word-break: break-word;
+    max-width: none;
+    width: auto;
+    display: block;
 }
 
 /* Hero Section Moderna */

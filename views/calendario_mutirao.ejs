@@ -81,7 +81,7 @@
           <tbody>
           <% calendario.forEach(function(c){ %>
             <tr>
-              <td><%= c.data_evento ? new Date(c.data_evento).toLocaleDateString('pt-BR') : '' %></td>
+              <td><%= c.data_evento ? (typeof c.data_evento === 'string' ? c.data_evento : new Date(c.data_evento).toLocaleDateString('pt-BR')) : '' %></td>
               <td><%= c.clinica %></td>
               <td style="white-space: pre-line; max-width: 150px;"><%= c.endereco || '-' %></td>
               <td><%= c.vagas === 0 ? 'Ilimitadas' : c.vagas %></td>
@@ -89,7 +89,8 @@
                 <% 
                   const hoje = new Date();
                   hoje.setHours(0, 0, 0, 0);
-                  const dataEvento = new Date(c.data_evento);
+                  const dataEventoVal = typeof c.data_evento === 'string' ? new Date(c.data_evento.split('/').reverse().join('-')) : c.data_evento;
+                  const dataEvento = new Date(dataEventoVal);
                   dataEvento.setHours(0, 0, 0, 0);
                   const expirado = dataEvento <= hoje;
                 %>
@@ -118,7 +119,7 @@
                   </a>
                 <% } %>
               </td>
-              <td><%= c.created_at ? new Date(c.created_at).toLocaleString('pt-BR') : '' %></td>
+              <td><%= c.created_at ? (typeof c.created_at === 'string' ? c.created_at : new Date(c.created_at).toLocaleString('pt-BR')) : '' %></td>
               <td>
                 <% if (user) { %>
                   <a href="/castracao/calendario-mutirao/relatorio/<%= c.id %>" class="btn btn-sm btn-info" title="Gerar Relatório PDF">
