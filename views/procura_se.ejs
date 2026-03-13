@@ -40,7 +40,7 @@
 <tbody>
 <% for (const procura_se of model) { %>
 <tr>
-<td><%= procura_se.origem ? new Date(procura_se.origem).toLocaleDateString('pt-BR') : 'N/A' %></td>
+<td><%= procura_se.origem ? (() => { const d = new Date(procura_se.origem); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR') : 'N/A'; })() : 'N/A' %></td>
 <td>
 <img src="../static/uploads/procura_se/<%= procura_se.arquivo %>"
 width="80" height="80"

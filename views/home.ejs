@@ -457,7 +457,7 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
         <% eventsList.slice(0, 4).forEach(function(event, i) { 
             const imgSrc = event.arquivo ? ('/uploads/eventos/' + event.arquivo) : ('/uploads/home/' + (event.arquivo || 'placeholder-event.jpg'));
             const linkUrl = event.arquivo ? `/eventos/${event.id}` : `/campanha/${event.id}`;
-            const eventDate = event.data_evento ? new Date(event.data_evento).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+            const eventDate = event.data_evento ? (() => { const d = new Date(event.data_evento); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : ''; })() : '';
             const hasFotos = event.fotos && event.fotos.length > 0;
         %>
         <div class="event-card-hover">
@@ -558,7 +558,7 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                     <td><%= castracao.nome || '-' %></td>
                     <td><span class="badge" style="background: <%= castracao.especie && castracao.especie.toLowerCase().includes('gato') ? '#8b5cf6' : '#3b82f6' %>; color: white;"><%= castracao.especie || '-' %></span></td>
                     <td title="<%= castracao.clinica %>"><%= castracao.clinica ? (castracao.clinica.length > 20 ? castracao.clinica.substring(0, 20) + '...' : castracao.clinica) : '-' %></td>
-                    <td><%= castracao.data_evento ? new Date(castracao.data_evento).toLocaleDateString('pt-BR') : 'N/A' %></td>
+                    <td><%= castracao.data_evento_formatado ? castracao.data_evento_formatado.split(' ')[0] : 'N/A' %></td>
                     <td>
                         <% if (isAttended) { %>
                             <span class="badge" style="background: #10b981; color: white;">✓ Atendido</span>

@@ -32,7 +32,7 @@
                                     <% for (const coleta of model) { %>
                                        
                                     <tr>
-                                        <td><%= new Date(coleta.origem).toLocaleDateString('pt-BR') %></td>
+                                        <td><%= (() => { const d = new Date(coleta.origem); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR') : ''; })() %></td>
                                         <td><%= coleta.nome %></td>    
                                         <td><%= coleta.telefone %></td>
                                         <td><%= coleta.whatsapp %></td>

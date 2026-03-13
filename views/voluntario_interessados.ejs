@@ -24,7 +24,7 @@
                 <% if (typeof model !== 'undefined' && model.length > 0) { %>
                     <% model.forEach(item => { %>
                         <tr>
-                            <td><%= item.origem ? new Date(item.origem).toLocaleDateString('pt-BR') : '-' %></td>
+                            <td><%= item.origem ? (() => { const d = new Date(item.origem); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR') : '-'; })() : '-' %></td>
                             <td class="fw-bold"><%= item.nome %></td>
                             <td>
                                 <% if(item.telefone) { %>

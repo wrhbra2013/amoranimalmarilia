@@ -84,7 +84,7 @@
                     <div class="d-flex w-100 justify-content-between">
                        <p class="mb-1 text-break"><%= c.comentario %></p> 
                       <h6 class="mb-1 fw-bold"><%= c.nome || 'Anônimo' %></h6>
-                      <small class="text-muted"><%= c.created_at ? new Date(c.created_at).toLocaleDateString('pt-BR') + ' às ' + new Date(c.created_at).toLocaleTimeString('pt-BR') : '' %></small>
+                      <small class="text-muted"><%= c.created_at ? (() => { const d = new Date(c.created_at); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR') : ''; })() : '' %></small>
                     </div>
                    
                 <% }); %>

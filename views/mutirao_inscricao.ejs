@@ -170,7 +170,7 @@
   <div class="card">
     <div class="card-body">
       <h5>Informações do Mutirão</h5>
-      <p><strong>Data:</strong> <%= mutirao.data_evento ? new Date(mutirao.data_evento).toLocaleDateString('pt-BR') : '' %></p>
+      <p><strong>Data:</strong> <%= mutirao.data_evento ? (() => { const d = new Date(mutirao.data_evento); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR') : ''; })() : '' %></p>
       <p><strong>Clínica:</strong> <%= mutirao.clinica %></p>
       <% if (mutirao.endereco) { %>
         <p><strong>Endereço:</strong> <%= mutirao.endereco %></p>

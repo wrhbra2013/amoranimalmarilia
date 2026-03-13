@@ -36,7 +36,7 @@
                         <div class="doc-meta">
                             <% // compute file extension and formatted date %>
                             <% const ext = doc.arquivo ? doc.arquivo.split('.').pop().toUpperCase() : 'N/A'; %>
-                            <% const formattedDate = doc.origem ? new Date(doc.origem).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : (doc.ano || 'N/A'); %>
+                            <% const formattedDate = doc.origem ? (() => { const d = new Date(doc.origem); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : (doc.ano || 'N/A'); })() : (doc.ano || 'N/A'); %>
                             <div style="margin-bottom:6px;">
                                 <span class="badge"><i class="bi bi-file-earmark"></i> <%= ext %></span>
                                 <span class="badge"><i class="bi bi-calendar-event"></i> <%= formattedDate %></span>

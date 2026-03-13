@@ -41,10 +41,10 @@
         <tbody>
           <% calendario.forEach(function(c){ %>
             <tr>
-              <td><%= c.data_evento ? new Date(c.data_evento).toLocaleDateString('pt-BR') : '' %></td>
+              <td><%= c.data_evento ? (() => { const d = new Date(c.data_evento); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR') : ''; })() : '' %></td>
               <td><%= c.clinica %></td>
               <td><%= c.vagas %></td>
-              <td><%= c.created_at ? new Date(c.created_at).toLocaleString('pt-BR') : '' %></td>
+              <td><%= c.created_at ? (() => { const d = new Date(c.created_at); return !isNaN(d.getTime()) ? d.toLocaleString('pt-BR') : ''; })() : '' %></td>
             </tr>
           <% }); %>
         </tbody>

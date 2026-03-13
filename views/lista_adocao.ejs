@@ -35,11 +35,7 @@
                          <% model.forEach(adocao => { %>
                          <tr>
                              <td>
-                                 <% if (adocao.origem) { %>
-                                     <%= new Date(adocao.origem).toLocaleDateString('pt-BR') %>
-                                 <% } else { %>
-                                     N/A
-                                 <% } %>
+                                  <%= adocao.origem ? (() => { const d = new Date(adocao.origem); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR') : 'N/A'; })() : 'N/A' %>
                              </td>
                              <td>
                                  <div class="image-container text-center">

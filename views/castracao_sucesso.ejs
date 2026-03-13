@@ -43,7 +43,7 @@
                     <p><strong>Tipo:</strong> <span class="badge bg-<%= castracao.tipo === 'mutirao' ? 'warning' : (castracao.tipo === 'pets_rua' ? 'info' : 'success') %>"><%= castracao.tipo === 'mutirao' ? 'Mutirão' : (castracao.tipo === 'pets_rua' ? 'Pet de Rua' : 'Baixo Custo') %></span></p>
                     <p><strong>Clínica:</strong> <%= castracao.clinica || 'A definir' %></p>
                     <p><strong>Dia Preferencial:</strong> <%= castracao.agenda || 'A definir' %></p>
-                    <p><strong>Data do Cadastro:</strong> <%= castracao.origem ? new Date(castracao.origem).toLocaleDateString('pt-BR') : 'Hoje' %></p>
+                    <p><strong>Data do Cadastro:</strong> <%= castracao.origem ? (() => { const d = new Date(castracao.origem); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR') : 'Hoje'; })() : 'Hoje' %></p>
                 </div>
             </div>
             

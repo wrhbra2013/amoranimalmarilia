@@ -20,7 +20,7 @@
               <div class="card-body">
                 <h5 class="card-title">
                   <i class="bi bi-calendar-event text-primary me-2"></i>
-                  <%= mutirao.data_evento ? new Date(mutirao.data_evento).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'}) : 'Data a definir' %>
+                  <%= mutirao.data_evento ? (() => { const d = new Date(mutirao.data_evento); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric'}) : 'Data a definir'; })() : 'Data a definir' %>
                 </h5>
                 <h6 class="card-subtitle mb-2 text-muted">
                   <i class="bi bi-geo-alt me-1"></i><%= mutirao.clinica %>
@@ -35,7 +35,7 @@
                 </p>
                 <p class="text-muted small">
                   <i class="bi bi-clock me-1"></i>
-                  Criado em: <%= mutirao.created_at ? new Date(mutirao.created_at).toLocaleDateString('pt-BR') : '' %>
+                  Criado em: <%= mutirao.created_at ? (() => { const d = new Date(mutirao.created_at); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR') : ''; })() : '' %>
                 </p>
                 <a href="/castracao/mutirao/inscrever/<%= mutirao.id %>" class="btn btn-primary w-100">
                   <i class="bi bi-pencil-square me-2"></i>Inscrever-se

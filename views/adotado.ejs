@@ -48,7 +48,7 @@
                 </div>
               <% } else if (adotado.origem) { %>
                 <div class="card-footer text-muted small">
-                    História compartilhada em: <%= new Date(adotado.origem).toLocaleDateString('pt-BR') %>
+                    História compartilhada em: <%= (() => { const d = new Date(adotado.origem); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR') : ''; })() %>
                 </div>
               <% } %>
             </div>

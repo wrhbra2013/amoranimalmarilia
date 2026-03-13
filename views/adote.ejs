@@ -71,7 +71,7 @@
                          <% if (adocao.origem) { %>
                          <div class="pet-date">
                              <i class="fas fa-calendar-alt me-1"></i>
-                             <%= new Date(adocao.origem).toLocaleDateString('pt-BR') %>
+                              <%= adocao.origem ? (() => { const d = new Date(adocao.origem); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR') : ''; })() : '' %>
                          </div>
                          <% } %>
                      </div>

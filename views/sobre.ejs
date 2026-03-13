@@ -86,7 +86,7 @@
                              </div>
                              <div class="volunteer-date">
                                  <i class="fas fa-calendar-alt me-1"></i>
-                                 <%= new Date(voluntario.origem).toLocaleDateString('pt-BR') %>
+                                  <%= (() => { const d = new Date(voluntario.origem); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR') : ''; })() %>
                              </div>
                          </div>
                      <% }); %>
