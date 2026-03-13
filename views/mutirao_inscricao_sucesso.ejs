@@ -14,11 +14,16 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Ticket(s):</strong> 
-                        <span class="text-danger fw-bold" style="font-size: 1.5rem; border: 2px solid #dc3545; padding: 5px 15px; border-radius: 5px;">
-                            <%= pets.map(p => p.ticket).filter(t => t).join(' & ') || inscricao.ticket %>
-                        </span>
-                    </p>
+                    <p><strong>Ticket(s) de Responsabilidade:</strong></p>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <% pets.forEach(function(pet) { %>
+                            <a href="/castracao/mutirao/termo/<%= pet.ticket %>" target="_blank" class="text-decoration-none">
+                                <span class="badge bg-danger" style="font-size: 1.3rem; padding: 8px 15px; border-radius: 5px;">
+                                    <i class="bi bi-ticket-perforated me-1"></i><%= pet.ticket %>
+                                </span>
+                            </a>
+                        <% }); %>
+                    </div>
                     <p><strong>Responsável:</strong> <%= inscricao.nome_responsavel %></p>
                     <p><strong>Contato:</strong> <%= inscricao.contato %></p>
                     <% if (inscricao.localidades) { %>
@@ -49,6 +54,7 @@
                             <th>Peso</th>
                             <th>Vacinado</th>
                             <th>Medicamento</th>
+                            <th>Termo</th>
                         </tr>
                     </thead>
                     <tbody style="background-color: #000; color: #fff;">
@@ -62,6 +68,11 @@
                                 <td><%= pet.peso || '-' %></td>
                                 <td><%= pet.vacinado ? 'Sim' : 'Não' %></td>
                                 <td><%= pet.medicamento ? pet.medicamento : '-' %></td>
+                                <td>
+                                    <a href="/castracao/mutirao/termo/<%= pet.ticket %>" class="btn btn-sm btn-outline-light" target="_blank">
+                                        <i class="bi bi-file-earmark-text"></i> Ver
+                                    </a>
+                                </td>
                             </tr>
                         <% }); %>
                     </tbody>
@@ -86,7 +97,7 @@
 
 <!-- Modal de Sucesso -->
 <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title"><i class="bi bi-check-circle-fill me-2"></i>Castração Registrada</h5>
@@ -94,8 +105,15 @@
             </div>
             <div class="modal-body text-center">
                 <p class="lead">Sua inscrição foi realizada com sucesso!</p>
-                <p><strong>Ticket(s):</strong> <span class="text-danger fw-bold" style="font-size: 1.5rem; border: 2px solid #dc3545; padding: 5px 15px; border-radius: 5px; display: inline-block;"><%= pets.map(p => p.ticket).filter(t => t).join(' & ') || inscricao.ticket %></span></p>
-                <p class="text-muted"><%= pets.length %> pet(s) cadastrado(s)</p>
+                <p><strong>Ticket(s) de Responsabilidade:</strong></p>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                    <% pets.forEach(function(pet) { %>
+                        <span class="badge bg-danger" style="font-size: 1.3rem; padding: 8px 15px; border-radius: 5px;">
+                            <i class="bi bi-ticket-perforated me-1"></i><%= pet.ticket %>
+                        </span>
+                    <% }); %>
+                </div>
+                <p class="text-muted"><%= pets.length %> pet(s) cadastrado(s) - Cada pet possui seu ticket de responsabilidade.</p>
             </div>
             <div class="modal-footer justify-content-center">
                 <a href="/castracao/mutirao-inscricao/comprovante/<%= inscricao.id %>" class="btn btn-primary" target="_blank">

@@ -622,19 +622,22 @@
  /* ==========================================================================
     3. Layout Elements (Header, Nav, Footer, Container)
     ========================================================================== */
- header {
-   text-align: center;
-   margin-bottom: 30px;
- }
- .main-header-controls {
-   margin: 0px auto;
-   margin-top:30px;
-  
-   background-color: var(--bg-color);   
-   /* Use body background or a specific header bg */
-   
-   
- }
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    max-width: 100%;
+    overflow: hidden;
+  }
+.main-header-controls {
+    margin: 0px auto;
+    margin-top:30px;
+    max-width: 100%;
+    overflow: hidden;
+    background-color: var(--bg-color);   
+    /* Use body background or a specific header bg */
+    
+    
+  }
  .main-header-controls .logo {
    /* Styles for your logo/site title area */
    display: flex;
@@ -687,16 +690,19 @@ nav.main-nav {
    text-decoration: var(--link-hover-decoration);
  }
  
- .nav-container { /* Specific for header logo/text area */
-   display: flex;
-   flex-direction: column;
-   align-items: center; /* Center items horizontally */
- }
- .nav-container img {  
-   height: auto;  
-   width: auto; /* Let image size naturally or set a max-width */
-   margin-bottom: 0.5rem; /* Space between image and text */
- }
+.nav-container { /* Specific for header logo/text area */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center items horizontally */
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .nav-container img {  
+    height: auto;  
+    width: auto; /* Let image size naturally or set a max-width */
+    max-width: 100%;
+    margin-bottom: 0.5rem; /* Space between image and text */
+  }
  .nav-container span {
    font-weight: bold;
    font-size: larger;
@@ -1127,27 +1133,32 @@ ul.list-checked li::before {
     Override only if necessary. */
  
  /* --- Cookie Consent Banner --- */
- .cookie-consent-banner {
-   position: fixed;
-   bottom: 0;
-   left: 0;
-   width: 100%;
-  background-color: rgba(15, 75, 58, 0.92); /* darkened nav teal, legível */
-   color: white;
-   padding: 15px;
-   text-align: center;
-   z-index: 1000;
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   gap: 15px;
- }
- .cookie-consent-banner p {
-   margin: 0;
-   flex-grow: 1;
-   text-align: left;
-   color: white; /* Ensure text is white on dark background */
- }
+.cookie-consent-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+   background-color: rgba(15, 75, 58, 0.92); /* darkened nav teal, legível */
+    color: white;
+    padding: 15px;
+    text-align: center;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    box-sizing: border-box;
+  }
+.cookie-consent-banner p {
+    margin: 0;
+    flex-grow: 1;
+    text-align: left;
+    color: white; /* Ensure text is white on dark background */
+    word-wrap: break-word;
+    word-break: break-word;
+  }
   .cookie-consent-banner button { /* Style for the accept button */
     padding: 8px 15px;
     cursor: pointer;
@@ -1162,9 +1173,11 @@ ul.list-checked li::before {
     .cookie-consent-banner {
       padding: 10px 15px;
       gap: 10px;
+      flex-wrap: wrap;
     }
     .cookie-consent-banner p {
       font-size: 0.9em;
+      word-wrap: break-word;
     }
     .cookie-consent-banner button {
       padding: 6px 10px;
@@ -1176,10 +1189,13 @@ ul.list-checked li::before {
     .cookie-consent-banner {
       padding: 8px 12px;
       gap: 8px;
+      flex-direction: column;
     }
     .cookie-consent-banner p {
       font-size: 0.85em;
       margin-bottom: 8px;
+      word-wrap: break-word;
+      text-align: center;
     }
     .cookie-consent-banner button {
       padding: 5px 8px;

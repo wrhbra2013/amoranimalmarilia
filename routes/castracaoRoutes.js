@@ -62,7 +62,21 @@ router.get('/sucesso/:ticket', async (req, res) => {
             req.flash('error', 'Castração não encontrada.');
             return res.redirect('/castracao');
         }
-        res.render('castracao_sucesso', { castracao: result[0] });
+        
+        const castracao = result[0];
+        
+        // Buscar todos os pets do mesmo responsável (mesmo nome + contato + tipo)
+        // Isso agrupa todos os pets de uma mesma inscrição
+        const allPets = await executeQuery(`
+            SELECT * FROM castracao 
+            WHERE nome = $1 AND contato = $2 AND tipo = $3
+            ORDER BY ticket ASC
+        `, [castracao.nome, castracao.contato, castracao.tipo]);
+        
+        res.render('castracao_sucesso', { 
+            castracao: castracao,
+            allPets: allPets
+        });
     } catch (error) {
         console.error('[castracaoRoutes GET /sucesso/:ticket] Erro:', error);
         req.flash('error', 'Erro ao carregar dados.');
@@ -89,6 +103,13 @@ router.get('/comprovante/:ticket', async (req, res) => {
         
         const castracao = result[0];
         
+        // Buscar todos os pets do mesmo responsável
+        const allPets = await executeQuery(`
+            SELECT * FROM castracao 
+            WHERE nome = $1 AND contato = $2 AND tipo = $3
+            ORDER BY ticket ASC
+        `, [castracao.nome, castracao.contato, castracao.tipo]);
+        
         const fontDescriptors = {
             Roboto: {
                 normal: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Regular.ttf'),
@@ -105,6 +126,9 @@ router.get('/comprovante/:ticket', async (req, res) => {
         const logoPath = path.join(__dirname, '..', 'static', 'css', 'imagem', 'ong.jpg');
         const emitDate = new Date().toLocaleDateString('pt-BR');
         const emitTime = new Date().toLocaleTimeString('pt-BR');
+        
+        // Gerar lista de tickets
+        const ticketsList = allPets.map(p => p.ticket).join(', ');
         
         const docDefinition = {
             pageSize: 'A4',
@@ -151,7 +175,7 @@ router.get('/comprovante/:ticket', async (req, res) => {
                 }
             },
             content: [
-                { text: `TICKET: ${castracao.ticket}`, style: 'ticket', alignment: 'center', margin: [0, 20, 0, 20] },
+                { text: `TICKET(S): ${ticketsList}`, style: 'ticket', alignment: 'center', margin: [0, 20, 0, 20] },
                 { text: 'DADOS DO RESPONSÁVEL', style: 'subHeader', margin: [0, 0, 0, 5] },
                 {
                     table: { widths: ['*', '*'], body: [
@@ -161,24 +185,33 @@ router.get('/comprovante/:ticket', async (req, res) => {
                         ...(castracao.locality ? [[{ text: 'Localidade:', style: 'label' }, { text: castracao.locality, style: 'value' }]] : [])
                     ]}, layout: 'lightHorizontalPadding', margin: [0, 0, 0, 15]
                 },
-                { text: 'DADOS DO PET', style: 'subHeader', margin: [0, 10, 0, 5] },
+                { text: 'DADOS DOS PETS (' + allPets.length + ')', style: 'subHeader', margin: [0, 10, 0, 5] },
                 {
                     table: {
-                        widths: ['*', '*', '*', '*'],
-                        body: [
-                            [
-                                { text: 'Nome', style: 'tableHeader' },
-                                { text: 'Espécie', style: 'tableHeader' },
-                                { text: 'Porte', style: 'tableHeader' },
-                                { text: 'Idade', style: 'tableHeader' }
-                            ],
-                            [
-                                { text: castracao.nome_pet || '-', style: 'tableCell' },
-                                { text: castracao.especie ? (castracao.especie.charAt(0).toUpperCase() + castracao.especie.slice(1)) : '-', style: 'tableCell' },
-                                { text: castracao.porte || '-', style: 'tableCell' },
-                                { text: castracao.idade ? castracao.idade + ' anos' : '-', style: 'tableCell' }
-                            ]
-                        ]
+                        widths: ['*', '*', '*', '*', '*', '*'],
+                        body: (function() {
+                            const body = [
+                                [
+                                    { text: 'Ticket', style: 'tableHeader' },
+                                    { text: 'Nome', style: 'tableHeader' },
+                                    { text: 'Espécie', style: 'tableHeader' },
+                                    { text: 'Sexo', style: 'tableHeader' },
+                                    { text: 'Porte', style: 'tableHeader' },
+                                    { text: 'Idade', style: 'tableHeader' }
+                                ]
+                            ];
+                            allPets.forEach(function(pet) {
+                                body.push([
+                                    { text: pet.ticket || '-', style: 'tableCell', bold: true },
+                                    { text: pet.nome_pet || '-', style: 'tableCell' },
+                                    { text: pet.especie ? (pet.especie.charAt(0).toUpperCase() + pet.especie.slice(1)) : '-', style: 'tableCell' },
+                                    { text: pet.sexo ? (pet.sexo.charAt(0).toUpperCase() + pet.sexo.slice(1)) : '-', style: 'tableCell' },
+                                    { text: pet.porte || '-', style: 'tableCell' },
+                                    { text: pet.idade ? pet.idade + ' anos' : '-', style: 'tableCell' }
+                                ]);
+                            });
+                            return body;
+                        })()
                     },
                     layout: {
                         hLineWidth: function() { return 0.5; },
@@ -197,7 +230,8 @@ router.get('/comprovante/:ticket', async (req, res) => {
                         [{ text: 'Status:', style: 'label' }, { text: castracao.status || 'PENDENTE', style: 'value' }]
                     ]}, layout: 'lightHorizontalPadding', margin: [0, 0, 0, 15]
                 },
-                { text: 'Guarde este comprovante para apresentação no dia da castração.', style: 'footer', alignment: 'center', margin: [0, 20, 0, 0] }
+                { text: 'IMPORTANTE: Cada pet possui seu próprio ticket de responsabilidade.', style: 'footer', alignment: 'center', margin: [0, 20, 0, 5] },
+                { text: 'Guarde este comprovante para apresentação no dia da castração.', style: 'footer', alignment: 'center', margin: [0, 0, 0, 0] }
             ],
             styles: {
                 headerTitle: {
@@ -265,6 +299,212 @@ router.get('/comprovante/:ticket', async (req, res) => {
     } catch (error) {
         console.error('[castracaoRoutes GET /comprovante/:ticket] Erro:', error);
         req.flash('error', 'Erro ao gerar comprovante.');
+        res.redirect('/castracao');
+    }
+});
+
+// Rota para gerar termo de responsabilidade individual por pet
+router.get('/termo/:ticket', async (req, res) => {
+    const { ticket } = req.params;
+    const PdfPrinter = require('pdfmake');
+    
+    try {
+        const result = await executeQuery(`
+            SELECT c.*, cl.endereco as clinica_endereco 
+            FROM castracao c 
+            LEFT JOIN clinicas cl ON c.clinica = cl.nome 
+            WHERE c.ticket = $1
+        `, [ticket]);
+        
+        if (!result || result.length === 0) {
+            req.flash('error', 'Castração não encontrada.');
+            return res.redirect('/castracao');
+        }
+        
+        const castracao = result[0];
+        
+        const fontDescriptors = {
+            Roboto: {
+                normal: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Regular.ttf'),
+                bold: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Medium.ttf'),
+                italics: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Italic.ttf'),
+                bolditalics: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-MediumItalic.ttf')
+            }
+        };
+        
+        const printer = new PdfPrinter(fontDescriptors);
+        
+        const logoPath = path.join(__dirname, '..', 'static', 'css', 'imagem', 'ong.jpg');
+        
+        const tipoLabel = castracao.tipo === 'mutirao' ? 'Mutirão' : (castracao.tipo === 'pets_rua' ? 'Pet de Rua' : 'Baixo Custo');
+        
+        const docDefinition = {
+            pageSize: 'A4',
+            pageOrientation: 'portrait',
+            pageMargins: [40, 80, 40, 50],
+            header: {
+                margin: [20, 10, 20, 0],
+                table: {
+                    widths: [70, '*', 140],
+                    body: [
+                        [{
+                            image: logoPath,
+                            width: 60,
+                            alignment: 'center',
+                            margin: [0, 2, 0, 2]
+                        }, {
+                            stack: [{
+                                text: 'ONG Amor Animal Marilia',
+                                style: 'headerTitle',
+                                alignment: 'center'
+                            }, {
+                                text: 'Termo de Responsabilidade - Castração',
+                                style: 'headerSubtitle',
+                                alignment: 'center'
+                            }],
+                            margin: [0, 5, 0, 0]
+                        }, {
+                            text: 'Rua Pascoal Eugenio Brasini, 701\nJd. Eldorado\nMarília - SP\nhttps://amoranimal.ong.br',
+                            style: 'addressHeader',
+                            alignment: 'right',
+                            margin: [0, 5, 5, 0]
+                        }]
+                    ]
+                },
+                layout: {
+                    hLineWidth: function() { return 0.5; },
+                    vLineWidth: function() { return 0.5; },
+                    hLineColor: function() { return '#cccccc'; },
+                    vLineColor: function() { return '#cccccc'; }
+                }
+            },
+            content: [
+                { text: `TICKET: ${castracao.ticket}`, style: 'ticket', alignment: 'center', margin: [0, 20, 0, 20] },
+                { text: 'DADOS DO RESPONSÁVEL', style: 'subHeader', margin: [0, 0, 0, 5] },
+                {
+                    table: { widths: ['*', '*'], body: [
+                        [{ text: 'Nome:', style: 'label' }, { text: castracao.nome || '-', style: 'value' }],
+                        [{ text: 'Contato:', style: 'label' }, { text: castracao.contato || '-', style: 'value' }],
+                        [{ text: 'WhatsApp:', style: 'label' }, { text: castracao.whatsapp || '-', style: 'value' }],
+                        ...(castracao.locality ? [[{ text: 'Localidade:', style: 'label' }, { text: castracao.locality, style: 'value' }]] : [])
+                    ]}, layout: 'lightHorizontalPadding', margin: [0, 0, 0, 15]
+                },
+                { text: 'DADOS DO PET', style: 'subHeader', margin: [0, 10, 0, 5] },
+                {
+                    table: {
+                        widths: ['*', '*', '*', '*', '*', '*'],
+                        body: [
+                            [
+                                { text: 'Nome', style: 'tableHeader' },
+                                { text: 'Espécie', style: 'tableHeader' },
+                                { text: 'Sexo', style: 'tableHeader' },
+                                { text: 'Porte', style: 'tableHeader' },
+                                { text: 'Idade', style: 'tableHeader' },
+                                { text: 'Tipo', style: 'tableHeader' }
+                            ],
+                            [
+                                { text: castracao.nome_pet || '-', style: 'tableCell' },
+                                { text: castracao.especie ? (castracao.especie.charAt(0).toUpperCase() + castracao.especie.slice(1)) : '-', style: 'tableCell' },
+                                { text: castracao.sexo ? (castracao.sexo.charAt(0).toUpperCase() + castracao.sexo.slice(1)) : '-', style: 'tableCell' },
+                                { text: castracao.porte || '-', style: 'tableCell' },
+                                { text: castracao.idade ? castracao.idade + ' anos' : '-', style: 'tableCell' },
+                                { text: tipoLabel, style: 'tableCell' }
+                            ]
+                        ]
+                    },
+                    layout: {
+                        hLineWidth: function() { return 0.5; },
+                        vLineWidth: function() { return 0.5; },
+                        hLineColor: function() { return '#cccccc'; },
+                        vLineColor: function() { return '#cccccc'; }
+                    },
+                    margin: [0, 0, 0, 20]
+                },
+                { text: 'TERMO DE RESPONSABILIDADE', style: 'header', alignment: 'center', margin: [0, 20, 0, 20] },
+                { text: `Eu, ${castracao.nome || 'Não informado'}, portador(a) do telefone ${castracao.contato || 'Não informado'}, declaro que sou o(a) responsável pelo animal ${castracao.nome_pet || 'Não informado'} (Ticket: ${castracao.ticket}), e que:\n\n1. Estou ciente das obrigações de pré e pós-operatório fornecidas pela equipe veterinária;\n2. O animal está em boas condições de saúde para o procedimento;\n3. Farei o jejum solicitado pela clínica;\n4. Retornarei no dia indicado para verificação pós-cirúrgica se necessário;\n5. Usarei colar elizabetano ou roupa cirúrgica conforme orientação;\n6. Estou ciente que qualquer intercorrência será de minha inteira responsabilidade.`, style: 'value', margin: [0, 0, 0, 20] },
+                { text: 'Declaro estar ciente de que é direito da equipe médica veterinária suspender a realização do procedimento cirúrgico caso seja identificado algum fator impeditivo.', style: 'value', margin: [0, 0, 0, 10] },
+                { text: 'Por expressão da verdade, firmo o presente.', style: 'value', margin: [0, 0, 0, 30] },
+                { text: 'Marília, ' + new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
+                {
+                    table: {
+                        widths: ['*', '*'],
+                        body: [
+                            [
+                                { text: '', border: [false, true, false, false], margin: [20, 20, 20, 0] },
+                                { text: '', border: [false, true, false, false], margin: [20, 20, 20, 0] }
+                            ],
+                            [
+                                { text: 'Médico Veterinário Responsável', alignment: 'center', margin: [0, 5, 0, 0], fontSize: 8 },
+                                { text: 'Assinatura do Proprietário(a)', alignment: 'center', margin: [0, 5, 0, 0], fontSize: 8 }
+                            ]
+                        ]
+                    },
+                    layout: 'noBorders',
+                    margin: [0, 0, 0, 20]
+                }
+            ],
+            styles: {
+                headerTitle: {
+                    fontSize: 14,
+                    bold: true,
+                    color: '#0066CC'
+                },
+                headerSubtitle: {
+                    fontSize: 11,
+                    color: '#333333'
+                },
+                addressHeader: {
+                    fontSize: 8,
+                    color: '#555555'
+                },
+                ticket: {
+                    fontSize: 24,
+                    bold: true,
+                    color: '#cc0000',
+                    background: '#f5f5f5'
+                },
+                header: {
+                    fontSize: 14,
+                    bold: true,
+                    color: '#0066CC'
+                },
+                subHeader: {
+                    fontSize: 12,
+                    bold: true,
+                    color: '#0066CC',
+                    margin: [0, 10, 0, 5]
+                },
+                label: {
+                    fontSize: 10,
+                    bold: true,
+                    color: '#666666'
+                },
+                value: {
+                    fontSize: 10,
+                    color: '#333333'
+                },
+                tableHeader: {
+                    fontSize: 8,
+                    bold: true,
+                    color: '#ffffff',
+                    fillColor: '#0066CC'
+                },
+                tableCell: {
+                    fontSize: 8,
+                    color: '#333333'
+                }
+            }
+        };
+        
+        const pdfDoc = printer.createPdfKitDocument(docDefinition);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=termo_responsabilidade_${ticket}.pdf`);
+        pdfDoc.pipe(res);
+        pdfDoc.end();
+        
+    } catch (error) {
+        console.error('[castracaoRoutes GET /termo/:ticket] Erro:', error);
+        req.flash('error', 'Erro ao gerar termo de responsabilidade.');
         res.redirect('/castracao');
     }
 });
@@ -931,6 +1171,211 @@ router.get('/mutirao-inscricao/comprovante/:id', async (req, res) => {
     } catch (error) {
         console.error('[castracaoRoutes GET /mutirao-inscricao/comprovante] Erro:', error);
         req.flash('error', 'Erro ao gerar comprovante.');
+        res.redirect('/castracao/calendario-mutirao');
+    }
+});
+
+// Rota para gerar termo de responsabilidade individual do mutirão por ticket do pet
+router.get('/mutirao/termo/:ticket', async (req, res) => {
+    const { ticket } = req.params;
+    const PdfPrinter = require('pdfmake');
+    
+    try {
+        // Buscar dados do pet e da inscrição
+        const result = await executeQuery(`
+            SELECT mp.*, mi.nome_responsavel, mi.cpf, mi.contato, mi.endereco, mi.numero, mi.complemento, 
+                   mi.bairro, mi.cidade, mi.estado, mi.cep,
+                   cm.data_evento, cm.clinica, cm.endereco as clinica_endereco
+            FROM mutirao_pet mp
+            JOIN mutirao_inscricao mi ON mp.mutirao_inscricao_id = mi.id
+            JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
+            WHERE mp.ticket = $1
+        `, [ticket]);
+        
+        if (!result || result.length === 0) {
+            req.flash('error', 'Pet não encontrado.');
+            return res.redirect('/castracao/calendario-mutirao');
+        }
+        
+        const pet = result[0];
+        
+        const fontDescriptors = {
+            Roboto: {
+                normal: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Regular.ttf'),
+                bold: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Medium.ttf'),
+                italics: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-Italic.ttf'),
+                bolditalics: path.join(__dirname, '..', 'static', 'fonts', 'Roboto-MediumItalic.ttf')
+            }
+        };
+        
+        const printer = new PdfPrinter(fontDescriptors);
+        const logoPath = path.join(__dirname, '..', 'static', 'css', 'imagem', 'ong.jpg');
+        
+        // Montar endereço
+        var enderecoCompleto = '';
+        if (pet.endereco) {
+            enderecoCompleto += pet.endereco;
+            if (pet.numero) enderecoCompleto += ', ' + pet.numero;
+            if (pet.complemento) enderecoCompleto += ' - ' + pet.complemento;
+        }
+        
+        var enderecoCep = '';
+        if (pet.cep) {
+            enderecoCep = pet.cep;
+            if (pet.bairro) enderecoCep += ' - ' + pet.bairro;
+            if (pet.cidade) enderecoCep += ' - ' + pet.cidade;
+            if (pet.estado) enderecoCep += '/' + pet.estado;
+        }
+        
+        const docDefinition = {
+            pageSize: 'A4',
+            pageOrientation: 'portrait',
+            pageMargins: [40, 80, 40, 50],
+            header: {
+                margin: [20, 10, 20, 0],
+                table: {
+                    widths: [70, '*', 140],
+                    body: [
+                        [{
+                            image: logoPath,
+                            width: 60,
+                            alignment: 'center',
+                            margin: [0, 2, 0, 2]
+                        }, {
+                            stack: [{
+                                text: 'ONG Amor Animal Marilia',
+                                style: 'headerTitle',
+                                alignment: 'center'
+                            }, {
+                                text: 'Termo de Responsabilidade - Mutirão de Castração',
+                                style: 'headerSubtitle',
+                                alignment: 'center'
+                            }],
+                            margin: [0, 5, 0, 0]
+                        }, {
+                            text: 'Rua Pascoal Eugenio Brasini, 701\nJd. Eldorado\nMarília - SP\nhttps://amoranimal.ong.br',
+                            style: 'addressHeader',
+                            alignment: 'right',
+                            margin: [0, 5, 5, 0]
+                        }]
+                    ]
+                },
+                layout: {
+                    hLineWidth: function() { return 0.5; },
+                    vLineWidth: function() { return 0.5; },
+                    hLineColor: function() { return '#cccccc'; },
+                    vLineColor: function() { return '#cccccc'; }
+                }
+            },
+            content: [
+                { text: `TICKET: ${pet.ticket}`, style: 'ticket', alignment: 'center', margin: [0, 20, 0, 20] },
+                { text: 'DADOS DO RESPONSÁVEL', style: 'subHeader', margin: [0, 0, 0, 5] },
+                {
+                    table: { widths: ['*', '*'], body: [
+                        [{ text: 'Nome:', style: 'label' }, { text: pet.nome_responsavel || '-', style: 'value' }],
+                        [{ text: 'CPF:', style: 'label' }, { text: pet.cpf || 'Não informado', style: 'value' }],
+                        [{ text: 'Contato:', style: 'label' }, { text: pet.contato || '-', style: 'value' }],
+                        [{ text: 'CEP:', style: 'label' }, { text: enderecoCep || 'Não informado', style: 'value' }],
+                        [{ text: 'Endereço:', style: 'label' }, { text: enderecoCompleto || 'Não informado', style: 'value' }]
+                    ]}, layout: 'lightHorizontalPadding', margin: [0, 0, 0, 15]
+                },
+                { text: 'DADOS DO PET', style: 'subHeader', margin: [0, 10, 0, 5] },
+                {
+                    table: {
+                        widths: ['*', '*', '*', '*', '*', '*'],
+                        body: [
+                            [
+                                { text: 'Nome', style: 'tableHeader' },
+                                { text: 'Espécie', style: 'tableHeader' },
+                                { text: 'Sexo', style: 'tableHeader' },
+                                { text: 'Idade', style: 'tableHeader' },
+                                { text: 'Peso', style: 'tableHeader' },
+                                { text: 'Vacinado', style: 'tableHeader' }
+                            ],
+                            [
+                                { text: pet.nome || '-', style: 'tableCell' },
+                                { text: pet.especie === 'gato' ? 'Gato' : 'Cachorro', style: 'tableCell' },
+                                { text: pet.sexo === 'macho' ? 'Macho' : 'Fêmea', style: 'tableCell' },
+                                { text: pet.idade || '-', style: 'tableCell' },
+                                { text: pet.peso || '-', style: 'tableCell' },
+                                { text: pet.vacinado ? 'Sim' : 'Não', style: 'tableCell' }
+                            ]
+                        ]
+                    },
+                    layout: {
+                        hLineWidth: function() { return 0.5; },
+                        vLineWidth: function() { return 0.5; },
+                        hLineColor: function() { return '#cccccc'; },
+                        vLineColor: function() { return '#cccccc'; }
+                    },
+                    margin: [0, 0, 0, 20]
+                },
+                { text: 'DADOS DO MUTIRÃO', style: 'subHeader', margin: [0, 10, 0, 5] },
+                {
+                    table: { widths: ['*', '*'], body: [
+                        [{ text: 'Data:', style: 'label' }, { text: pet.data_evento ? new Date(pet.data_evento).toLocaleDateString('pt-BR') : 'Não definida', style: 'value' }],
+                        [{ text: 'Clínica:', style: 'label' }, { text: pet.clinica || '-', style: 'value' }]
+                    ]}, layout: 'lightHorizontalPadding', margin: [0, 0, 0, 20]
+                },
+                { text: 'TERMO DE RESPONSABILIDADE', style: 'header', alignment: 'center', margin: [0, 20, 0, 20] },
+                { text: `Eu, ${pet.nome_responsavel}, CPF ${pet.cpf || 'Não informado'}, residente na ${enderecoCompleto || 'Não informado'}, ${pet.bairro ? 'bairro ' + pet.bairro : ''}, ${pet.cidade || ''}/${pet.estado || ''}, CEP ${pet.cep || 'Não informado'}, telefone ${pet.contato || 'Não informado'}.`, style: 'value', margin: [0, 0, 0, 15] },
+                { text: '1. Por meio deste instrumento, confirmo ciência quanto às obrigações abaixo discriminadas, enquanto proprietário(a) do animal descrito neste termo (Ticket: ' + pet.ticket + ').', style: 'value', margin: [0, 0, 0, 10] },
+                { text: 'Nos últimos 10 dias apresentou alguma alteração de comportamento? (  ) sim (  ) não', style: 'value', margin: [0, 0, 0, 5] },
+                { text: 'Está tendo vômito ou diarreia? (  ) sim (  ) não', style: 'value', margin: [0, 0, 0, 10] },
+                { text: 'O referido animal será contemplado pelo Mutirão de Castração Gratuita da ONG Amor Animal, com cirurgia a ser realizada na Clínica Veterinária É o Bicho, pela Dra. Thais Carvalho Parra CRMV 38659.', style: 'value', margin: [0, 0, 0, 10] },
+                { text: '2. Estar atento(a) e cumprir as orientações de pré e pós-operatório;', style: 'value', margin: [0, 3, 0, 3] },
+                { text: '3. Acatar as orientações pré-operatórias fornecidas pela equipe veterinária;', style: 'value', margin: [0, 0, 0, 3] },
+                { text: '4. Felinas fêmeas deverão retornar após 10 dias para retirada dos pontos;', style: 'value', margin: [0, 0, 0, 3] },
+                { text: '5. É obrigatório o uso de colar elizabetano ou roupa cirúrgica;', style: 'value', margin: [0, 0, 0, 3] },
+                { text: '6. Todos os animais serão medicados no ato da castração, não havendo necessidade de uso de medicação posterior, exceto em casos de dor. Nessa situação recomenda-se administrar 1 gota de dipirona por kg, a cada 8 horas, ou enquanto houver dor ou febre.', style: 'value', margin: [0, 0, 0, 10] },
+                { text: 'Declaro estar ciente de que é direito da equipe médica veterinária suspender a realização do procedimento cirúrgico caso seja identificado algum fator impeditivo, e que a campanha não cobra qualquer tipo de intervenção extra.', style: 'value', margin: [0, 0, 0, 10] },
+                { text: 'Declaro, ainda, estar ciente dos riscos inerentes ao processo de anestesia, bem como de eventuais incompatibilidades orgânicas do animal frente a medicamentos de uso comum.', style: 'value', margin: [0, 0, 0, 10] },
+                { text: 'Declaro e autorizo o procedimento de marcação de orelha no meu gato(a), que se trata de marcação universal para controle populacional.', style: 'value', margin: [0, 0, 0, 10] },
+                { text: 'Qualquer intercorrência que exija atendimento posterior, seja por falha no cumprimento das orientações fornecidas ou por fatores individuais do animal, será de inteira responsabilidade e custeio do(a) proprietário(a).', style: 'value', margin: [0, 0, 0, 10] },
+                { text: 'Para mais informações, entre em contato: (14) 99815-1723 – ONG Amor Animal.', style: 'value', margin: [0, 0, 0, 10] },
+                { text: 'Por expressão da verdade, firmo o presente.', style: 'value', margin: [0, 0, 0, 20] },
+                { text: 'Marília, ' + (pet.data_evento ? new Date(pet.data_evento).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })) + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
+                {
+                    table: {
+                        widths: ['*', '*'],
+                        body: [
+                            [
+                                { text: '', border: [false, true, false, false], margin: [20, 20, 20, 0] },
+                                { text: '', border: [false, true, false, false], margin: [20, 20, 20, 0] }
+                            ],
+                            [
+                                { text: 'Médico Veterinário Responsável', alignment: 'center', margin: [0, 5, 0, 0], fontSize: 8 },
+                                { text: 'Assinatura do Proprietário(a)', alignment: 'center', margin: [0, 5, 0, 0], fontSize: 8 }
+                            ]
+                        ]
+                    },
+                    layout: 'noBorders',
+                    margin: [0, 0, 0, 20]
+                }
+            ],
+            styles: {
+                headerTitle: { fontSize: 14, bold: true, color: '#0066CC' },
+                headerSubtitle: { fontSize: 11, color: '#333333' },
+                addressHeader: { fontSize: 8, color: '#555555' },
+                ticket: { fontSize: 24, bold: true, color: '#cc0000', background: '#f5f5f5' },
+                header: { fontSize: 14, bold: true, color: '#0066CC' },
+                subHeader: { fontSize: 12, bold: true, color: '#0066CC', margin: [0, 10, 0, 5] },
+                label: { fontSize: 10, bold: true, color: '#666666' },
+                value: { fontSize: 10, color: '#333333' },
+                tableHeader: { fontSize: 8, bold: true, color: '#ffffff', fillColor: '#0066CC' },
+                tableCell: { fontSize: 8, color: '#333333' }
+            }
+        };
+        
+        const pdfDoc = printer.createPdfKitDocument(docDefinition);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=termo_responsabilidade_mutirao_${ticket}.pdf`);
+        pdfDoc.pipe(res);
+        pdfDoc.end();
+        
+    } catch (error) {
+        console.error('[castracaoRoutes GET /mutirao/termo/:ticket] Erro:', error);
+        req.flash('error', 'Erro ao gerar termo de responsabilidade.');
         res.redirect('/castracao/calendario-mutirao');
     }
 });

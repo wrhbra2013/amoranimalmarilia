@@ -14,7 +14,22 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Ticket:</strong> <span class="text-danger fw-bold" style="font-size: 2rem; border: 2px solid #dc3545; padding: 5px 15px; border-radius: 5px;"><%= castracao.ticket %></span></p>
+                    <p><strong>Ticket(s) de Responsabilidade:</strong></p>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <% if (allPets && allPets.length > 0) { %>
+                            <% allPets.forEach(function(pet) { %>
+                                <a href="/castracao/termo/<%= pet.ticket %>" target="_blank" class="text-decoration-none">
+                                    <span class="badge bg-danger" style="font-size: 1.5rem; padding: 10px 20px; border-radius: 5px;">
+                                        <i class="bi bi-ticket-perforated me-1"></i><%= pet.ticket %>
+                                    </span>
+                                </a>
+                            <% }); %>
+                        <% } else { %>
+                            <span class="text-danger fw-bold" style="font-size: 2rem; border: 2px solid #dc3545; padding: 5px 15px; border-radius: 5px;">
+                                <%= castracao.ticket %>
+                            </span>
+                        <% } %>
+                    </div>
                     <p><strong>Responsável:</strong> <%= castracao.nome %></p>
                     <p><strong>Contato:</strong> <%= castracao.contato %></p>
                     <% if (castracao.whatsapp) { %>
@@ -34,26 +49,39 @@
             
             <hr>
             
-            <h5>Dados do Pet</h5>
+            <h5>Pets Cadastrados (<%= allPets ? allPets.length : 1 %>)</h5>
             <div class="table-responsive">
                 <table class="table table-striped table-bordered">
                     <thead class="table-dark">
                         <tr>
+                            <th>Ticket</th>
                             <th>Nome</th>
                             <th>Espécie</th>
+                            <th>Sexo</th>
                             <th>Porte</th>
                             <th>Idade</th>
                             <th>Status</th>
+                            <th>Termo</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><strong><%= castracao.nome_pet || '-' %></strong></td>
-                            <td><%= castracao.especie ? (castracao.especie.charAt(0).toUpperCase() + castracao.especie.slice(1)) : '-' %></td>
-                            <td><%= castracao.porte || '-' %></td>
-                            <td><%= castracao.idade || '-' %> anos</td>
-                            <td><span class="badge bg-warning"><%= castracao.status || 'PENDENTE' %></span></td>
-                        </tr>
+                        <% var petsList = allPets && allPets.length > 0 ? allPets : [castracao]; %>
+                        <% petsList.forEach(function(pet) { %>
+                            <tr>
+                                <td><span class="badge bg-danger"><%= pet.ticket %></span></td>
+                                <td><strong><%= pet.nome_pet || '-' %></strong></td>
+                                <td><%= pet.especie ? (pet.especie.charAt(0).toUpperCase() + pet.especie.slice(1)) : '-' %></td>
+                                <td><%= pet.sexo ? (pet.sexo.charAt(0).toUpperCase() + pet.sexo.slice(1)) : '-' %></td>
+                                <td><%= pet.porte || '-' %></td>
+                                <td><%= pet.idade || '-' %> anos</td>
+                                <td><span class="badge bg-warning"><%= pet.status || 'PENDENTE' %></span></td>
+                                <td>
+                                    <a href="/castracao/termo/<%= pet.ticket %>" class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <i class="bi bi-file-earmark-text"></i> Ver
+                                    </a>
+                                </td>
+                            </tr>
+                        <% }); %>
                     </tbody>
                 </table>
             </div>
@@ -70,13 +98,13 @@
 
     <div class="alert alert-info">
         <i class="bi bi-info-circle me-2"></i>
-        <strong>Importante:</strong> Guarde o comprovante (PDF) e apresente-no no dia da castração. Você também pode tirar um print desta tela.
+        <strong>Importante:</strong> Cada pet possui um ticket de responsabilidade único. Guarde o comprovante (PDF) e apresente-no no dia da castração. Você também pode tirar um print desta tela.
     </div>
 </main>
 
 <!-- Modal de Sucesso -->
 <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title"><i class="bi bi-check-circle-fill me-2"></i>Castração Registrada</h5>
@@ -84,8 +112,21 @@
             </div>
             <div class="modal-body text-center">
                 <p class="lead">Sua inscrição foi realizada com sucesso!</p>
-                <p><strong>Ticket:</strong> <span class="text-danger fw-bold" style="font-size: 2rem; border: 2px solid #dc3545; padding: 5px 15px; border-radius: 5px; display: inline-block;"><%= castracao.ticket %></span></p>
-                <p class="text-muted">Guarde seu ticket para apresentar no dia da castração.</p>
+                <p><strong>Ticket(s) de Responsabilidade:</strong></p>
+                <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                    <% if (allPets && allPets.length > 0) { %>
+                        <% allPets.forEach(function(pet) { %>
+                            <span class="badge bg-danger" style="font-size: 1.5rem; padding: 10px 20px; border-radius: 5px;">
+                                <i class="bi bi-ticket-perforated me-1"></i><%= pet.ticket %>
+                            </span>
+                        <% }); %>
+                    <% } else { %>
+                        <span class="text-danger fw-bold" style="font-size: 2rem; border: 2px solid #dc3545; padding: 5px 15px; border-radius: 5px; display: inline-block;">
+                            <%= castracao.ticket %>
+                        </span>
+                    <% } %>
+                </div>
+                <p class="text-muted"><%= allPets ? allPets.length : 1 %> pet(s) cadastrado(s)</p>
             </div>
             <div class="modal-footer justify-content-center">
                 <a href="/castracao/comprovante/<%= castracao.ticket %>" class="btn btn-primary" target="_blank">
