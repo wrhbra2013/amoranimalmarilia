@@ -677,11 +677,11 @@
 .voluntarios-carrossel {
     display: flex;
     gap: 1.5rem;
-    overflow-x: visible;
+    overflow-x: auto;
     padding: 1rem 0;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-    flex-wrap: wrap;
+    align-items: flex-start;
 }
 
 .voluntarios-carrossel::-webkit-scrollbar {
@@ -699,15 +699,15 @@
 }
 
 .voluntario-card {
-    flex: 0 0 auto;
-    min-width: 260px;
+    flex: 0 0 280px;
+    min-width: 280px;
     background: var(--container-bg);
     border-radius: 16px;
     overflow: visible;
     box-shadow: var(--container-shadow);
     transition: all 0.3s ease;
-    width: auto;
-    max-width: none;
+    height: auto;
+    align-self: flex-start;
 }
 
 .voluntario-card:hover {

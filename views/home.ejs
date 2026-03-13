@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <p>Junte-se a nós na missão de-resgatar, cuidar e encontrar lares amorosos para animais abandonados.</p>
         <div style="display: block;">
             <a href="/doacao" class="btn btn-primary">Quero Doar</a>
-            <a href="/adocao" class="btn btn-outline"> Ou Adote</a>
+            <a href="/adocao" class="btn btn-outline">Ou Adote</a>
         </div>
     </div>
 </section>
@@ -457,21 +457,19 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
         <% eventsList.slice(0, 4).forEach(function(event, i) { 
             const imgSrc = event.arquivo ? ('/uploads/eventos/' + event.arquivo) : ('/uploads/home/' + (event.arquivo || 'placeholder-event.jpg'));
             const linkUrl = event.arquivo ? `/eventos/${event.id}` : `/campanha/${event.id}`;
-            const eventDate = event.data_evento ? (typeof event.data_evento === 'string' ? event.data_evento : new Date(event.data_evento).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })) : '';
+            const eventDate = event.data_evento ? new Date(event.data_evento).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
             const hasFotos = event.fotos && event.fotos.length > 0;
         %>
         <div class="event-card-hover">
             <div class="event-info">
-                <a href="/eventos/<%= event.id %>" style="text-decoration: none; color: inherit;">
-                    <h3 class="event-titulo" style="margin-bottom: 10px;"><%= event.titulo %></h3>
-                    <div class="event-meta">
-                        <span><i class="fas fa-calendar-alt"></i> <%= eventDate %></span>
-                        <% if (event.local) { %>
-                        <span><i class="fas fa-map-marker-alt"></i> <%= event.local %></span>
-                        <% } %>
-                    </div>
-                    <p class="event-descricao"><%= event.descricao && event.descricao.trim() ? event.descricao : 'Descrição não disponível.' %></p>
-                </a>
+                <h3 class="event-titulo" style="margin-bottom: 10px;"><%= event.titulo %></h3>
+                <div class="event-meta">
+                    <span><i class="fas fa-calendar-alt"></i> <%= eventDate %></span>
+                    <% if (event.local) { %>
+                    <span><i class="fas fa-map-marker-alt"></i> <%= event.local %></span>
+                    <% } %>
+                </div>
+                <p class="event-descricao"><%= event.descricao && event.descricao.trim() ? event.descricao : 'Descrição não disponível.' %></p>
             </div>
             <div class="event-fotos-area">
                 <% if (hasFotos) { %>
@@ -560,7 +558,7 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                     <td><%= castracao.nome || '-' %></td>
                     <td><span class="badge" style="background: <%= castracao.especie && castracao.especie.toLowerCase().includes('gato') ? '#8b5cf6' : '#3b82f6' %>; color: white;"><%= castracao.especie || '-' %></span></td>
                     <td title="<%= castracao.clinica %>"><%= castracao.clinica ? (castracao.clinica.length > 20 ? castracao.clinica.substring(0, 20) + '...' : castracao.clinica) : '-' %></td>
-                    <td><%= castracao.data_evento ? (typeof castracao.data_evento === 'string' ? castracao.data_evento : new Date(castracao.data_evento).toLocaleDateString('pt-BR')) : 'N/A' %></td>
+                    <td><%= castracao.data_evento ? new Date(castracao.data_evento).toLocaleDateString('pt-BR') : 'N/A' %></td>
                     <td>
                         <% if (isAttended) { %>
                             <span class="badge" style="background: #10b981; color: white;">✓ Atendido</span>
@@ -645,7 +643,7 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                     <% } %>
                     <% if (v.mensagem) { %>
                     <div class="voluntario-card-message">
-                        "<%= v.mensagem %>"
+                        "<%= v.mensagem.length > 80 ? v.mensagem.slice(0, 77) + '...' : v.mensagem %>"
                     </div>
                     <% } %>
                 </div>
@@ -654,7 +652,7 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
         </div>
         
         <div class="text-center mt-4">
-            <a href="/doacao/voluntario" class="button" style="display: inline-block; padding: 10px 20px; background-color: var(--nav-bg, #0d9488); color: white; border-radius: 5px; font-weight: bold;">Ver Todos os Voluntários</a>
+            <a href="/doacao/voluntario" class="button">Ver Todos os Voluntários</a>
         </div>
     </div>
 </section>
