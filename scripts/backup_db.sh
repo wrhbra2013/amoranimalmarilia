@@ -3,10 +3,32 @@ set -euo pipefail
 
 # Simple PostgreSQL backup script for Amor Animal
 # Places backups under ../amoranimal_uploads/backups by default
+# Usage:
+#   ./backup_db.sh           - Run backup now
+#   ./backup_db.sh --cron    - Install cron job (runs every 3 days at 3am)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_PATH="$SCRIPT_DIR/backup_db.sh"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BACKUP_DIR="${BACKUP_DIR:-$PROJECT_DIR/../amoranimal_uploads/backups}"
+
+# Install cron job
+if [[ "${1:-}" == "--cron" ]]; then
+    echo "Installing cron job to run every 3 days at 3am..."
+    
+    # Remove existing backup cron entries
+    crontab -l 2>/dev/null | grep -v "backup_db.sh" > /tmp/current_cron || true
+    
+    # Add new cron entry (every 3 days at 3:00 AM)
+    echo "0 3 */3 * * PGPASSWORD=\${PGPASSWORD:-} $SCRIPT_PATH" >> /tmp/current_cron
+    
+    crontab /tmp/current_cron
+    rm /tmp/current_cron
+    
+    echo "Cron job installed:"
+    crontab -l | grep backup
+    exit 0
+fi
 
 mkdir -p "$BACKUP_DIR"
 chmod 750 "$BACKUP_DIR" || true
