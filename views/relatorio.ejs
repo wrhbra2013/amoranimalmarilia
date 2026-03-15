@@ -4,8 +4,56 @@
 <%- include("_footer") -%>
 
 <div class="relatorio-container">
+      <!-- Painel de Banco de Dados (collapsible) -->
+      <details class="db-panel-details">
+          <summary class="db-panel-title">
+              <i class="bi bi-hdd-stack me-2"></i>Painel do Banco de Dados
+              <span class="warning-text">⚠️ Altere com cuidado, risco de perda de dados</span>
+              <span class="db-panel-arrow">▼</span>
+          </summary>
+          
+          <div class="db-panel-content">
+              <div class="db-panel-actions">
+                  <button type="button" class="btn-export btn-db" onclick="runBackup('run')">
+                      <i class="bi bi-database-check"></i>
+                      Criar Backup
+                  </button>
+                  <button type="button" class="btn-export btn-db btn-secondary" onclick="runBackup('cron')">
+                      <i class="bi bi-clock-history"></i>
+                      Agendar Backup (Cron)
+                  </button>
+                  <button type="button" class="btn-export btn-db btn-warning" onclick="showMaintenanceMenu()">
+                      <i class="bi bi-tools"></i>
+                      Manutenção
+                  </button>
+              </div>
+              
+              <div id="maintenanceMenu" class="maintenance-menu" style="display: none;">
+                  <div class="menu-options">
+                      <button type="button" class="menu-option" onclick="runMaintenance('1')">1) Fluxo Completo</button>
+                      <button type="button" class="menu-option" onclick="runMaintenance('2')">2) Gerenciar Repositório</button>
+                      <button type="button" class="menu-option" onclick="runMaintenance('3')">3) Atualizar Código (Git)</button>
+                      <button type="button" class="menu-option" onclick="runMaintenance('4')">4) Instalar Dependências</button>
+                      <button type="button" class="menu-option" onclick="runMaintenance('5')">5) Reiniciar App (PM2)</button>
+                      <button type="button" class="menu-option" onclick="runMaintenance('6')">6) Validar Nginx</button>
+                      <button type="button" class="menu-option" onclick="runMaintenance('7')">7) Verificar Certificado</button>
+                      <button type="button" class="menu-option" onclick="runMaintenance('8')">8) Renovar Certificado</button>
+                      <button type="button" class="menu-option" onclick="runMaintenance('9')">9) Ver Logs</button>
+                  </div>
+              </div>
+              
+              <div class="log-container">
+                  <label for="logOutput" class="form-label"><i class="bi bi-terminal me-2"></i>Logs:</label>
+                  <textarea id="logOutput" class="form-control log-textarea" readonly placeholder="Aguardando ação..."></textarea>
+                  <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="clearLog()">
+                      <i class="bi bi-trash"></i> Limpar
+                  </button>
+              </div>
+          </div>
+      </details>
+
       <!-- Seletor de Tabelas do Banco de Dados -->
-      <div class="selector-section">
+      <div class="selector-section mt-4">
           <h2 class="mb-3"><i class="bi bi-database me-2"></i>Selecionar Tabela</h2>
           <p class="text-muted">Escolha uma tabela do banco de dados para visualizar os dados</p>
           
@@ -22,11 +70,22 @@
                   <% } %>
               </select>
           </div>
-      </div>
+          
+          <div class="mb-3">
+              <label for="backupSelect" class="form-label">Arquivo de Backup:</label>
+              <div class="restore-controls">
+                  <select class="form-select" id="backupSelect" style="flex: 1;">
+                      <option value="">-- Selecione um backup --</option>
+                  </select>
+                  <button type="button" class="btn-export btn-db btn-restore" onclick="restoreTable()">
+                      <i class="bi bi-arrow-counterclockwise"></i>
+                      Restaurar
+                  </button>
+              </div>
+          </div>
 
-      
-     <!-- Seção de Dados -->
-     <% if (typeof tabela !== 'undefined' && tabela) { %>
+      <!-- Seção de Dados -->
+      <% if (typeof tabela !== 'undefined' && tabela) { %>
          <div class="data-section">
              <div class="section-header">
                  <div>

@@ -183,7 +183,144 @@ async function fetchReportData(tabela) {
       todasTabelas: allTables
     });
   });
- 
+
+  router.post('/backup', isAdmin, async (req, res) => {
+    const action = req.query.action || req.body.action;
+    console.log('[backup] action received:', action, 'query:', req.query, 'body:', req.body);
+    const scriptPath = path.join(__dirname, '..', 'scripts', 'backup_db.sh');
+    
+    const env = {
+      ...process.env,
+      PGDATABASE: process.env.DB_DATABASE || 'espelho',
+      PGHOST: process.env.DB_HOST || 'localhost',
+      PGPORT: process.env.DB_PORT || '5432',
+      PGUSER: process.env.DB_USER || 'postgres',
+      PGPASSWORD: process.env.DB_PASSWORD || 'wander'
+    };
+    
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+    
+    try {
+      let command;
+      if (action === 'run') {
+        command = `bash ${scriptPath}`;
+      } else if (action === 'cron') {
+        command = `bash ${scriptPath} --cron`;
+      } else {
+        console.log('[backup] Invalid action:', action);
+        return res.json({ success: false, log: 'Ação inválida: ' + action });
+      }
+      
+      console.log('[backup] Executing:', command);
+      const { stdout, stderr } = await execAsync(command, { cwd: path.join(__dirname, '..', 'scripts'), env });
+      res.json({ success: true, log: stdout + stderr });
+    } catch (error) {
+      console.log('[backup] Error:', error.message);
+      res.json({ success: false, log: `Erro: ${error.message}\n${error.stderr || ''}` });
+    }
+  });
+
+   router.post('/maintenance', isAdmin, async (req, res) => {
+    const option = req.query.option || req.body.option;
+    const scriptPath = path.join(__dirname, '..', 'scripts', 'control.sh');
+    
+    const optionsMap = {
+      '1': '1',
+      '2': '2',
+      '3': '3',
+      '4': '4',
+      '5': '5',
+      '6': '6',
+      '7': '7',
+      '8': '8',
+      '9': '9'
+    };
+    
+    const selectedOption = optionsMap[option];
+    
+    if (!selectedOption) {
+      return res.json({ success: false, log: 'Opção inválida. Escolha entre 1-9.' });
+    }
+    
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+    
+    try {
+      const command = `echo "${selectedOption}" | bash ${scriptPath}`;
+      const { stdout, stderr } = await execAsync(command, { cwd: path.join(__dirname, '..') });
+      res.json({ success: true, log: stdout + stderr });
+    } catch (error) {
+      res.json({ success: false, log: `Erro: ${error.message}\n${error.stderr || ''}` });
+    }
+   });
+
+   router.post('/restore', isAdmin, async (req, res) => {
+     const tabela = req.query.tabela || req.body.tabela;
+     const backupFile = req.query.backupFile || req.body.backupFile;
+    
+    if (!tabela || !backupFile) {
+      return res.json({ success: false, log: 'Parâmetros inválidos. Informe a tabela e o arquivo de backup.' });
+    }
+    
+    const backupDir = path.join(__dirname, '..', '..', 'amoranimal_uploads', 'backups');
+    const backupPath = path.join(backupDir, backupFile);
+    
+    if (!fsNode.existsSync(backupPath)) {
+      return res.json({ success: false, log: `Arquivo de backup não encontrado: ${backupFile}` });
+    }
+    
+    const env = {
+      ...process.env,
+      PGDATABASE: process.env.DB_DATABASE || 'espelho',
+      PGHOST: process.env.DB_HOST || 'localhost',
+      PGPORT: process.env.DB_PORT || '5432',
+      PGUSER: process.env.DB_USER || 'postgres',
+      PGPASSWORD: process.env.DB_PASSWORD || 'wander'
+    };
+    
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+    
+    try {
+      let log = `Iniciando restauração da tabela '${tabela}'...\n`;
+      log += `Arquivo: ${backupFile}\n\n`;
+      
+      log += `1. Fazendo DROP da tabela '${tabela}'...\n`;
+      await execAsync(`PGPASSWORD=${env.PGPASSWORD} psql -h ${env.PGHOST} -p ${env.PGPORT} -U ${env.PGUSER} -d ${env.PGDATABASE} -c "DROP TABLE IF EXISTS ${tabela};"`, { env });
+      log += `   ✓ Tabela '${tabela}' removida (se existia).\n\n`;
+      
+      log += `2. Restaurando tabela do backup...\n`;
+      const restoreCmd = `PGPASSWORD=${env.PGPASSWORD} pg_restore -h ${env.PGHOST} -p ${env.PGPORT} -U ${env.PGUSER} -d ${env.PGDATABASE} --data-only --table=${tabela} "${backupPath}"`;
+      await execAsync(restoreCmd, { env });
+      log += `   ✓ Dados restaurados com sucesso!\n`;
+      
+      res.json({ success: true, log });
+    } catch (error) {
+      res.json({ success: false, log: `Erro durante restauração: ${error.message}` });
+    }
+   });
+
+   router.get('/backups', isAdmin, async (req, res) => {
+    const backupDir = path.join(__dirname, '..', '..', 'amoranimal_uploads', 'backups');
+    
+    try {
+      const files = await fsPromises.readdir(backupDir);
+      const backupFiles = files
+        .filter(f => f.endsWith('.dump.gz') || f.endsWith('.dump'))
+        .sort()
+        .reverse()
+        .slice(0, 20);
+      
+      res.json({ success: true, files: backupFiles });
+    } catch (error) {
+      res.json({ success: false, files: [], error: error.message });
+    }
+   });
+  
   router.get('/:tabela', isAdmin, async (req, res) => {
     const tabela = req.params.tabela;
     const allTables = await getAllTables();
@@ -674,7 +811,6 @@ tableHeader: {
              } finally {
               client.release();
              }
-            });
-
+             });
  
-  module.exports = router;
+   module.exports = router;
