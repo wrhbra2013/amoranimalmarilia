@@ -241,7 +241,7 @@ async function fetchReportData(tabela) {
     const scriptPath = path.join(__dirname, '..', 'scripts', 'control.sh');
     
     const optionsMap = {
-      '1': '1',
+      '1': '1',  // Fluxo completo (sem reiniciar pm2 via API)
       '2': '2',
       '3': '3',
       '4': '4',
@@ -252,7 +252,20 @@ async function fetchReportData(tabela) {
       '9': '9'
     };
     
-    const selectedOption = optionsMap[option];
+    // Opção 1 executa fluxo completo mas sem reiniciar PM2 (bloqueia a requisição)
+    const optionsMapApi = {
+      '1': '1a', // Fluxo completo custom (sem reiniciar)
+      '2': '2',
+      '3': '3',
+      '4': '4',
+      '5': '5',
+      '6': '6',
+      '7': '7',
+      '8': '8',
+      '9': '9'
+    };
+    
+    const selectedOption = optionsMapApi[option] || optionsMap[option];
     
     if (!selectedOption) {
       return res.json({ success: false, log: 'Opção inválida. Escolha entre 1-9.' });

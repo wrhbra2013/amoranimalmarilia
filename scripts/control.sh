@@ -117,6 +117,7 @@ read -p "Selecione uma opção: " opcao
 
 case $opcao in
     1) gerenciar_repositorio && instalar_dependencias && reiniciar_pm2 && validar_nginx && verificar_certbot && renovar_certbot && mostrar_logs ;;
+    1a) gerenciar_repositorio && instalar_dependencias && validar_nginx && verificar_certbot && renovar_certbot && mostrar_logs ;;
     2) gerenciar_repositorio ;;
     3) verificar_git ;;
     4) instalar_dependencias ;;
