@@ -660,7 +660,7 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                 </div>
                 <div class="voluntario-card-body">
                     <div class="voluntario-card-name"><%= v.nome ? (v.nome.length > 25 ? v.nome.slice(0, 23) + '..' : v.nome) : 'Voluntário' %></div>
-                    <div class="voluntario-card-funcao"><%= v.funcao || 'Voluntário' %></div>
+                    <div class="voluntario-card-funcao"><i class="fas fa-paw"></i> <%= v.funcao || 'Voluntário' %></div>
                     <% if (v.localidade) { %>
                     <div class="voluntario-card-location">
                         <i class="fas fa-map-marker-alt"></i> <%= v.localidade %>
