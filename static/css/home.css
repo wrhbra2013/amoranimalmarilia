@@ -699,8 +699,9 @@
 }
 
 .voluntario-card {
-    flex: 0 0 260px;
-    min-width: 260px;
+    flex: 0 0 280px;
+    min-width: 280px;
+    max-width: 280px;
     background: var(--container-bg);
     border-radius: 16px;
     overflow: visible;
@@ -811,7 +812,7 @@
     font-size: 0.8rem;
     color: #666;
     font-style: italic;
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
     line-height: 1.5;
     white-space: normal;
     overflow-x: visible;
@@ -824,6 +825,8 @@
     background: #f8f9fa;
     border-radius: 8px;
     border-left: 3px solid var(--brand-teal);
+    max-height: 150px;
+    overflow-y: auto;
 }
 
 /* Hero Section Moderna */
