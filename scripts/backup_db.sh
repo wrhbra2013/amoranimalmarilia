@@ -16,17 +16,19 @@ BACKUP_DIR="${BACKUP_DIR:-$PROJECT_DIR/../amoranimal_uploads/backups}"
 if [[ "${1:-}" == "--cron" ]]; then
     echo "Installing cron job to run every 3 days at 3am..."
     
+    CRONTAB="/usr/bin/crontab"
+    
     # Remove existing backup cron entries
-    crontab -l 2>/dev/null | grep -v "backup_db.sh" > /tmp/current_cron || true
+    $CRONTAB -l 2>/dev/null | grep -v "backup_db.sh" > /tmp/current_cron || true
     
     # Add new cron entry (every 3 days at 3:00 AM)
     echo "0 3 */3 * * PGPASSWORD=\${PGPASSWORD:-} $SCRIPT_PATH" >> /tmp/current_cron
     
-    crontab /tmp/current_cron
+    $CRONTAB /tmp/current_cron
     rm /tmp/current_cron
     
     echo "Cron job installed:"
-    crontab -l | grep backup
+    $CRONTAB -l | grep backup
     exit 0
 fi
 

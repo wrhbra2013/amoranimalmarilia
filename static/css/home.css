@@ -872,6 +872,12 @@
     margin-top: 0.5rem;
 }
 
+/* Responsivo - Ocultar atendimentos concluídos */
+.status-atendido { display: none; }
+
+#toggleAtendidos:checked ~ .landing-container ~ .castracao-table .status-atendido,
+body:has(#toggleAtendidos:checked) .status-atendido { display: table-row; }
+
 /* Responsive */
 @media (max-width: 768px) {
     .hero-landing h1 { font-size: 2rem; }

@@ -222,6 +222,20 @@ async function fetchReportData(tabela) {
     }
   });
 
+   router.post('/logs', isAdmin, async (req, res) => {
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+    
+    try {
+      const command = 'pm2 logs amoranimal --lines 10 --nostream 2>&1 | head -15';
+      const { stdout, stderr } = await execAsync(command, { timeout: 10000 });
+      res.json({ success: true, log: stdout + stderr });
+    } catch (error) {
+      res.json({ success: false, log: `Erro: ${error.message}` });
+    }
+   });
+
    router.post('/maintenance', isAdmin, async (req, res) => {
     const option = req.query.option || req.body.option;
     const scriptPath = path.join(__dirname, '..', 'scripts', 'control.sh');
@@ -249,8 +263,8 @@ async function fetchReportData(tabela) {
     const execAsync = promisify(exec);
     
     try {
-      const command = `echo "${selectedOption}" | bash ${scriptPath}`;
-      const { stdout, stderr } = await execAsync(command, { cwd: path.join(__dirname, '..') });
+      const command = `echo "${selectedOption}" | timeout 30 bash ${scriptPath}`;
+      const { stdout, stderr } = await execAsync(command, { cwd: path.join(__dirname, '..'), timeout: 35000 });
       res.json({ success: true, log: stdout + stderr });
     } catch (error) {
       res.json({ success: false, log: `Erro: ${error.message}\n${error.stderr || ''}` });

@@ -72,7 +72,7 @@ validar_nginx() {
 
 mostrar_logs() {
     echo -e "\n${AMARELO}[Logs] Exibindo logs...${NC}"
-    pm2 logs $APP_NAME --lines 15
+    pm2 logs $APP_NAME --lines 10 --nostream 2>&1 | head -20
 }
 
 verificar_certbot() {

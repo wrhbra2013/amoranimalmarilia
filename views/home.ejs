@@ -527,6 +527,13 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
 <section class="landing-section landing-section-alt">
     <div class="landing-container">
         <h2 class="text-center mb-4" style="color: var(--heading-color);">Agendamentos de Castração</h2>
+        
+        <div class="text-end mb-2">
+            <label style="cursor: pointer; font-size: 0.85rem;">
+                <input type="checkbox" id="toggleAtendidos" onchange="document.querySelectorAll('.status-atendido').forEach(el => el.style.display = this.checked ? 'table-row' : 'none')" style="margin-right: 5px;">
+                Mostrar atendidos
+            </label>
+        </div>
     </div>
     
     <div class="castracao-table" style="border-radius: 0; box-shadow: none; width: 100%; overflow-x: auto;">
@@ -552,7 +559,7 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                     const rotaAtender = isMutirao ? '/castracao/mutirao/updateStatus/' + castracao.id : '/castracao/updateStatus/' + castracao.id;
                     const rotaComprovante = isMutirao ? '/castracao/mutirao/comprovante/' + castracao.ticket : '/castracao/comprovante/' + castracao.ticket;
                 %>
-                <tr id="castracao-row-<%= castracao.id %>">
+                <tr id="castracao-row-<%= castracao.id %>" class="<%= isAttended ? 'status-atendido' : '' %>">
                     <td><strong>#<%= castracao.ticket %></strong></td>
                     <td><%= castracao.nome_pet || '-' %></td>
                     <td><%= castracao.nome || '-' %></td>

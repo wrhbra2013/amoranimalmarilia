@@ -169,8 +169,10 @@ async function runMaintenance(option) {
     
     appendLog(`Iniciando manutenção: ${optionNames[option]}...`);
     
+    const url = option === '9' ? '/relatorio/logs' : '/relatorio/maintenance?option=' + option;
+    
     try {
-        const response = await fetch('/relatorio/maintenance?option=' + option, {
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Accept': 'application/json' }
         });
