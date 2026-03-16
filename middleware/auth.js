@@ -25,14 +25,15 @@ function isAdmin(req, res, next) {
 // middleware/auth.js
 exports.isAdmin = (req, res, next) => {
   if (req.session && req.session.user) {
-      // Supondo que você tenha um campo 'isAdmin' no objeto 'user' da sessão
       if (req.session.user.isAdmin) {
-          return next(); // Usuário é admin, permite o acesso
+          return next();
       }
   }
-  // Se não for admin ou não estiver logado, redireciona ou envia um erro
+  const wantsJson = req.accepts('html') !== 'html' || req.xhr || req.headers['accept']?.includes('application/json');
+  if (wantsJson) {
+    return res.status(403).json({ error: 'Acesso negado. Requer privilégios de administrador.' });
+  }
   res.status(403).send('Acesso negado. Requer privilégios de administrador.');
-  // Ou:  res.redirect('/login');  // Redireciona para a página de login
 };
 
 

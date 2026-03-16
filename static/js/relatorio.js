@@ -171,8 +171,28 @@ async function runMaintenance(option) {
     
     try {
         const response = await fetch('/relatorio/maintenance?option=' + option, {
-            method: 'POST'
+            method: 'POST',
+            headers: { 'Accept': 'application/json' }
         });
+        
+        const contentType = response.headers.get('content-type');
+        
+        if (!response.ok) {
+            if (contentType?.includes('application/json')) {
+                const errorData = await response.json();
+                appendLog(errorData.error || errorData.log || `Erro HTTP: ${response.status}`, true);
+            } else {
+                const text = await response.text();
+                appendLog(`Erro HTTP: ${response.status} - ${text.substring(0, 100)}`, true);
+            }
+            return;
+        }
+        
+        if (!contentType?.includes('application/json')) {
+            const text = await response.text();
+            appendLog(`Erro: Resposta inválida do servidor: ${text.substring(0, 100)}`, true);
+            return;
+        }
         
         const data = await response.json();
         
