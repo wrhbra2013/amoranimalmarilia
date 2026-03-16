@@ -510,6 +510,24 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                 <div class="event-comment-texto"><%= comment.comentario %></div>
             </div>
             <% }); %>
+            <% if (event.comentarios.length > 3) { %>
+            <input type="checkbox" id="expand-comments-<%= event.id %>" class="expand-comments-check" style="display:none">
+            <label for="expand-comments-<%= event.id %>" class="expand-comments-label" style="cursor:pointer; color: var(--brand-teal); font-size: 0.85rem; display:block; margin-top:8px;">Ver mais comentários...</label>
+            <div class="more-comments" style="display:none">
+                <% event.comentarios.slice(3).forEach(function(comment) { %>
+                <div class="event-comment">
+                    <div class="event-comment-autor"><%= comment.nome || 'Anônimo' %></div>
+                    <div class="event-comment-texto"><%= comment.comentario %></div>
+                </div>
+                <% }); %>
+            </div>
+            <label for="expand-comments-<%= event.id %>" class="expand-comments-label" style="cursor:pointer; color: var(--brand-teal); font-size: 0.85rem; display:none; margin-top:8px;">Ver menos...</label>
+            <style>
+                #expand-comments-<%= event.id %>:checked ~ .more-comments { display: block !important; }
+                #expand-comments-<%= event.id %>:checked ~ .expand-comments-label:first-of-type { display: none !important; }
+                #expand-comments-<%= event.id %>:checked ~ .expand-comments-label:last-of-type { display: block !important; }
+            </style>
+            <% } %>
         </div>
         <% } %>
         <% }); %>
