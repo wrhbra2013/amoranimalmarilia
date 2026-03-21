@@ -27,12 +27,27 @@ router.use(async (req, res, next) => {
         try {
             const cfgRaw = await fs.readFile(configPath, 'utf8');
             const cfg = JSON.parse(cfgRaw);
+            // Clínica padrão geral (para compatibilidade)
             res.locals.defaultClinica = cfg.defaultClinica || '';
             res.locals.defaultClinicaEndereco = cfg.defaultClinicaEndereco || '';
+            // Clínicas separadas para baixo custo e pets de rua
+            res.locals.defaultClinicaBaixoCusto = cfg.defaultClinicaBaixoCusto || cfg.defaultClinica || '';
+            res.locals.defaultClinicaBaixoCustoEndereco = cfg.defaultClinicaBaixoCustoEndereco || cfg.defaultClinicaEndereco || '';
+            res.locals.defaultClinicaPetsRua = cfg.defaultClinicaPetsRua || cfg.defaultClinica || '';
+            res.locals.defaultClinicaPetsRuaEndereco = cfg.defaultClinicaPetsRuaEndereco || cfg.defaultClinicaEndereco || '';
+            // Clínica padrão para mutirão
+            res.locals.defaultClinicaMutirao = cfg.defaultClinicaMutirao || '';
+            res.locals.defaultClinicaMutiraoEndereco = cfg.defaultClinicaMutiraoEndereco || '';
         } catch (e) {
             // se não houver config, tentar derivar do primeiro registro de clinicas
             res.locals.defaultClinica = '';
             res.locals.defaultClinicaEndereco = '';
+            res.locals.defaultClinicaBaixoCusto = '';
+            res.locals.defaultClinicaBaixoCustoEndereco = '';
+            res.locals.defaultClinicaPetsRua = '';
+            res.locals.defaultClinicaPetsRuaEndereco = '';
+            res.locals.defaultClinicaMutirao = '';
+            res.locals.defaultClinicaMutiraoEndereco = '';
         }
 
         // se houver clinicas e defaultClinica vazio, tenta preencher endereco pela busca
@@ -310,7 +325,8 @@ router.get('/termo/:ticket', async (req, res) => {
     
     try {
         const result = await executeQuery(`
-            SELECT c.*, cl.endereco as clinica_endereco 
+            SELECT c.*, cl.endereco as clinica_endereco,
+                   safe_date_format(c.data_evento, 'A definir') as data_evento_formatada
             FROM castracao c 
             LEFT JOIN clinicas cl ON c.clinica = cl.nome 
             WHERE c.ticket = $1
@@ -420,11 +436,12 @@ router.get('/termo/:ticket', async (req, res) => {
                     },
                     margin: [0, 0, 0, 20]
                 },
+                { text: '', pageBreak: 'before' },
                 { text: 'TERMO DE RESPONSABILIDADE', style: 'header', alignment: 'center', margin: [0, 20, 0, 20] },
                 { text: `Eu, ${castracao.nome || 'Não informado'}, portador(a) do telefone ${castracao.contato || 'Não informado'}, declaro que sou o(a) responsável pelo animal ${castracao.nome_pet || 'Não informado'} (Ticket: ${castracao.ticket}), e que:\n\n1. Estou ciente das obrigações de pré e pós-operatório fornecidas pela equipe veterinária;\n2. O animal está em boas condições de saúde para o procedimento;\n3. Farei o jejum solicitado pela clínica;\n4. Retornarei no dia indicado para verificação pós-cirúrgica se necessário;\n5. Usarei colar elizabetano ou roupa cirúrgica conforme orientação;\n6. Estou ciente que qualquer intercorrência será de minha inteira responsabilidade.`, style: 'value', margin: [0, 0, 0, 20] },
                 { text: 'Declaro estar ciente de que é direito da equipe médica veterinária suspender a realização do procedimento cirúrgico caso seja identificado algum fator impeditivo.', style: 'value', margin: [0, 0, 0, 10] },
                 { text: 'Por expressão da verdade, firmo o presente.', style: 'value', margin: [0, 0, 0, 30] },
-                { text: 'Marília, ' + new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
+                { text: 'Marília, ' + (castracao.data_evento_formatada || 'A definir') + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
                 {
                     table: {
                         widths: ['*', '*'],
@@ -590,24 +607,56 @@ router.get('/', async (req, res) => {
 // POST /castracao/admin/default-clinica - salva a clínica padrão usada para baixo custo/pets-rua (admin)
 router.post('/admin/default-clinica', isAdmin, async (req, res) => {
     try {
-        const { defaultClinica } = req.body;
-        // tentar obter endereco da tabela de clinicas
-        let endereco = '';
+        const { defaultClinicaBaixoCusto, defaultClinicaPetsRua } = req.body;
+        
+        // Buscar configurações existentes
+        const configPath = path.join(__dirname, '..', 'config', 'castracao_settings.json');
+        let cfg = {};
         try {
-            const rows = await executeQuery('SELECT endereco FROM clinicas WHERE nome = $1 LIMIT 1', [defaultClinica]);
-            if (rows && rows.length) endereco = rows[0].endereco || '';
-        } catch (e) {
-            // fallback: tentar encontrar em res.locals.clinicas
-            const found = (res.locals && res.locals.clinicas) ? res.locals.clinicas.find(c => c.nome === defaultClinica) : null;
-            if (found) endereco = found.endereco || '';
+            const cfgRaw = await fs.readFile(configPath, 'utf8');
+            cfg = JSON.parse(cfgRaw);
+        } catch (e) {}
+        
+        // Processar clínica de baixo custo
+        if (defaultClinicaBaixoCusto) {
+            try {
+                const rows = await executeQuery('SELECT endereco FROM clinicas WHERE nome = $1 LIMIT 1', [defaultClinicaBaixoCusto]);
+                cfg.defaultClinicaBaixoCusto = defaultClinicaBaixoCusto;
+                cfg.defaultClinicaBaixoCustoEndereco = rows && rows.length ? rows[0].endereco || '' : '';
+            } catch (e) {
+                const found = res.locals.clinicas ? res.locals.clinicas.find(c => c.nome === defaultClinicaBaixoCusto) : null;
+                cfg.defaultClinicaBaixoCusto = defaultClinicaBaixoCusto;
+                cfg.defaultClinicaBaixoCustoEndereco = found ? found.endereco || '' : '';
+            }
+        } else {
+            cfg.defaultClinicaBaixoCusto = '';
+            cfg.defaultClinicaBaixoCustoEndereco = '';
         }
-
-        const configDir = path.join(__dirname, '..', 'config');
-        const configPath = path.join(configDir, 'castracao_settings.json');
-        try { await fs.mkdir(configDir, { recursive: true }); } catch (e) {}
-        const cfg = { defaultClinica: defaultClinica || '', defaultClinicaEndereco: endereco || '' };
+        
+        // Processar clínica de pets de rua
+        if (defaultClinicaPetsRua) {
+            try {
+                const rows = await executeQuery('SELECT endereco FROM clinicas WHERE nome = $1 LIMIT 1', [defaultClinicaPetsRua]);
+                cfg.defaultClinicaPetsRua = defaultClinicaPetsRua;
+                cfg.defaultClinicaPetsRuaEndereco = rows && rows.length ? rows[0].endereco || '' : '';
+            } catch (e) {
+                const found = res.locals.clinicas ? res.locals.clinicas.find(c => c.nome === defaultClinicaPetsRua) : null;
+                cfg.defaultClinicaPetsRua = defaultClinicaPetsRua;
+                cfg.defaultClinicaPetsRuaEndereco = found ? found.endereco || '' : '';
+            }
+        } else {
+            cfg.defaultClinicaPetsRua = '';
+            cfg.defaultClinicaPetsRuaEndereco = '';
+        }
+        
+        // Manter compatibilidade com clínica padrão geral (para formulários que usam defaultClinica)
+        if (!cfg.defaultClinica && (defaultClinicaBaixoCusto || defaultClinicaPetsRua)) {
+            cfg.defaultClinica = defaultClinicaBaixoCusto || defaultClinicaPetsRua;
+            cfg.defaultClinicaEndereco = cfg.defaultClinicaBaixoCustoEndereco || cfg.defaultClinicaPetsRuaEndereco;
+        }
+        
         await fs.writeFile(configPath, JSON.stringify(cfg, null, 2), 'utf8');
-        req.flash('success', 'Clínica padrão atualizada com sucesso.');
+        req.flash('success', 'Clínicas padrão atualizadas com sucesso.');
         res.redirect('/castracao');
     } catch (error) {
         console.error('[castracaoRoutes POST /admin/default-clinica] Erro:', error);
@@ -778,7 +827,41 @@ router.get('/calendario-mutirao', async (req, res) => {
     }
 });
 
-// POST /castracao/calendario-mutirao - cria nova data de mutirão (admin)
+// POST /castracao/calendario-mutirao/salvar-default-clinica - salva a clínica padrão para mutirões (admin)
+router.post('/calendario-mutirao/salvar-default-clinica', isAdmin, async (req, res) => {
+    try {
+        const { defaultClinicaMutirao } = req.body;
+        
+        let endereco = '';
+        try {
+            const rows = await executeQuery('SELECT endereco FROM clinicas WHERE nome = $1 LIMIT 1', [defaultClinicaMutirao]);
+            if (rows && rows.length) endereco = rows[0].endereco || '';
+        } catch (e) {
+            const found = res.locals.clinicas ? res.locals.clinicas.find(c => c.nome === defaultClinicaMutirao) : null;
+            if (found) endereco = found.endereco || '';
+        }
+
+        const configPath = path.join(__dirname, '..', 'config', 'castracao_settings.json');
+        let cfg = {};
+        try {
+            const cfgRaw = await fs.readFile(configPath, 'utf8');
+            cfg = JSON.parse(cfgRaw);
+        } catch (e) {}
+
+        cfg.defaultClinicaMutirao = defaultClinicaMutirao || '';
+        cfg.defaultClinicaMutiraoEndereco = endereco || '';
+
+        await fs.writeFile(configPath, JSON.stringify(cfg, null, 2), 'utf8');
+        req.flash('success', 'Clínica padrão para mutirão atualizada com sucesso.');
+        res.redirect('/castracao/calendario-mutirao');
+    } catch (error) {
+        console.error('[castracaoRoutes POST /calendario-mutirao/salvar-default-clinica] Erro:', error);
+        req.flash('error', 'Não foi possível salvar a clínica padrão.');
+        res.redirect('/castracao/calendario-mutirao');
+    }
+});
+
+// POST /castracao/admin/default-clinica - salva a clínica padrão usada para baixo custo/pets-rua (admin)
 router.post('/calendario-mutirao', isAdmin, async (req, res) => {
     try {
         const { data_evento, clinica, vagas, endereco } = req.body;
@@ -815,10 +898,10 @@ router.get('/mutirao-inscricao/:id', async (req, res) => {
         // Verificar se o mutirão já passou (data do evento)
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
-        const dataMutirao = new Date(mutirao.data_evento);
-        dataMutirao.setHours(0, 0, 0, 0);
+        const dataMutirao = mutirao.data_evento ? new Date(mutirao.data_evento) : null;
+        if (dataMutirao) dataMutirao.setHours(0, 0, 0, 0);
         
-        if (dataMutirao <= hoje) {
+        if (!dataMutirao || dataMutirao <= hoje) {
             req.flash('error', 'Este mutirão já foi realizado. Inscrições encerradas.');
             return res.redirect('/castracao/calendario-mutirao');
         }
@@ -1001,14 +1084,14 @@ router.post('/mutirao-inscricao', async (req, res) => {
         const mutiraoResult = await client.query('SELECT vagas, clinica, data_evento FROM calendario_mutirao WHERE id = $1', [calendario_mutirao_id]);
         const mutirao = mutiraoResult.rows[0];
         const clinicaMutirao = mutirao.clinica;
-        const dataMutirao = new Date(mutirao.data_evento);
+        const dataMutirao = mutirao.data_evento ? new Date(mutirao.data_evento) : null;
         
         // Verificar se o mutirão já passou (data do evento)
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
-        dataMutirao.setHours(0, 0, 0, 0);
+        if (dataMutirao) dataMutirao.setHours(0, 0, 0, 0);
         
-        if (dataMutirao <= hoje) {
+        if (!dataMutirao || dataMutirao <= hoje) {
             throw new Error('Este mutirão já foi realizado. Inscrições encerradas.');
         }
         
@@ -1118,7 +1201,9 @@ router.get('/mutirao-inscricao/sucesso/:id', async (req, res) => {
     
     try {
         const inscricao = await executeQuery(`
-            SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco 
+            SELECT mi.*, 
+                   safe_date_format(cm.data_evento, 'A definir') as data_evento_formatada,
+                   cm.data_evento, cm.clinica, cm.endereco 
             FROM mutirao_inscricao mi
             JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
             WHERE mi.id = $1
@@ -1185,7 +1270,9 @@ router.get('/mutirao/termo/:ticket', async (req, res) => {
         const result = await executeQuery(`
             SELECT mp.*, mi.nome_responsavel, mi.cpf, mi.contato, mi.endereco, mi.numero, mi.complemento, 
                    mi.bairro, mi.cidade, mi.estado, mi.cep,
-                   cm.data_evento, cm.clinica, cm.endereco as clinica_endereco
+                   cm.data_evento as data_evento, 
+                   safe_date_format(cm.data_evento, 'Não definida') as data_evento_formatada,
+                   cm.clinica, cm.endereco as clinica_endereco
             FROM mutirao_pet mp
             JOIN mutirao_inscricao mi ON mp.mutirao_inscricao_id = mi.id
             JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
@@ -1313,10 +1400,11 @@ router.get('/mutirao/termo/:ticket', async (req, res) => {
                 { text: 'DADOS DO MUTIRÃO', style: 'subHeader', margin: [0, 10, 0, 5] },
                 {
                     table: { widths: ['*', '*'], body: [
-                        [{ text: 'Data:', style: 'label' }, { text: pet.data_evento ? new Date(pet.data_evento).toLocaleDateString('pt-BR') : 'Não definida', style: 'value' }],
+                        [{ text: 'Data:', style: 'label' }, { text: pet.data_evento_formatada || 'Não definida', style: 'value' }],
                         [{ text: 'Clínica:', style: 'label' }, { text: pet.clinica || '-', style: 'value' }]
                     ]}, layout: 'lightHorizontalPadding', margin: [0, 0, 0, 20]
                 },
+                { text: '', pageBreak: 'before' },
                 { text: 'TERMO DE RESPONSABILIDADE', style: 'header', alignment: 'center', margin: [0, 20, 0, 20] },
                 { text: `Eu, ${pet.nome_responsavel}, CPF ${pet.cpf || 'Não informado'}, residente na ${enderecoCompleto || 'Não informado'}, ${pet.bairro ? 'bairro ' + pet.bairro : ''}, ${pet.cidade || ''}/${pet.estado || ''}, CEP ${pet.cep || 'Não informado'}, telefone ${pet.contato || 'Não informado'}.`, style: 'value', margin: [0, 0, 0, 15] },
                 { text: '1. Por meio deste instrumento, confirmo ciência quanto às obrigações abaixo discriminadas, enquanto proprietário(a) do animal descrito neste termo (Ticket: ' + pet.ticket + ').', style: 'value', margin: [0, 0, 0, 10] },
@@ -1334,7 +1422,7 @@ router.get('/mutirao/termo/:ticket', async (req, res) => {
                 { text: 'Qualquer intercorrência que exija atendimento posterior, seja por falha no cumprimento das orientações fornecidas ou por fatores individuais do animal, será de inteira responsabilidade e custeio do(a) proprietário(a).', style: 'value', margin: [0, 0, 0, 10] },
                 { text: 'Para mais informações, entre em contato: (14) 99815-1723 – ONG Amor Animal.', style: 'value', margin: [0, 0, 0, 10] },
                 { text: 'Por expressão da verdade, firmo o presente.', style: 'value', margin: [0, 0, 0, 20] },
-                { text: 'Marília, ' + (pet.data_evento ? new Date(pet.data_evento).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })) + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
+                { text: 'Marília, ' + (pet.data_evento_formatada || 'Não definida') + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
                 {
                     table: {
                         widths: ['*', '*'],
@@ -1389,7 +1477,11 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
     try {
         // Primeiro tenta encontrar pela ticket do pet (novo formato M0001-1)
         let inscricaoResult = await executeQuery(`
-            SELECT mi.*, cm.data_evento, cm.clinica, cm.endereco as clinica_endereco, mp.ticket as pet_ticket, mp.nome as pet_nome, mp.especie as pet_especie, mp.sexo as pet_sexo, mp.idade as pet_idade, mp.peso as pet_peso
+            SELECT mi.*, 
+                   cm.data_evento, 
+                   safe_date_format(cm.data_evento, 'A definir') as data_evento_formatada,
+                   cm.clinica, cm.endereco as clinica_endereco, 
+                   mp.ticket as pet_ticket, mp.nome as pet_nome, mp.especie as pet_especie, mp.sexo as pet_sexo, mp.idade as pet_idade, mp.peso as pet_peso
             FROM mutirao_pet mp
             JOIN mutirao_inscricao mi ON mp.mutirao_inscricao_id = mi.id
             JOIN calendario_mutirao cm ON mi.calendario_mutirao_id = cm.id
@@ -1512,7 +1604,7 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
             table: {
                 widths: ['*', '*'],
                 body: [
-                    [{ text: 'Data:', style: 'label' }, { text: inscricao.data_evento ? new Date(inscricao.data_evento).toLocaleDateString('pt-BR') : 'Não definida', style: 'value' }],
+                    [{ text: 'Data:', style: 'label' }, { text: inscricao.data_evento_formatada || 'A definir', style: 'value' }],
                     [{ text: 'Clínica:', style: 'label' }, { text: inscricao.clinica, style: 'value' }]
                 ]
             },
@@ -1576,6 +1668,7 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
         });
         
         // ==================== PÁGINA 2: TERMO DE RESPONSABILIDADE ====================
+        content.push({ text: '', pageBreak: 'before' });
         
         // Conteúdo do termo
         const termoContent = [
@@ -1597,7 +1690,7 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
             { text: 'Qualquer intercorrência que exija atendimento posterior, seja por falha no cumprimento das orientações fornecidas ou por fatores individuais do animal, será de inteira responsabilidade e custeio do(a) proprietário(a).', style: 'value', margin: [0, 0, 0, 10] },
             { text: 'Para mais informações, entre em contato: (14) 99815-1723 – ONG Amor Animal.', style: 'value', margin: [0, 0, 0, 10] },
             { text: 'Por expressão da verdade, firmo o presente.', style: 'value', margin: [0, 0, 0, 20] },
-            { text: 'Marília, ' + (inscricao.data_evento ? new Date(inscricao.data_evento).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })) + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] }
+            { text: 'Marília, ' + (inscricao.data_evento_formatada || 'A definir') + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] }
         ];
         
         content.push({
@@ -2186,7 +2279,11 @@ router.get('/calendario-mutirao/relatorio/:id', isAdmin, async (req, res) => {
     
     try {
         // Buscar dados do mutirão
-        const mutiraoResult = await executeQuery('SELECT * FROM calendario_mutirao WHERE id = $1', [mutiraoId]);
+        const mutiraoResult = await executeQuery(`
+            SELECT *, 
+                   safe_date_format(data_evento, 'A definir') as data_evento_formatada 
+            FROM calendario_mutirao WHERE id = $1
+        `, [mutiraoId]);
         if (mutiraoResult.length === 0) {
             req.flash('error', 'Mutirão não encontrado.');
             return res.redirect('/castracao/calendario-mutirao');
@@ -2250,7 +2347,8 @@ router.get('/calendario-mutirao/relatorio/:id', isAdmin, async (req, res) => {
         });
         
         const printer = new PdfPrinter(fontDescriptors);
-        const time = new Date().toLocaleDateString('pt-BR', {
+        
+        const time = new Date().toLocaleString('pt-BR', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
@@ -2263,7 +2361,7 @@ router.get('/calendario-mutirao/relatorio/:id', isAdmin, async (req, res) => {
         
         // Informações do mutirão no formato do relatorioRoutes
         content.push({
-            text: sanitizeTextForPdf(`Mutirão: ${mutirao.clinica} - ${new Date(mutirao.data_evento).toLocaleDateString('pt-BR')}`),
+            text: sanitizeTextForPdf(`Mutirão: ${mutirao.clinica} - ${mutirao.data_evento_formatada || 'A definir'}`),
             style: 'subHeader',
             alignment: 'center',
             margin: [0, 0, 0, 10]

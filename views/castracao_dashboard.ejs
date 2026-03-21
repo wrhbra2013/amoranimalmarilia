@@ -7,23 +7,57 @@
 
         <% if (user && user.isAdmin) { %>
         <form action="/castracao/admin/default-clinica" method="POST" class="mt-3 admin-default-clinica">
-            <label class="form-label fw-bold">Clínica padrão para Baixo Custo e Pets de Rua (modo Administrador)</label>
-            <div style="display:flex; gap:8px; align-items:center; max-width:720px;">
-                <select id="select-default-clinica" name="defaultClinica" class="form-select" style="max-width:400px;">
-                    <option value="">-- Nenhuma (A definir) --</option>
-                    <% if (clinicas && clinicas.length) { %>
-                        <% clinicas.forEach(function(c) { %>
-                            <option value="<%= c.nome %>" <%= (defaultClinica === c.nome) ? 'selected' : '' %> data-endereco="<%= c.endereco ? c.endereco.replace(/"/g,'&quot;') : '' %>"><%= c.nome %></option>
-                        <% }); %>
-                    <% } %>
-                </select>
-                <button type="submit" class="btn btn-primary">Salvar clínica padrão</button>
+            <label class="form-label fw-bold">Clínicas Padrão (modo Administrador)</label>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label small">Clínica para Baixo Custo</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <select id="select-default-clinica-baixo-custo" name="defaultClinicaBaixoCusto" class="form-select" style="max-width:300px;" onchange="updateEnderecoBaixoCusto()">
+                            <option value="">-- Nenhuma (A definir) --</option>
+                            <% if (clinicas && clinicas.length) { %>
+                                <% clinicas.forEach(function(c) { %>
+                                    <option value="<%= c.nome %>" <%= (typeof defaultClinicaBaixoCusto !== 'undefined' && defaultClinicaBaixoCusto === c.nome) ? 'selected' : '' %> data-endereco="<%= c.endereco ? c.endereco.replace(/"/g,'&quot;') : '' %>"><%= c.nome %></option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+                    <small class="text-muted">Endereço:</small>
+                    <div id="default-clinica-baixo-custo-endereco" style="font-weight:500;"> <%= (typeof defaultClinicaBaixoCustoEndereco !== 'undefined' && defaultClinicaBaixoCustoEndereco) ? defaultClinicaBaixoCustoEndereco : ((typeof defaultClinicaBaixoCusto !== 'undefined' && defaultClinicaBaixoCusto) ? 'Endereço não cadastrado' : '— A definir —') %> </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small">Clínica para Pets de Rua</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <select id="select-default-clinica-pets-rua" name="defaultClinicaPetsRua" class="form-select" style="max-width:300px;" onchange="updateEnderecoPetsRua()">
+                            <option value="">-- Nenhuma (A definir) --</option>
+                            <% if (clinicas && clinicas.length) { %>
+                                <% clinicas.forEach(function(c) { %>
+                                    <option value="<%= c.nome %>" <%= (typeof defaultClinicaPetsRua !== 'undefined' && defaultClinicaPetsRua === c.nome) ? 'selected' : '' %> data-endereco="<%= c.endereco ? c.endereco.replace(/"/g,'&quot;') : '' %>"><%= c.nome %></option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+                    <small class="text-muted">Endereço:</small>
+                    <div id="default-clinica-pets-rua-endereco" style="font-weight:500;"> <%= (typeof defaultClinicaPetsRuaEndereco !== 'undefined' && defaultClinicaPetsRuaEndereco) ? defaultClinicaPetsRuaEndereco : ((typeof defaultClinicaPetsRua !== 'undefined' && defaultClinicaPetsRua) ? 'Endereço não cadastrado' : '— A definir —') %> </div>
+                </div>
             </div>
-            <div style="margin-top:6px; max-width:720px;">
-                <small class="text-muted">Endereço da clínica padrão:</small>
-                <div id="default-clinica-endereco" style="font-weight:500;"> <%= (typeof defaultClinicaEndereco !== 'undefined' && defaultClinicaEndereco) ? defaultClinicaEndereco : (defaultClinica ? 'Endereço não cadastrado' : '— A definir —') %> </div>
-            </div>
+            <button type="submit" class="btn btn-primary">Salvar Clínicas Padrão</button>
         </form>
+        <script>
+            function updateEnderecoBaixoCusto() {
+                const select = document.getElementById('select-default-clinica-baixo-custo');
+                const enderecoDiv = document.getElementById('default-clinica-baixo-custo-endereco');
+                const selectedOption = select.options[select.selectedIndex];
+                const endereco = selectedOption.getAttribute('data-endereco');
+                enderecoDiv.textContent = endereco || (select.value ? 'Endereço não cadastrado' : '— A definir —');
+            }
+            function updateEnderecoPetsRua() {
+                const select = document.getElementById('select-default-clinica-pets-rua');
+                const enderecoDiv = document.getElementById('default-clinica-pets-rua-endereco');
+                const selectedOption = select.options[select.selectedIndex];
+                const endereco = selectedOption.getAttribute('data-endereco');
+                enderecoDiv.textContent = endereco || (select.value ? 'Endereço não cadastrado' : '— A definir —');
+            }
+        </script>
         <% } %>
     </header>
 

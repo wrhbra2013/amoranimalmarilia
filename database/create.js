@@ -648,12 +648,107 @@ async function migrateCastracaoAtendidoColumn() {
       await migrateSolicitacaoAcessoCpfColumn(); // Garante que a coluna CPF exista
       await create_login();
       await create_admin_user(); // Deve ser chamado após create_login
+      await create_date_functions(); // Funções auxiliares para tratamento de datas
     } catch (error) {
       console.error("Erro fatal durante a inicialização das tabelas (PostgreSQL):", error.message);
       throw error;
     }
   }
- 
+
+  // Funções auxiliares para tratamento de datas
+  async function create_date_functions() {
+    try {
+      // Função para formatar data em formato brasileiro (DD/MM/YYYY)
+      await pool.query(`
+        CREATE OR REPLACE FUNCTION format_date_br(date_or_timestamp)
+        RETURNS TEXT AS $$
+        BEGIN
+          IF date_or_timestamp IS NULL THEN
+            RETURN NULL;
+          END IF;
+          RETURN TO_CHAR(date_or_timestamp, 'DD/MM/YYYY');
+        END;
+        $$ LANGUAGE plpgsql IMMUTABLE;
+      `);
+      console.log("Função format_date_br criada com sucesso.");
+
+      // Função para formatar data com hora em formato brasileiro
+      await pool.query(`
+        CREATE OR REPLACE FUNCTION format_datetime_br(date_or_timestamp)
+        RETURNS TEXT AS $$
+        BEGIN
+          IF date_or_timestamp IS NULL THEN
+            RETURN NULL;
+          END IF;
+          RETURN TO_CHAR(date_or_timestamp, 'DD/MM/YYYY HH24:MI:SS');
+        END;
+        $$ LANGUAGE plpgsql IMMUTABLE;
+      `);
+      console.log("Função format_datetime_br criada com sucesso.");
+
+      // Função segura para retornar data formatada ou valor padrão
+      await pool.query(`
+        CREATE OR REPLACE FUNCTION safe_date_format(date_value DATE, default_value TEXT DEFAULT 'Não definida')
+        RETURNS TEXT AS $$
+        BEGIN
+          IF date_value IS NULL THEN
+            RETURN default_value;
+          END IF;
+          RETURN TO_CHAR(date_value, 'DD/MM/YYYY');
+        END;
+        $$ LANGUAGE plpgsql IMMUTABLE;
+      `);
+      console.log("Função safe_date_format criada com sucesso.");
+
+      // Função para obter data atual no fuso horário brasileiro
+      await pool.query(`
+        CREATE OR REPLACE FUNCTION current_date_br()
+        RETURNS DATE AS $$
+        BEGIN
+          RETURN CURRENT_DATE AT TIME ZONE 'America/Sao_Paulo';
+        END;
+        $$ LANGUAGE plpgsql STABLE;
+      `);
+      console.log("Função current_date_br criada com sucesso.");
+
+      // Função para converter timestamp para fuso horário brasileiro
+      await pool.query(`
+        CREATE OR REPLACE FUNCTION to_br_timestamp(timestamp_value TIMESTAMP)
+        RETURNS TIMESTAMP AS $$
+        BEGIN
+          IF timestamp_value IS NULL THEN
+            RETURN NULL;
+          END IF;
+          RETURN timestamp_value AT TIME ZONE 'America/Sao_Paulo';
+        END;
+        $$ LANGUAGE plpgsql IMMUTABLE;
+      `);
+      console.log("Função to_br_timestamp criada com sucesso.");
+
+      // Função para verificar se uma data é válida
+      await pool.query(`
+        CREATE OR REPLACE FUNCTION is_valid_date(date_string TEXT)
+        RETURNS BOOLEAN AS $$
+        DECLARE
+          d DATE;
+        BEGIN
+          IF date_string IS NULL OR date_string = '' THEN
+            RETURN FALSE;
+          END IF;
+          d := date_string::DATE;
+          RETURN TRUE;
+        EXCEPTION WHEN OTHERS THEN
+          RETURN FALSE;
+        END;
+        $$ LANGUAGE plpgsql IMMUTABLE;
+      `);
+      console.log("Função is_valid_date criada com sucesso.");
+
+    } catch (error) {
+      console.warn("Aviso ao criar funções de data:", error.message);
+    }
+  }
+
   module.exports = {
      create_home,
      create_adocao,
@@ -670,6 +765,7 @@ async function migrateCastracaoAtendidoColumn() {
      create_transparencia,
      create_solicitacao_acesso,
      create_calendario_mutirao,
-     initializeDatabaseTables
- };
+     initializeDatabaseTables,
+     create_date_functions
+  };
  
