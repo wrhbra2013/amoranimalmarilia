@@ -10,6 +10,20 @@
   
 const router = express.Router();
 
+function formatDateExtenso(dateStr) {
+    if (!dateStr || dateStr === 'A definir' || dateStr === 'Não definida' || dateStr === 'Não definida') {
+        return dateStr;
+    }
+    const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    const parts = dateStr.split('/');
+    if (parts.length !== 3) return dateStr;
+    const dia = parseInt(parts[0], 10);
+    const mes = parseInt(parts[1], 10) - 1;
+    const ano = parseInt(parts[2], 10);
+    if (isNaN(dia) || isNaN(mes) || isNaN(ano) || mes < 0 || mes > 11) return dateStr;
+    return dia + ' de ' + meses[mes] + ' de ' + ano;
+}
+
 // Middleware local para carregar listas e configuração de clínica padrão em res.locals
 router.use(async (req, res, next) => {
     try {
@@ -441,7 +455,7 @@ router.get('/termo/:ticket', async (req, res) => {
                 { text: `Eu, ${castracao.nome || 'Não informado'}, portador(a) do telefone ${castracao.contato || 'Não informado'}, declaro que sou o(a) responsável pelo animal ${castracao.nome_pet || 'Não informado'} (Ticket: ${castracao.ticket}), e que:\n\n1. Estou ciente das obrigações de pré e pós-operatório fornecidas pela equipe veterinária;\n2. O animal está em boas condições de saúde para o procedimento;\n3. Farei o jejum solicitado pela clínica;\n4. Retornarei no dia indicado para verificação pós-cirúrgica se necessário;\n5. Usarei colar elizabetano ou roupa cirúrgica conforme orientação;\n6. Estou ciente que qualquer intercorrência será de minha inteira responsabilidade.`, style: 'value', margin: [0, 0, 0, 20] },
                 { text: 'Declaro estar ciente de que é direito da equipe médica veterinária suspender a realização do procedimento cirúrgico caso seja identificado algum fator impeditivo.', style: 'value', margin: [0, 0, 0, 10] },
                 { text: 'Por expressão da verdade, firmo o presente.', style: 'value', margin: [0, 0, 0, 30] },
-                { text: 'Marília, ' + (castracao.data_evento_formatada || 'A definir') + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
+                { text: 'Marília, ' + formatDateExtenso(castracao.data_evento_formatada) + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
                 {
                     table: {
                         widths: ['*', '*'],
@@ -1422,7 +1436,7 @@ router.get('/mutirao/termo/:ticket', async (req, res) => {
                 { text: 'Qualquer intercorrência que exija atendimento posterior, seja por falha no cumprimento das orientações fornecidas ou por fatores individuais do animal, será de inteira responsabilidade e custeio do(a) proprietário(a).', style: 'value', margin: [0, 0, 0, 10] },
                 { text: 'Para mais informações, entre em contato: (14) 99815-1723 – ONG Amor Animal.', style: 'value', margin: [0, 0, 0, 10] },
                 { text: 'Por expressão da verdade, firmo o presente.', style: 'value', margin: [0, 0, 0, 20] },
-                { text: 'Marília, ' + (pet.data_evento_formatada || 'Não definida') + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
+                { text: 'Marília, ' + formatDateExtenso(pet.data_evento_formatada) + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
                 {
                     table: {
                         widths: ['*', '*'],

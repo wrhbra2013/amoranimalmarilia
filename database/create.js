@@ -660,7 +660,7 @@ async function migrateCastracaoAtendidoColumn() {
     try {
       // Função para formatar data em formato brasileiro (DD/MM/YYYY)
       await pool.query(`
-        CREATE OR REPLACE FUNCTION format_date_br(date_or_timestamp)
+        CREATE OR REPLACE FUNCTION format_date_br(date_or_timestamp TIMESTAMP)
         RETURNS TEXT AS $$
         BEGIN
           IF date_or_timestamp IS NULL THEN
@@ -674,7 +674,7 @@ async function migrateCastracaoAtendidoColumn() {
 
       // Função para formatar data com hora em formato brasileiro
       await pool.query(`
-        CREATE OR REPLACE FUNCTION format_datetime_br(date_or_timestamp)
+        CREATE OR REPLACE FUNCTION format_datetime_br(date_or_timestamp TIMESTAMP)
         RETURNS TEXT AS $$
         BEGIN
           IF date_or_timestamp IS NULL THEN
