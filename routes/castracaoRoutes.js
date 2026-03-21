@@ -163,6 +163,10 @@ router.get('/comprovante/:ticket', async (req, res) => {
             pageSize: 'A4',
             pageOrientation: 'portrait',
             pageMargins: [40, 80, 40, 50],
+            info: {
+                title: 'Comprovante de Inscricao - Castracao',
+                author: 'ONG Amor Animal Marilia'
+            },
             header: {
                 margin: [20, 10, 20, 0],
                 table: {
@@ -450,12 +454,11 @@ router.get('/termo/:ticket', async (req, res) => {
                     },
                     margin: [0, 0, 0, 20]
                 },
-                { text: '', pageBreak: 'before' },
                 { text: 'TERMO DE RESPONSABILIDADE', style: 'header', alignment: 'center', margin: [0, 20, 0, 20] },
                 { text: `Eu, ${castracao.nome || 'Não informado'}, portador(a) do telefone ${castracao.contato || 'Não informado'}, declaro que sou o(a) responsável pelo animal ${castracao.nome_pet || 'Não informado'} (Ticket: ${castracao.ticket}), e que:\n\n1. Estou ciente das obrigações de pré e pós-operatório fornecidas pela equipe veterinária;\n2. O animal está em boas condições de saúde para o procedimento;\n3. Farei o jejum solicitado pela clínica;\n4. Retornarei no dia indicado para verificação pós-cirúrgica se necessário;\n5. Usarei colar elizabetano ou roupa cirúrgica conforme orientação;\n6. Estou ciente que qualquer intercorrência será de minha inteira responsabilidade.`, style: 'value', margin: [0, 0, 0, 20] },
                 { text: 'Declaro estar ciente de que é direito da equipe médica veterinária suspender a realização do procedimento cirúrgico caso seja identificado algum fator impeditivo.', style: 'value', margin: [0, 0, 0, 10] },
                 { text: 'Por expressão da verdade, firmo o presente.', style: 'value', margin: [0, 0, 0, 30] },
-                { text: 'Marília, ' + formatDateExtenso(castracao.data_evento_formatada) + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
+                { text: 'Marília, ' + (castracao.data_evento_formatada !== 'A definir' ? formatDateExtenso(castracao.data_evento_formatada) + '.' : '______'), style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
                 {
                     table: {
                         widths: ['*', '*'],
@@ -495,23 +498,23 @@ router.get('/termo/:ticket', async (req, res) => {
                     background: '#f5f5f5'
                 },
                 header: {
-                    fontSize: 14,
+                    fontSize: 16,
                     bold: true,
                     color: '#0066CC'
                 },
                 subHeader: {
-                    fontSize: 12,
+                    fontSize: 14,
                     bold: true,
                     color: '#0066CC',
                     margin: [0, 10, 0, 5]
                 },
                 label: {
-                    fontSize: 10,
+                    fontSize: 12,
                     bold: true,
                     color: '#666666'
                 },
                 value: {
-                    fontSize: 10,
+                    fontSize: 12,
                     color: '#333333'
                 },
                 tableHeader: {
@@ -1418,7 +1421,6 @@ router.get('/mutirao/termo/:ticket', async (req, res) => {
                         [{ text: 'Clínica:', style: 'label' }, { text: pet.clinica || '-', style: 'value' }]
                     ]}, layout: 'lightHorizontalPadding', margin: [0, 0, 0, 20]
                 },
-                { text: '', pageBreak: 'before' },
                 { text: 'TERMO DE RESPONSABILIDADE', style: 'header', alignment: 'center', margin: [0, 20, 0, 20] },
                 { text: `Eu, ${pet.nome_responsavel}, CPF ${pet.cpf || 'Não informado'}, residente na ${enderecoCompleto || 'Não informado'}, ${pet.bairro ? 'bairro ' + pet.bairro : ''}, ${pet.cidade || ''}/${pet.estado || ''}, CEP ${pet.cep || 'Não informado'}, telefone ${pet.contato || 'Não informado'}.`, style: 'value', margin: [0, 0, 0, 15] },
                 { text: '1. Por meio deste instrumento, confirmo ciência quanto às obrigações abaixo discriminadas, enquanto proprietário(a) do animal descrito neste termo (Ticket: ' + pet.ticket + ').', style: 'value', margin: [0, 0, 0, 10] },
@@ -1436,7 +1438,7 @@ router.get('/mutirao/termo/:ticket', async (req, res) => {
                 { text: 'Qualquer intercorrência que exija atendimento posterior, seja por falha no cumprimento das orientações fornecidas ou por fatores individuais do animal, será de inteira responsabilidade e custeio do(a) proprietário(a).', style: 'value', margin: [0, 0, 0, 10] },
                 { text: 'Para mais informações, entre em contato: (14) 99815-1723 – ONG Amor Animal.', style: 'value', margin: [0, 0, 0, 10] },
                 { text: 'Por expressão da verdade, firmo o presente.', style: 'value', margin: [0, 0, 0, 20] },
-                { text: 'Marília, ' + formatDateExtenso(pet.data_evento_formatada) + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
+                { text: 'Marília, ' + (pet.data_evento_formatada !== 'A definir' && pet.data_evento_formatada !== 'Não definida' ? formatDateExtenso(pet.data_evento_formatada) + '.' : '______'), style: 'value', alignment: 'center', margin: [0, 0, 0, 30] },
                 {
                     table: {
                         widths: ['*', '*'],
@@ -1704,13 +1706,12 @@ router.get('/mutirao/comprovante/:ticket', async (req, res) => {
             { text: 'Qualquer intercorrência que exija atendimento posterior, seja por falha no cumprimento das orientações fornecidas ou por fatores individuais do animal, será de inteira responsabilidade e custeio do(a) proprietário(a).', style: 'value', margin: [0, 0, 0, 10] },
             { text: 'Para mais informações, entre em contato: (14) 99815-1723 – ONG Amor Animal.', style: 'value', margin: [0, 0, 0, 10] },
             { text: 'Por expressão da verdade, firmo o presente.', style: 'value', margin: [0, 0, 0, 20] },
-            { text: 'Marília, ' + (inscricao.data_evento_formatada || 'A definir') + '.', style: 'value', alignment: 'center', margin: [0, 0, 0, 30] }
+            { text: 'Marília, ' + (inscricao.data_evento_formatada && inscricao.data_evento_formatada !== 'A definir' && inscricao.data_evento_formatada !== 'Não definida' ? formatDateExtenso(inscricao.data_evento_formatada) + '.' : '______'), style: 'value', alignment: 'center', margin: [0, 0, 0, 30] }
         ];
         
         content.push({
             stack: termoContent,
-            margin: [20, 0, 20, 0],
-            pageBreak: 'before'
+            margin: [20, 0, 20, 0]
         });
         
         // Assinaturas
