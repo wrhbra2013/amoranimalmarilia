@@ -424,10 +424,10 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
             <% if (typeof model17 !== 'undefined' && model17 > 0) { %>
             <div class="stat-card">
                 <div class="stat-card-icon" style="color: var(--brand-pink);">
-                    <i class="fas fa-tint"></i>
+                    <i class="fas fa-box"></i>
                 </div>
                 <div class="stat-card-number"><%= model17 %></div>
-                <div class="stat-card-label">Doações Sangue</div>
+                <div class="stat-card-label">Coleta</div>
             </div>
             <% } %>
         </div>
@@ -441,70 +441,6 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                             (typeof model9 !== 'undefined' && model9 > 0) ||
                             (typeof modelCastracaoPorAno !== 'undefined' && modelCastracaoPorAno.length > 0);
         %>
-
-        <% if (hasAnyButton) { %>
-        <div class="mt-4">
-            <div class="stats-grid">
-                <% if (typeof model3 !== 'undefined' && model3 > 0) { %>
-                <a href="/adocao/" class="stat-card">
-                    <div class="stat-card-number" style="color: var(--brand-coral);"><%= model3 %></div>
-                    <div class="stat-card-label">Adoção</div>
-                </a>
-                <% } %>
-                <% if (typeof model7 !== 'undefined' && model7 > 0) { %>
-                <a href="/adotado/" class="stat-card">
-                    <div class="stat-card-number" style="color: var(--brand-purple);"><%= model7 %></div>
-                    <div class="stat-card-label">Adotados</div>
-                </a>
-                <% } %>
-                <% if (typeof model11 !== 'undefined' && model11 > 0) { %>
-                <a href="/procura-se/form" class="stat-card">
-                    <div class="stat-card-number" style="color: var(--brand-blue);"><%= model11 %></div>
-                    <div class="stat-card-label">Procura-se</div>
-                </a>
-                <% } %>
-                <% if (typeof model9 !== 'undefined' && model9 > 0) { %>
-                <a href="/castracao/form" class="stat-card">
-                    <div class="stat-card-number" style="color: var(--brand-green);"><%= model9 %></div>
-                    <div class="stat-card-label">Castrações</div>
-                </a>
-                <% } %>
-                <% 
-                const hasCastracaoAnual = (typeof modelCastracaoPorAno !== 'undefined' && modelCastracaoPorAno && modelCastracaoPorAno.length > 0);
-                if (hasCastracaoAnual) { %>
-                <a href="/castracao/" class="stat-card">
-                    <div class="stat-card-number" style="color: var(--brand-teal); font-size: 1.5rem;">
-                        <% 
-                        const totalCastracaoAno = modelCastracaoPorAno.reduce((sum, item) => sum + parseInt(item.total), 0);
-                        %>
-                        <%= totalCastracaoAno %>
-                    </div>
-                    <div class="stat-card-label">Castrações Anuais</div>
-                    <div style="display: flex; justify-content: center; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
-                        <% modelCastracaoPorAno.forEach(function(ano) { %>
-                        <div style="text-align: center;" title="<%= ano.ano %>: <%= ano.total %> castrações">
-                            <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-coral); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;"><%= ano.total %></div>
-                            <div style="font-size: 0.65rem; color: var(--brand-coral);"><%= ano.ano %></div>
-                        </div>
-                        <% }); %>
-                    </div>
-                </a>
-                <% } %>
-                <% if (typeof model13 !== 'undefined' && model13 > 0) { %>
-                <a href="/parceria/form" class="stat-card">
-                    <div class="stat-card-number" style="color: var(--brand-yellow);"><%= model13 %></div>
-                    <div class="stat-card-label">Parcerias</div>
-                </a>
-                <% } %>
-                <% if (typeof model17 !== 'undefined' && model17 > 0) { %>
-                <a href="/doacao/coleta/form" class="stat-card">
-                    <div class="stat-card-number" style="color: var(--brand-pink);"><%= model17 %></div>
-                    <div class="stat-card-label">Coleta</div>
-                </a>
-                <% } %>
-            </div>
-        </div>
-        <% } %>
     </div>
 </section>
 <% } %>

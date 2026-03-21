@@ -1,95 +1,192 @@
- <%- include("_header") -%>
- 
- <div class="container mt-4 mb-5"> <!-- Container principal para espaçamento e centralização -->
- 
-     <div class="text-center mb-4"> <!-- Centraliza o título -->
-         <h1><i class="fas fa-donate me-2"></i>Doações</h1> <!-- Ícone adicionado para consistência -->
-     </div>
- 
-     <div class="card shadow-sm mb-4"> <!-- Usando card para agrupar o conteúdo inicial -->
-         <div class="card-body">
-             <h2 class="card-title h4">Como você gostaria de ajudar?</h2> <!-- Título dentro do card -->
-             <p class="card-text">Selecione uma opção abaixo:</p>
-             <p>Você pode ajudar de várias maneiras, como doações financeiras, doações de ração ou oferecendo seu tempo como voluntário.</p>
-             <ul> <!-- Usando lista para melhor semântica das opções -->
-                 <li><strong>Doação Financeira:</strong> Você pode fazer isso através de PIX (veja detalhes abaixo).</li>
-                 <li><strong>Doação de Ração:</strong> Entre em contato conosco para saber os locais de coleta.</li>
-                 <li><strong>Voluntariado:</strong> Entre em contato conosco para saber mais sobre as oportunidades disponíveis.</li>
-             </ul>
-             <p class="mt-3">Obrigado por considerar ajudar!</p>
-         </div>
-     </div>
- 
-     <div class="mb-4"> <!-- Espaçamento antes do select -->
-         <label for="donation-option" class="form-label fw-bold">Selecione o tipo de ajuda:</label> <!-- Label associado ao select -->
-         <select id="donation-option" class="form-select form-select-lg" onchange="handleOptionChange(this)"> <!-- Classes Bootstrap para o select -->
-             <option value="0" selected>Selecione uma opção...</option> <!-- 'selected' na opção padrão -->
-             <option value="1">Doação Financeira (PIX)</option>
-             <option value="2">Voluntariado</option>
-             <option value="3">Doação de Ração</option>
-         </select>
-     </div>
- 
-     <!-- Seções de Informação (inicialmente ocultas via JS ou CSS) -->
-     <!-- É recomendado controlar a visibilidade com JS adicionando/removendo a classe 'd-none' do Bootstrap -->
-     <div id="pix-info" class="card border-info mb-3 d-none"> <!-- Usando card e classe d-none para ocultar inicialmente -->
-         <div class="card-header bg-info text-white">
-             <i class="fas fa-piggy-bank me-2"></i>Informações para Doação Financeira (PIX)
-         </div>
-         <div class="card-body text-info">
-             <p class="card-text">Obrigado por sua generosidade!</p>
-             <p><strong>PIX (CNPJ):</strong> 40.472.777.0001.73</p>
-             <p><strong>Nome:</strong> Associação Grupo Amor Animal</p>
-             <div class="text-center"> <!-- Centraliza o QR Code -->
-                 <img src="/static/css/imagem/qrcodepix.png" alt="QR Code para PIX" class="img-fluid" style="max-width: 200px;"> <!-- img-fluid para responsividade -->
-             </div>
-         </div>
-     </div>
- 
-     <div id="volunteer-info" class="card border-success mb-3 d-none"> <!-- Usando card e classe d-none -->
-          <div class="card-header bg-success text-white">
-             <i class="fas fa-hands-helping me-2"></i>Informações sobre Voluntariado
-         </div>
-         <div class="card-body text-success">
-             <p class="card-text">Obrigado por seu interesse em ser voluntário!</p>
-             <p>Você pode se voluntariar em várias áreas, como cuidados com os animais, eventos de arrecadação e muito mais. Se você tem habilidades específicas (fotografia, marketing, veterinária, etc.), sua ajuda será muito bem-vinda!</p>
-             <p><strong>Para saber mais sobre as oportunidades, por favor, entre em contato conosco através dos nossos canais de atendimento ou  se preferir cadastre-se para que posssamos entrar em contato..</strong></p>
-              <div class="text-center"> <!-- Centraliza o QR Code -->
-               <a href="/doacao/voluntario" class="btn btn-secondary">
-              <i class="fas fa-arrow-left me-1"></i>Inscrição  <!-- Melhor texto e ícone -->
-         </a>
-             </div>
-               
+<%- include("_header") -%>
 
-         </div>
-     </div>
- 
-     <div id="food-donation-info" class="card border-warning mb-3 d-none"> <!-- Usando card e classe d-none -->
-          <div class="card-header bg-warning text-dark"> <!-- Fundo warning, texto escuro para contraste -->
-             <i class="fas fa-bone me-2"></i>Informações sobre Doação de Ração
-         </div>
-         <div class="card-body text-dark"> <!-- Texto escuro para contraste -->
-             <p class="card-text">Obrigado por considerar doar ração!</p>
-             <p>Sua doação ajuda a alimentar muitos animais necessitados.</p>
-             <p><strong>Por favor, entre em contato conosco para combinarmos a entrega ou informarmos os pontos de coleta mais próximos.</strong></p>
-         </div>
-             <div class="text-center"> <!-- Centraliza o QR Code -->
-               <a href="/doacao/coleta/form" class="btn btn-secondary">
-              <i class="fas fa-arrow-left me-1"></i>Adicione Item  <!-- Melhor texto e ícone -->
-         </a>
-             </div>
-     </div>
- 
-     <!-- Botão Cancelar/Voltar -->
-     <div class="mt-4 text-center"> <!-- Espaçamento e centralização -->
-         <a href="/home" class="btn btn-secondary">
-              <i class="fas fa-arrow-left me-1"></i> Voltar para Home <!-- Melhor texto e ícone -->
-         </a>
-     </div>
- 
- </div> <!-- Fim container -->
- 
- 
- 
- <%- include("_footer") -%>
- 
+<style>
+.d-none { display: none !important; }
+
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.text-center { text-align: center; }
+.mb-4 { margin-bottom: 20px; }
+.mb-5 { margin-bottom: 25px; }
+.mt-4 { margin-top: 20px; }
+
+.card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.card-header {
+    padding: 12px 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.border-info { border-color: #17a2b8 !important; }
+.border-success { border-color: #28a745 !important; }
+.border-warning { border-color: #ffc107 !important; }
+
+.bg-info { background-color: #17a2b8 !important; color: #fff; }
+.bg-success { background-color: #28a745 !important; color: #fff; }
+.bg-warning { background-color: #ffc107 !important; color: #000; }
+
+.text-white { color: #fff !important; }
+.text-dark { color: #000 !important; }
+
+.form-label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.fw-bold { font-weight: bold; }
+
+.form-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+h1 { margin: 0 0 20px 0; font-size: 28px; }
+.h4 { font-size: 20px; margin: 0 0 10px 0; }
+.mt-3 { margin-top: 15px; }
+</style>
+
+<div class="container">
+
+    <div class="text-center mb-4">
+        <h1><i class="fas fa-donate"></i> Doações</h1>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h4">Como você gostaria de ajudar?</h2>
+            <p>Selecione uma opção abaixo:</p>
+            <p>Você pode ajudar de várias maneiras, como doações financeiras, doações de ração ou oferecendo seu tempo como voluntário.</p>
+            <ul>
+                <li><strong>Doação Financeira:</strong> Você pode fazer isso através de PIX (veja detalhes abaixo).</li>
+                <li><strong>Doação de Ração:</strong> Entre em contato conosco para saber os locais de coleta.</li>
+                <li><strong>Voluntariado:</strong> Entre em contato conosco para saber mais sobre as oportunidades disponíveis.</li>
+            </ul>
+            <p class="mt-3">Obrigado por considerar ajudar!</p>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <label for="donation-option" class="form-label fw-bold">Selecione o tipo de ajuda:</label>
+        <select id="donation-option" class="form-select" onchange="showSection(this.value)">
+            <option value="" disabled selected>Selecione uma opção...</option>
+            <option value="pix">Doação Financeira (PIX)</option>
+            <option value="voluntario">Voluntariado</option>
+            <option value="racao">Doação de Ração</option>
+        </select>
+    </div>
+
+    <div class="d-none" id="section-pix">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <i class="fas fa-piggy-bank"></i> Informações para Doação Financeira (PIX)
+            </div>
+            <div class="card-body">
+                <p>Obrigado por sua generosidade!</p>
+                <p><strong>PIX (CNPJ):</strong> 40.472.777.0001.73</p>
+                <p><strong>Nome:</strong> Associação Grupo Amor Animal</p>
+                <div class="text-center">
+                    <img src="/static/css/imagem/qrcodepix.png" alt="QR Code para PIX" style="max-width: 200px;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none" id="section-voluntario">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <i class="fas fa-hands-helping"></i> Informações sobre Voluntariado
+            </div>
+            <div class="card-body">
+                <p>Obrigado por seu interesse em ser voluntário!</p>
+                <p>Você pode se voluntariar em várias áreas, como cuidados com os animais, eventos de arrecadação e muito mais. Se você tem habilidades específicas (fotografia, marketing, veterinária, etc.), sua ajuda será muito bem-vinda!</p>
+                <p><strong>Para saber mais sobre as oportunidades, por favor, entre em contato conosco através dos nossos canais de atendimento ou se preferir cadastre-se para que posssamos entrar em contato..</strong></p>
+                <div class="text-center">
+                    <a href="/doacao/voluntario" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Inscrição
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none" id="section-racao">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <i class="fas fa-bone"></i> Informações sobre Doação de Ração
+            </div>
+            <div class="card-body">
+                <p>Obrigado por considerar doar ração!</p>
+                <p>Sua doação ajuda a alimentar muitos animais necessitados.</p>
+                <p><strong>Por favor, entre em contato conosco para combinarmos a entrega ou informarmos os pontos de coleta mais próximos.</strong></p>
+                <div class="text-center">
+                    <a href="/doacao/coleta/form" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Adicione Item
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 text-center">
+        <a href="/home" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar para Home
+        </a>
+    </div>
+
+</div>
+
+<script>
+function showSection(value) {
+    var sections = document.querySelectorAll('[id^="section-"]');
+    
+    sections.forEach(function(section) {
+        section.classList.add('d-none');
+    });
+    
+    if (value) {
+        var targetSection = document.getElementById('section-' + value);
+        if (targetSection) {
+            targetSection.classList.remove('d-none');
+        }
+    }
+}
+</script>
+
+<%- include("_footer") -%>

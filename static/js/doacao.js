@@ -1,63 +1,40 @@
-// This function is called when the user selects an option from the dropdown menu   
 document.addEventListener('DOMContentLoaded', () => {
   const pixInfo = document.getElementById('pix-info');
   const volunteerInfo = document.getElementById('volunteer-info');
   const foodDonationInfo = document.getElementById('food-donation-info');
 
-  if (pixInfo) pixInfo.style.display = "none";
-  if (volunteerInfo) volunteerInfo.style.display = "none";
-  if (foodDonationInfo) foodDonationInfo.style.display = "none";
+  if (pixInfo) pixInfo.classList.add('d-none');
+  if (volunteerInfo) volunteerInfo.classList.add('d-none');
+  if (foodDonationInfo) foodDonationInfo.classList.add('d-none');
 });
 
 function handleOptionChange(selectElement) {
-    // Ensure the first option is not displayed
-    const selectedValue = selectElement.options[selectElement.selectedIndex].value;
-  
- 
-   const pixInfo = document.getElementById('pix-info');
-   const volunteerInfo = document.getElementById('volunteer-info');
-   const foodDonationInfo = document.getElementById('food-donation-info');
-  
-   if (pixInfo && volunteerInfo && foodDonationInfo) {
-     // Hide all sections if no valid option is selected
-     if (selectedValue === "0") {
-       pixInfo.style.display = "none";
-       volunteerInfo.style.display = "none";
-       foodDonationInfo.style.display = "none";
-       
-     } else  if (selectedValue === "1") {
-       pixInfo.style.display = "block";
-       volunteerInfo.style.display = "none";
-       foodDonationInfo.style.display = "none";
-     } else if (selectedValue === "2") {
-       pixInfo.style.display = "none";
-       volunteerInfo.style.display = "block";
-       foodDonationInfo.style.display = "none";
-     } else if (selectedValue === "3") {
-       pixInfo.style.display = "none";
-       volunteerInfo.style.display = "none";
-       foodDonationInfo.style.display = "block";
-     } else {
-       console.log("Invalid selection");
-     }
-     
-   }
-    // Hide all 
-    // sections if no valid option is selected
-    if (selectedValue === "") {
-      pixInfo.style.display = "none";
-      volunteerInfo.style.display = "none";
-      foodDonationInfo.style.display = "none";
-    }     
+  const selectedValue = selectElement.value;
+  const pixInfo = document.getElementById('pix-info');
+  const volunteerInfo = document.getElementById('volunteer-info');
+  const foodDonationInfo = document.getElementById('food-donation-info');
 
+  if (pixInfo && volunteerInfo && foodDonationInfo) {
+    pixInfo.classList.add('d-none');
+    volunteerInfo.classList.add('d-none');
+    foodDonationInfo.classList.add('d-none');
+
+    if (selectedValue === "1") {
+      pixInfo.classList.remove('d-none');
+    } else if (selectedValue === "2") {
+      volunteerInfo.classList.remove('d-none');
+    } else if (selectedValue === "3") {
+      foodDonationInfo.classList.remove('d-none');
+    }
+  }
 }
 
 function mostrarOutroItem(valor) {
-    const outroItemDiv = document.getElementById('outroItemDiv');
-    if (valor === 'outro') {
-        outroItemDiv.style.display = 'block';
-    } else {
-        outroItemDiv.style.display = 'none';
-        document.getElementById('outro_item_descricao').value = ''; // Limpa o campo se outra opção for selecionada
-    }
+  const outroItemDiv = document.getElementById('outroItemDiv');
+  if (valor === 'outro') {
+    outroItemDiv.style.display = 'block';
+  } else {
+    outroItemDiv.style.display = 'none';
+    document.getElementById('outro_item_descricao').value = '';
+  }
 }
