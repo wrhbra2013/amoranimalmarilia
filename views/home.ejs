@@ -356,7 +356,8 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                 (typeof model11 !== 'undefined' && model11 > 0) ||
                 (typeof model9 !== 'undefined' && model9 > 0) ||
                 (typeof model13 !== 'undefined' && model13 > 0) ||
-                (typeof model17 !== 'undefined' && model17 > 0);
+                (typeof model17 !== 'undefined' && model17 > 0) ||
+                (typeof modelCastracaoPorAno !== 'undefined' && modelCastracaoPorAno.length > 0);
 %>
 
 <% if (hasStats) { %>
@@ -428,6 +429,22 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                 </div>
                 <div class="stat-card-number"><%= model17 %></div>
                 <div class="stat-card-label">Coleta</div>
+            </div>
+            <% } %>
+            <% if (typeof modelCastracaoPorAno !== 'undefined' && modelCastracaoPorAno.length > 0) { %>
+            <div class="stat-card" style="grid-column: span 1;">
+                <div class="stat-card-icon" style="color: var(--brand-teal);">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="stat-card-number" style="font-size: 1.2rem;">
+                    <% modelCastracaoPorAno.forEach(function(item) { %>
+                        <div style="font-size: 0.9rem; margin: 2px 0;">
+                            <span style="color: var(--text-color);"><%= item.ano %>:</span>
+                            <strong><%= item.total %></strong>
+                        </div>
+                    <% }); %>
+                </div>
+                <div class="stat-card-label">Castrações por Ano</div>
             </div>
             <% } %>
         </div>
