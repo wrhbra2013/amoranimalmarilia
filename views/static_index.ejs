@@ -1,0 +1,75 @@
+<%-include("_header")-%>
+
+<style>
+.stat-card {
+    background: var(--container-bg) !important;
+}
+</style>
+
+<link rel="stylesheet" href="/static/css/home.css">
+
+<main class="main-content">
+
+<!-- ==========================================================================
+    HERO SECTION - Landing Page Moderna
+========================================================================== -->
+<section class="hero-landing">
+    <div class="landing-container">
+        <h1>Amor que Transforma Vidas</h1>
+        <p>Junte-se a nós na missão de-resgatar, cuidar e encontrar lares amorosos para animais abandonados.</p>
+        <div style="display: block;">
+            <a href="/doacao" class="btn btn-primary">Quero Doar</a>
+            <a href="/adocao" class="btn btn-outline">Ou Adote</a>
+        </div>
+    </div>
+</section>
+
+<!-- ==========================================================================
+    MISSÃO / SOBRE RESUMO
+========================================================================== -->
+<section class="landing-section landing-section-alt">
+    <div class="landing-container">
+        <div class="landing-grid" style="grid-template-columns: 1fr 1fr; align-items: center;">
+            <div>
+                <h2 style="color: var(--heading-color);">Nossa Missão</h2>
+                <p style="line-height: 1.8; color: var(--text-color);">
+                    A ONG Amor Animal é dedicada ao resgate, reabilitação e realocação de animais em situação de vulnerabilidade. 
+                    Movidos pela compaixão, trabalhamos incansavelmente para oferecer uma segunda chance a cada um deles, 
+                    promovendo a posse responsável e o bem-estar animal em nossa comunidade.
+                </p>
+                <a href="/sobre" class="button" style="font-size: 1rem; padding: 10px 25px; background: transparent; border: 2px solid var(--brand-teal); color: var(--brand-teal); border-radius: 8px;">Saiba mais</a>
+            </div>
+            <div style="text-align: center;">
+                <fieldset style="border: 2px solid var(--brand-teal); border-radius: 12px; padding: 1.5rem; max-width: 300px; margin: 0 auto;">
+                    <legend style="padding: 0 10px; font-weight: bold; color: var(--heading-color);">Portal da Transparência</legend>
+                    <img src="/static/css/imagem/transparencia.png" alt="QR Code Transparência" style="width: 150px; height: 150px; border-radius: 8px;">
+                    <p style="margin-top: 1rem; color: var(--text-color); font-size: 0.9rem;">
+                        Escaneie ou visite<br>
+                        <a href="https://amoranimal.ong.br/transparencia" target="_blank" style="color: var(--brand-teal);">amoranimal.ong.br/transparencia</a>
+                    </p>
+                </fieldset>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==========================================================================
+    CHAMADA FINAL / COMO AJUDAR
+========================================================================== -->
+<section class="landing-section landing-section-white">
+    <div class="landing-container text-center">
+        <h2 style="color: var(--heading-color); margin-bottom: 1rem;">Faça Parte da Mudança</h2>
+        <p style="font-size: 1.1rem; color: var(--text-color); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+            Sua ajuda, seja como voluntário, parceiro ou doador, é fundamental para continuarmos nosso trabalho.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="/doacao/voluntario/interesse/form" class="button">Quero ser Voluntário</a>
+            <a href="/parceria/form" class="button" style="background: var(--brand-coral);">Seja um Parceiro</a>
+            <a href="/doacao" class="button" style="background: var(--brand-purple);">Faça uma Doação</a>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<%- include("_footer") -%>
