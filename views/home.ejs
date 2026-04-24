@@ -289,6 +289,12 @@ function scrollEventFotos(index, direction) {
         });
     }
 }
+function toggleEventForm() {
+    const form = document.getElementById('event-form-inline');
+    if (form) {
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+}
 function atenderCastracao(url, rowId) {
     if (!confirm('Confirmar atendimento?')) return;
     
@@ -472,9 +478,47 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
     <div class="landing-container">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h2 style="color: var(--heading-color);">Eventos</h2>
-            <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
-                <a href="/eventos/form" class="button btn-sm">+ Adicionar Evento</a>
-            <% } %>
+<% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+            <button type="button" class="button btn-sm" onclick="toggleEventForm()">+ Adicionar Evento</button>
+        <% } %>
+        </div>
+
+        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+        <div id="event-form-inline" class="event-form-inline" style="display: none; margin-bottom: 30px; padding: 25px; background: var(--container-bg); border-radius: 12px; box-shadow: var(--container-shadow);">
+            <h3 style="margin-bottom: 20px; color: var(--heading-color);">Criar Novo Evento</h3>
+            <form action="/eventos/form" method="POST" enctype="multipart/form-data" id="event-form">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="event-titulo" class="form-label">Título do Evento *</label>
+                        <input type="text" id="event-titulo" name="titulo" class="form-control" required placeholder="Ex: Mutirão de Castração">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="event-data" class="form-label">Data do Evento</label>
+                        <input type="date" id="event-data" name="data" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="event-arquivo" class="form-label">Imagem *</label>
+                        <input type="file" id="event-arquivo" name="arquivo" class="form-control" accept="image/*" required>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label for="event-descricao" class="form-label">Descrição</label>
+                    <textarea id="event-descricao" name="descricao" class="form-control" rows="3" placeholder="Descreva o evento..."></textarea>
+                </div>
+                <div class="mt-3 d-flex gap-2">
+                    <button type="submit" class="button">
+                        <i class="fas fa-save"></i> Criar Evento
+                    </button>
+                    <button type="button" class="button btn-secondary" onclick="toggleEventForm()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+        <% } %>
+    </div>
+</section>
+<% } %>
         </div>
 
         <div class="events-grid">
