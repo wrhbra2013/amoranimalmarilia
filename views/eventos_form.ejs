@@ -1,47 +1,35 @@
 <%- include("_header") -%>
 
 <main class="main-content">
-  <div class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-md-8">
-        <h2 class="mb-4">Criar Evento</h2>
+  <div class="container">
+    <h2>Criar Evento</h2>
 
-        <% if (typeof error_msg !== 'undefined' && error_msg.length) { %>
-          <div class="alert alert-danger"><%= error_msg %></div>
-        <% } %>
-        <% if (typeof success_msg !== 'undefined' && success_msg.length) { %>
-          <div class="alert alert-success"><%= success_msg %></div>
-        <% } %>
+    <% if (typeof error_msg !== 'undefined' && error_msg.length) { %>
+      <div class="alert" style="background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;"><%= error_msg %></div>
+    <% } %>
+    <% if (typeof success_msg !== 'undefined' && success_msg.length) { %>
+      <div class="alert" style="background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;"><%= success_msg %></div>
+    <% } %>
 
-        <form action="/eventos/form" method="post" enctype="multipart/form-data">
-          <div class="mb-3">
-            <label for="titulo" class="form-label">Título</label>
-            <input type="text" id="titulo" name="titulo" class="form-control" required>
-          </div>
+    <form action="/eventos/form" method="post" enctype="multipart/form-data">
+      <label for="titulo">Título</label>
+      <input type="text" id="titulo" name="titulo" required>
 
-          <div class="mb-3">
-            <label for="data" class="form-label">Data do Evento</label>
-            <input type="date" id="data" name="data" class="form-control">
-          </div>
+      <label for="data">Data do Evento</label>
+      <input type="date" id="data" name="data">
 
-          <div class="mb-3">
-            <label for="arquivo" class="form-label">Imagem (obrigatória)</label>
-            <input type="file" id="arquivo" name="arquivo" accept="image/*" class="form-control" required>
-          </div>
+      <label for="arquivo">Imagem (obrigatória)</label>
+      <input type="file" id="arquivo" name="arquivo" accept="image/*" required>
 
-          <div class="mb-3">
-            <label for="descricao" class="form-label">Descrição</label>
-            <textarea id="descricao" name="descricao" rows="6" class="form-control"></textarea>
-          </div>
+      <label for="descricao">Descrição</label>
+      <textarea id="descricao" name="descricao" rows="6"></textarea>
 
-          <div class="d-flex justify-content-between">
-            <a href="/eventos" class="button btn-secondary">Cancelar</a>
-            <button type="submit" class="button">Criar Evento</button>
-          </div>
-        </form>
-
+      <div class="button-group">
+        <a href="/eventos" class="button btn-cancelar">Cancelar</a>
+        <button type="submit" class="button btn-submit-form">Criar Evento</button>
       </div>
-    </div>
+    </form>
+
   </div>
 </main>
 

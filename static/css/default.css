@@ -834,10 +834,33 @@ footer {
    text-decoration: none;
    transition: background-color 0.15s ease-in-out;
  }
- .button:hover {
-   background-color: var(--button-hover-bg);
-   text-decoration: none;
- }
+.button:hover {
+    background-color: var(--button-hover-bg);
+    text-decoration: none;
+  }
+
+  .btn-submit-form {
+    background-color: #28a745;
+    color: white;
+    font-weight: bold;
+  }
+  .btn-submit-form:hover {
+    background-color: #218838;
+  }
+
+.btn-cancelar {
+     background-color: #6c757d;
+     color: white;
+   }
+   .btn-cancelar:hover {
+     background-color: #5a6268;
+   }
+
+   .button-group {
+     display: flex;
+     gap: 1rem;
+     margin-top: 1rem;
+   }
  
  /* --- Forms --- */
  label,
