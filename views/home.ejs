@@ -493,6 +493,7 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
             const linkUrl = event.arquivo ? `/eventos/${event.id}` : `/campanha/${event.id}`;
             const eventDate = event.data_evento ? (() => { const d = new Date(event.data_evento); return !isNaN(d.getTime()) ? d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : ''; })() : '';
             const hasFotos = event.fotos && event.fotos.length > 0;
+            const hasArquivo = event.arquivo && event.arquivo.length > 0;
         %>
         <div class="event-card-hover">
             <div class="event-info">
@@ -524,9 +525,13 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                         </div>
                         <div class="event-lightbox-counter">1 / <%= event.fotos.length %></div>
                     </div>
-                <% } else { %>
+                <% } else if (hasArquivo) { %>
                     <a href="<%= linkUrl %>">
                         <img src="<%= imgSrc %>" alt="<%= event.titulo %>">
+                    </a>
+                <% } else { %>
+                    <a href="<%= linkUrl %>">
+                        <img src="/uploads/home/placeholder-event.jpg" alt="<%= event.titulo %>">
                     </a>
                 <% } %>
                 <div class="event-fotos-overlay">
