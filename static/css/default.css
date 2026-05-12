@@ -1,10 +1,16 @@
-ii/* ==========================================================================
-   0. CSS Pure Toggle Hacks (replaces JS)
+/* ==========================================================================
+    0. CSS Pure Toggle Hacks (replaces JS)
    ========================================================================== */
-.css-toggle-checkbox {
+.css-toggle-checkbox,
+.help-checkbox {
   position: absolute;
+  width: 0;
+  height: 0;
+  padding: 0;
+  margin: 0;
   opacity: 0;
   pointer-events: none;
+  border: none;
 }
 
 /* High Contrast Toggle - CSS Pure */
@@ -24,14 +30,7 @@ ii/* ==========================================================================
 
 
 
-/* Help Button - CSS Pure Dropdown */
-.help-checkbox {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.help-label {
+/* Help Button - CSS Pure Dropdown */.help-label {
   position: fixed;
   top: 15px;
   left: 50px;
