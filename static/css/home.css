@@ -94,21 +94,20 @@
     opacity: 0.8;
 }
 
-/* Grid de Eventos - Scroll Vertical */
+/* Grid de Eventos - Scroll Horizontal */
 .events-grid {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 1.5rem;
-    max-height: 800px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-    padding-right: 8px;
+    padding-bottom: 8px;
 }
 
 .events-grid::-webkit-scrollbar {
-    width: 8px;
+    height: 8px;
 }
 
 .events-grid::-webkit-scrollbar-track {
@@ -119,6 +118,11 @@
 .events-grid::-webkit-scrollbar-thumb {
     background: var(--brand-teal);
     border-radius: 4px;
+}
+
+.events-grid > .event-card-hover {
+    flex: 0 0 600px;
+    min-width: 0;
 }
 
 /* Event Full Card com Carrossel de Fotos */
