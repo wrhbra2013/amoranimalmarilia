@@ -592,9 +592,9 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
         </div>
     </div>
     
-    <div class="castracao-table" style="border-radius: 0; box-shadow: none; width: 100%; overflow-x: auto;">
+    <div class="castracao-table" style="border-radius: 0; box-shadow: none; width: 100%; overflow-x: auto; overflow-y: auto; max-height: 600px;">
         <table class="table table-striped table-hover mb-0" style="font-size: 0.8rem; width: 100%;">
-            <thead style="background: var(--brand-teal); color: white;">
+            <thead style="background: var(--brand-teal); color: white; position: sticky; top: 0; z-index: 2;">
                 <tr>
                     <th>Ticket</th>
                     <th>Pet</th>
@@ -607,7 +607,7 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                 </tr>
             </thead>
             <tbody>
-                <% model8.slice(0, 10).forEach(function(castracao) { 
+                <% model8.forEach(function(castracao) { 
                     const statusUpper = castracao.status ? String(castracao.status).trim().toUpperCase() : 'PENDENTE';
                     const isAttended = statusUpper === 'ATENDIDO';
                     const isMutirao = castracao.tipo === 'mutirao';
