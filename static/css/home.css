@@ -94,17 +94,31 @@
     opacity: 0.8;
 }
 
-/* Grid de Eventos - Cards lado a lado */
+/* Grid de Eventos - Scroll Vertical */
 .events-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 1.5rem;
+    max-height: 800px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 8px;
 }
 
-@media (max-width: 900px) {
-    .events-grid {
-        grid-template-columns: 1fr;
-    }
+.events-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.events-grid::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.events-grid::-webkit-scrollbar-thumb {
+    background: var(--brand-teal);
+    border-radius: 4px;
 }
 
 /* Event Full Card com Carrossel de Fotos */

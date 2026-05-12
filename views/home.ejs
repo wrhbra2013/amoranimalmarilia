@@ -466,6 +466,35 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
 </section>
 <% } %>
 
+<!-- ==========================================================================
+    MISSÃO / SOBRE RESUMO
+========================================================================== -->
+<section class="landing-section landing-section-alt">
+    <div class="landing-container">
+        <div class="landing-grid" style="grid-template-columns: 1fr 1fr; align-items: center;">
+            <div>
+                <h2 style="color: var(--heading-color);">Nossa Missão</h2>
+                <p style="line-height: 1.8; color: var(--text-color);">
+                    A ONG Amor Animal é dedicada ao resgate, reabilitação e realocação de animais em situação de vulnerabilidade. 
+                    Movidos pela compaixão, trabalhamos incansavelmente para oferecer uma segunda chance a cada um deles, 
+                    promovendo a posse responsável e o bem-estar animal em nossa comunidade.
+                </p>
+                <a href="/sobre" class="button" style="font-size: 1rem; padding: 10px 25px; background: transparent; border: 2px solid var(--brand-teal); color: var(--brand-teal); border-radius: 8px;">Saiba mais</a>
+            </div>
+            <div style="text-align: center;">
+                <fieldset style="border: 2px solid var(--brand-teal); border-radius: 12px; padding: 1.5rem; max-width: 300px; margin: 0 auto;">
+                    <legend style="padding: 0 10px; font-weight: bold; color: var(--heading-color);">Portal da Transparência</legend>
+                    <img src="/static/css/imagem/transparencia.png" alt="QR Code Transparência" style="width: 150px; height: 150px; border-radius: 8px;">
+                    <p style="margin-top: 1rem; color: var(--text-color); font-size: 0.9rem;">
+                        Escaneie ou visite<br>
+                        <a href="https://amoranimal.ong.br/transparencia" target="_blank" style="color: var(--brand-teal);">amoranimal.ong.br/transparencia</a>
+                    </p>
+                </fieldset>
+            </div>
+        </div>
+    </div>
+</section>
+
 <% const eventsList = (typeof modelEventos !== 'undefined' && modelEventos.length) ? modelEventos : ((typeof model1 !== 'undefined' && model1.length) ? model1 : []); %>
 
 <% if (eventsList && eventsList.length > 0) { %>
@@ -765,35 +794,6 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
     </div>
 </section>
 <% } %>
-
-<!-- ==========================================================================
-    MISSÃO / SOBRE RESUMO
-========================================================================== -->
-<section class="landing-section landing-section-alt">
-    <div class="landing-container">
-        <div class="landing-grid" style="grid-template-columns: 1fr 1fr; align-items: center;">
-            <div>
-                <h2 style="color: var(--heading-color);">Nossa Missão</h2>
-                <p style="line-height: 1.8; color: var(--text-color);">
-                    A ONG Amor Animal é dedicada ao resgate, reabilitação e realocação de animais em situação de vulnerabilidade. 
-                    Movidos pela compaixão, trabalhamos incansavelmente para oferecer uma segunda chance a cada um deles, 
-                    promovendo a posse responsável e o bem-estar animal em nossa comunidade.
-                </p>
-                <a href="/sobre" class="button" style="font-size: 1rem; padding: 10px 25px; background: transparent; border: 2px solid var(--brand-teal); color: var(--brand-teal); border-radius: 8px;">Saiba mais</a>
-            </div>
-            <div style="text-align: center;">
-                <fieldset style="border: 2px solid var(--brand-teal); border-radius: 12px; padding: 1.5rem; max-width: 300px; margin: 0 auto;">
-                    <legend style="padding: 0 10px; font-weight: bold; color: var(--heading-color);">Portal da Transparência</legend>
-                    <img src="/static/css/imagem/transparencia.png" alt="QR Code Transparência" style="width: 150px; height: 150px; border-radius: 8px;">
-                    <p style="margin-top: 1rem; color: var(--text-color); font-size: 0.9rem;">
-                        Escaneie ou visite<br>
-                        <a href="https://amoranimal.ong.br/transparencia" target="_blank" style="color: var(--brand-teal);">amoranimal.ong.br/transparencia</a>
-                    </p>
-                </fieldset>
-            </div>
-        </div>
-    </div>
-</section>
 
 <!-- ==========================================================================
     CHAMADA FINAL / COMO AJUDAR
