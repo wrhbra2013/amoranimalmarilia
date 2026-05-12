@@ -309,9 +309,7 @@ function atenderCastracao(url, rowId) {
                 if (cells[6]) {
                     cells[6].innerHTML = '<span class="badge" style="background: #10b981; color: white;">✓ Atendido</span>';
                 }
-                if (cells[7]) {
-                    cells[7].innerHTML = '';
-                }
+
             }
         } else {
             alert('Erro ao processar atendimento.');
@@ -629,18 +627,24 @@ const hasStats = (typeof model15 !== 'undefined' && model15 > 0) ||
                             <span class="badge" style="background: #10b981; color: white;">✓ Atendido</span>
                         <% } else { %>
                             <span class="badge" style="background: #f59e0b; color: white;">⏳ Pendente</span>
+                            <button type="button" class="btn btn-sm" style="background: #10b981; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; margin-left: 4px;" onclick="atenderCastracao('<%= rotaAtender %>', '<%= castracao.id %>')" title="Marcar como Atendido">
+                                <i class="bi bi-clipboard2-check"></i>
+                            </button>
                         <% } %>
                     </td>
-                    <td>
-                        <% if (!isAttended) { %>
-                        <button type="button" class="btn btn-sm btn-atender" onclick="atenderCastracao('<%= rotaAtender %>', '<%= castracao.id %>')">
-                            ✓
-                        </button>
-                        <% } %>
+                    <td style="white-space: nowrap;">
                         <% if (castracao.ticket) { %>
-                        <a href="<%= rotaComprovante %>" target="_blank" class="btn btn-sm btn-comprovante">
-                            📄
+                        <a href="<%= rotaComprovante %>" target="_blank" class="btn btn-sm" style="background: var(--brand-teal); color: white; border: none; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; text-decoration: none;">
+                            <i class="bi bi-file-earmark-text"></i> Comprovante
                         </a>
+                        <% } %>
+                        <% if (typeof isAdmin !== 'undefined' && isAdmin) { %>
+                        <% var rotaExcluir = isMutirao ? '/castracao/mutirao/delete/' + castracao.id : '/castracao/delete/' + castracao.id; %>
+                        <form action="<%= rotaExcluir %>" method="POST" style="display: inline; margin-left: 4px;" onsubmit="return confirm('Tem certeza que deseja excluir este agendamento?');">
+                            <button type="submit" class="btn btn-sm" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem;">
+                                <i class="bi bi-trash3"></i> Excluir
+                            </button>
+                        </form>
                         <% } %>
                     </td>
                 </tr>
