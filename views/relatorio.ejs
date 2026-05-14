@@ -116,46 +116,56 @@
                  </div>
              </div>
              
-             <% if (typeof model !== 'undefined' && model.length > 0) { %>
-                 <div style="overflow-x: auto;">
-                     <table class="table-modern">
-                         <thead>
-                             <% if (model.length > 0) { %>
-                                 <tr>
-                                     <% const firstItem = model[0]; %>
-                                     <% for (const key in firstItem) { %>
-                                         <th>
-                                             <%= key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ') %>
-                                         </th>
-                                     <% } %>
-                                     <th style="text-align: center; min-width: 100px;">Ações</th>
-                                 </tr>
-                             <% } %>
-                         </thead>
-                         <tbody>
-                              <% for (const item of model) { %>
+              <% if (typeof model !== 'undefined' && model.length > 0) { %>
+                  <div style="overflow-x: auto;">
+                      <table class="table-modern">
+                          <thead>
+                              <% if (model.length > 0) { %>
                                   <tr>
-                                      <% for (const key in item) { %>
-                                          <td><%= item[key] || '-' %></td>
+                                      <% const firstItem = model[0]; %>
+                                      <% for (const key in firstItem) { %>
+                                          <% if (key === 'id') continue; %>
+                                          <th>
+                                              <%= key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ').replace(/_formatado$/i, '') %>
+                                          </th>
                                       <% } %>
-                                      <td>
-                                          <% if (item.id) { %>
-                                          <div class="action-buttons">
-                                              <form action="/relatorio/delete/<%= tabela %>/<%= item.id %>?_method=DELETE" method="POST" style="margin: 0;">
-                                                  <button type="submit" class="btn-action btn-delete" title="Excluir Registro" onclick="return confirm('Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.')">
-                                                      <i class="bi bi-trash"></i>
-                                                  </button>
-                                              </form>
-                                          </div>
-                                          <% } else { %>
-                                          <span class="text-muted">-</span>
-                                          <% } %>
-                                      </td>
+                                      <th style="text-align: center; min-width: 100px;">Ações</th>
                                   </tr>
                               <% } %>
-                         </tbody>
-                     </table>
-                 </div>
+                          </thead>
+                          <tbody>
+                               <% for (const item of model) { %>
+                                   <tr>
+                                       <% for (const key in item) { %>
+                                           <% if (key === 'id') continue; %>
+                                           <td>
+                                               <% 
+                                               let val = item[key];
+                                               if (val && typeof val === 'string' && val.length > 120) {
+                                                   val = val.substring(0, 120) + '...';
+                                               }
+                                               %>
+                                               <%= val || '-' %>
+                                           </td>
+                                       <% } %>
+                                       <td>
+                                           <% if (item.id) { %>
+                                           <div class="action-buttons">
+                                               <form action="/relatorio/delete/<%= tabela %>/<%= item.id %>?_method=DELETE" method="POST" style="margin: 0;">
+                                                   <button type="submit" class="btn-action btn-delete" title="Excluir Registro" onclick="return confirm('Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.')">
+                                                       <i class="bi bi-trash"></i>
+                                                   </button>
+                                               </form>
+                                           </div>
+                                           <% } else { %>
+                                           <span class="text-muted">-</span>
+                                           <% } %>
+                                       </td>
+                                   </tr>
+                               <% } %>
+                          </tbody>
+                      </table>
+                  </div>
              <% } else { %>
                  <div class="empty-state">
                      <i class="bi bi-inbox"></i>

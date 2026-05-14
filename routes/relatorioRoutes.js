@@ -354,7 +354,7 @@ async function fetchReportData(tabela) {
     try {
      const data = await fetchReportData(tabela);
      // MES_NOME será usado para exibição, MES_NUM para lógica interna se necessário.
-     const columnsToHideForHtml = ['origem', 'arquivo', 'ano', 'mes_num', 'mes_nome', 'isAdmin'];
+     const columnsToHideForHtml = ['origem', 'arquivo', 'ano', 'mes_num', 'mes_nome', 'isAdmin', 'updated_at', 'termo_arquivo', 'criado_por', 'whatsapp', 'senha', 'password', 'token', 'complemento'];
  
      const sanitizedData = data.map(row => {
       const sanitizedRow = {};
@@ -393,7 +393,7 @@ async function fetchReportData(tabela) {
      });
     }
  
-    const columnsToRemoveForPdf = ['arquivo', 'ano', 'mes_num', 'mes_nome', 'origem', 'isAdmin', 'whatsapp'];
+     const columnsToRemoveForPdf = ['arquivo', 'ano', 'mes_num', 'mes_nome', 'origem', 'isAdmin', 'whatsapp', 'updated_at', 'termo_arquivo', 'criado_por', 'senha', 'password', 'token', 'complemento'];
     let tableHeaders = [];
     if (tableData.length > 0 && tableData[0]) {
      const originalHeaders = Object.keys(tableData[0]);
