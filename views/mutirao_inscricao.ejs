@@ -83,6 +83,14 @@
       <h4>Dados dos Pets</h4>
       <p class="text-muted">Cada pet cadastrado ocupará uma vaga no mutirão.</p>
 
+      <% if (mutirao.especie_padrao === 'gato') { %>
+        <div class="alert alert-info"><i class="fas fa-cat"></i> <strong>Mutirão exclusivo para GATOS.</strong> Apenas felinos serão aceitos neste mutirão.</div>
+      <% } else if (mutirao.especie_padrao === 'cachorro') { %>
+        <div class="alert alert-warning"><i class="fas fa-dog"></i> <strong>Mutirão exclusivo para CACHORROS.</strong> Apenas caninos serão aceitos neste mutirão.</div>
+      <% } else if (mutirao.especie_padrao === 'ambos') { %>
+        <div class="alert alert-success"><i class="fas fa-paw"></i> <strong>Mutirão para Gatos e Cachorros.</strong> Ambas as espécies são aceitas.</div>
+      <% } %>
+
       <!-- Formulário para adicionar pet -->
       <div class="card bg-light p-3 mb-3">
         <div class="row g-2">
@@ -94,8 +102,12 @@
             <label class="form-label">Espécie *</label>
             <select id="petEspecie" class="form-select">
               <option value="">Selecione...</option>
-              <option value="gato">Gato</option>
-              <option value="cachorro">Cachorro</option>
+              <% if (mutirao.especie_padrao !== 'cachorro') { %>
+                <option value="gato">Gato</option>
+              <% } %>
+              <% if (mutirao.especie_padrao !== 'gato') { %>
+                <option value="cachorro">Cachorro</option>
+              <% } %>
             </select>
           </div>
           <div class="col-md-2">
@@ -179,6 +191,13 @@
       <% if (mutirao.vagas_disponiveis !== null) { %>
         <p><strong>Vagas disponíveis:</strong> <span class="badge bg-info"><%= mutirao.vagas_disponiveis %></span></p>
       <% } %>
+      <% if (mutirao.especie_padrao === 'gato') { %>
+        <p><strong>Espécie:</strong> <span class="badge bg-info">Exclusivo Gato</span></p>
+      <% } else if (mutirao.especie_padrao === 'cachorro') { %>
+        <p><strong>Espécie:</strong> <span class="badge bg-warning text-dark">Exclusivo Cachorro</span></p>
+      <% } else if (mutirao.especie_padrao === 'ambos') { %>
+        <p><strong>Espécie:</strong> <span class="badge bg-success">Gato e Cachorro</span></p>
+      <% } %>
     </div>
   </div>
 </main>
@@ -208,6 +227,18 @@
             alert('Preencha: Nome, Espécie e Sexo do pet');
             return;
         }
+        
+        <% if (mutirao.especie_padrao === 'gato') { %>
+        if (especie !== 'gato') {
+            alert('Este mutirão é exclusivo para GATOS. Selecione a espécie correta.');
+            return;
+        }
+        <% } else if (mutirao.especie_padrao === 'cachorro') { %>
+        if (especie !== 'cachorro') {
+            alert('Este mutirão é exclusivo para CACHORROS. Selecione a espécie correta.');
+            return;
+        }
+        <% } %>
         
         pets.push({
             nome: nome,
@@ -342,6 +373,12 @@
             buscarCep();
         }
     });
+
+    // Auto-select species if mutirao has especie_padrao restriction
+    var especiePadrao = '<%= mutirao.especie_padrao || "" %>';
+    if (especiePadrao === 'gato' || especiePadrao === 'cachorro') {
+        document.getElementById('petEspecie').value = especiePadrao;
+    }
 })();
 </script>
 

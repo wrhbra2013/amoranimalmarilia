@@ -881,13 +881,13 @@ router.post('/calendario-mutirao/salvar-default-clinica', isAdmin, async (req, r
 // POST /castracao/admin/default-clinica - salva a clínica padrão usada para baixo custo/pets-rua (admin)
 router.post('/calendario-mutirao', isAdmin, async (req, res) => {
     try {
-        const { data_evento, clinica, vagas, endereco } = req.body;
+        const { data_evento, clinica, vagas, endereco, especie_padrao } = req.body;
         if (!data_evento || !clinica) {
             req.flash('error', 'Data e clínica são obrigatórias.');
             return res.redirect('/castracao/calendario-mutirao');
         }
-        const insertSql = `INSERT INTO calendario_mutirao (data_evento, clinica, vagas, endereco, criado_por) VALUES ($1,$2,$3,$4,$5)`;
-        await pool.query(insertSql, [data_evento, clinica, parseInt(vagas || 0, 10), endereco || null, req.user ? req.user.usuario || req.user.nome : null]);
+        const insertSql = `INSERT INTO calendario_mutirao (data_evento, clinica, vagas, endereco, especie_padrao, criado_por) VALUES ($1,$2,$3,$4,$5,$6)`;
+        await pool.query(insertSql, [data_evento, clinica, parseInt(vagas || 0, 10), endereco || null, especie_padrao || '', req.user ? req.user.usuario || req.user.nome : null]);
         req.flash('success', 'Data de mutirão criada com sucesso.');
         res.redirect('/castracao/calendario-mutirao');
     } catch (error) {

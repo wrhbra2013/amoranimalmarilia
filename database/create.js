@@ -342,6 +342,7 @@ async function create_calendario_mutirao() {
          data_evento DATE NOT NULL,
          clinica VARCHAR(255) NOT NULL,
          vagas INT DEFAULT 0,
+         especie_padrao VARCHAR(20) DEFAULT '',
          criado_por VARCHAR(255),
          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
      );`;
@@ -357,6 +358,18 @@ async function migrateCalendarioMutiraoEndereco() {
     const result = await pool.query(checkColumn);
     if (result.rows.length === 0) {
         await executeDDL(`ALTER TABLE calendario_mutirao ADD COLUMN endereco TEXT`, 'calendario_mutirao');
+    }
+}
+
+async function migrateCalendarioMutiraoEspeciePadrao() {
+    const checkColumn = `
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'calendario_mutirao' AND column_name = 'especie_padrao'
+    `;
+    const result = await pool.query(checkColumn);
+    if (result.rows.length === 0) {
+        await executeDDL(`ALTER TABLE calendario_mutirao ADD COLUMN especie_padrao VARCHAR(20) DEFAULT ''`, 'calendario_mutirao');
     }
 }
 
@@ -643,6 +656,7 @@ async function migrateCastracaoAtendidoColumn() {
         await create_mutirao_castracao();
         await create_calendario_mutirao();
         await migrateCalendarioMutiraoEndereco();
+        await migrateCalendarioMutiraoEspeciePadrao();
       await create_transparencia();
       await create_solicitacao_acesso();
       await migrateSolicitacaoAcessoCpfColumn(); // Garante que a coluna CPF exista

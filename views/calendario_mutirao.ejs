@@ -85,6 +85,16 @@
         <input type="number" name="vagas" class="form-control" value="10" min="0" title="0 = vagas ilimitadas">
         <small class="text-muted">0 = ilimitadas</small>
       </div>
+      <div class="col-md-2">
+        <label class="form-label">Espécie Padrão</label>
+        <select name="especie_padrao" class="form-select">
+          <option value="">Padrão (gato e cachorro)</option>
+          <option value="gato">Exclusivo Gato</option>
+          <option value="cachorro">Exclusivo Cachorro</option>
+          <option value="ambos">Gato e Cachorro</option>
+        </select>
+        <small class="text-muted">Define a espécie permitida nas inscrições</small>
+      </div>
       <div class="col-md-12 d-flex align-items-end">
         <button class="btn btn-primary w-100" type="submit">Adicionar Data</button>
       </div>
@@ -131,6 +141,7 @@
               <th>Endereço</th>
               <th>Vagas</th>
               <th>Disponíveis</th>
+              <th>Espécie</th>
               <th>Inscrever</th>
               <th>Criado em</th>
               <th>Ações</th>
@@ -159,6 +170,17 @@
                   <span class="badge bg-warning text-dark"><%= c.vagas_disponiveis %></span>
                 <% } else { %>
                   <span class="badge bg-success"><%= c.vagas_disponiveis !== undefined ? (c.vagas_disponiveis === null ? 'Ilimitadas' : c.vagas_disponiveis) : (c.vagas === 0 ? 'Ilimitadas' : c.vagas) %></span>
+                <% } %>
+              </td>
+              <td>
+                <% if (c.especie_padrao === 'gato') { %>
+                  <span class="badge bg-info"><i class="fas fa-cat"></i> Gato</span>
+                <% } else if (c.especie_padrao === 'cachorro') { %>
+                  <span class="badge bg-warning text-dark"><i class="fas fa-dog"></i> Cachorro</span>
+                <% } else if (c.especie_padrao === 'ambos') { %>
+                  <span class="badge bg-success">Gato e Cachorro</span>
+                <% } else { %>
+                  <span class="badge bg-secondary">Padrão</span>
                 <% } %>
               </td>
               <td>
