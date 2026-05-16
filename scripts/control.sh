@@ -17,10 +17,15 @@ NC='\033[0m'
 gerenciar_repositorio() {
     if [ -d "$REPO_DIR" ]; then
         echo -e "${AMARELO}A pasta '$REPO_DIR' já existe.${NC}"
-        echo "1) Atualizar via Git Pull"
-        echo "2) Apagar e clonar do zero"
-        echo "3) Pular"
-        read -p "Escolha: " opcao_repo
+        if [ -t 0 ]; then
+            echo "1) Atualizar via Git Pull"
+            echo "2) Apagar e clonar do zero"
+            echo "3) Pular"
+            read -p "Escolha: " opcao_repo
+        else
+            echo -e "${AMARELO}Modo não-interativo: atualizando via Git Pull.${NC}"
+            opcao_repo=1
+        fi
 
         case $opcao_repo in
             1) cd "$REPO_DIR" && git pull && cd .. ;;

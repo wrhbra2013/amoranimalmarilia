@@ -22,24 +22,24 @@
                       <i class="bi bi-clock-history"></i>
                       Agendar Backup (Cron)
                   </button>
-                  <button type="button" class="btn-export btn-db btn-warning" onclick="showMaintenanceMenu()">
-                      <i class="bi bi-tools"></i>
-                      Manutenção
-                  </button>
+                   <button type="button" class="btn-export btn-db btn-warning" onclick="showMaintenanceMenu()">
+                        <i class="bi bi-tools"></i>
+                        Manutenção (control.sh)
+                    </button>
               </div>
               
               <div id="maintenanceMenu" class="maintenance-menu" style="display: none;">
-                  <div class="menu-options">
-                      <button type="button" class="menu-option" onclick="runMaintenance('1')">1) Fluxo Completo</button>
-                      <button type="button" class="menu-option" onclick="runMaintenance('2')">2) Gerenciar Repositório</button>
-                      <button type="button" class="menu-option" onclick="runMaintenance('3')">3) Atualizar Código (Git)</button>
-                      <button type="button" class="menu-option" onclick="runMaintenance('4')">4) Instalar Dependências</button>
-                      <button type="button" class="menu-option" onclick="runMaintenance('5')">5) Reiniciar App (PM2)</button>
-                      <button type="button" class="menu-option" onclick="runMaintenance('6')">6) Validar Nginx</button>
-                      <button type="button" class="menu-option" onclick="runMaintenance('7')">7) Verificar Certificado</button>
-                      <button type="button" class="menu-option" onclick="runMaintenance('8')">8) Renovar Certificado</button>
-                      <button type="button" class="menu-option" onclick="runMaintenance('9')">9) Ver Logs</button>
-                  </div>
+                   <div class="menu-options">
+                        <button type="button" class="menu-option" onclick="runMaintenance('1')">1) Fluxo Completo (Repo → NPM → PM2 → Nginx → Certif. → Logs)</button>
+                        <button type="button" class="menu-option" onclick="runMaintenance('2')">2) Gerenciar Repositório</button>
+                        <button type="button" class="menu-option" onclick="runMaintenance('3')">3) Atualizar Código (Git Pull)</button>
+                        <button type="button" class="menu-option" onclick="runMaintenance('4')">4) Instalar Dependências (NPM)</button>
+                        <button type="button" class="menu-option" onclick="runMaintenance('5')">5) Reiniciar App (PM2)</button>
+                        <button type="button" class="menu-option" onclick="runMaintenance('6')">6) Validar Webserver (Nginx)</button>
+                        <button type="button" class="menu-option" onclick="runMaintenance('7')">7) Verificar Certificado (Certbot)</button>
+                        <button type="button" class="menu-option" onclick="runMaintenance('8')">8) Renovar Certificado (Certbot)</button>
+                        <button type="button" class="menu-option" onclick="runMaintenance('9')">9) Ver Logs</button>
+                    </div>
               </div>
               
               <div class="log-container">

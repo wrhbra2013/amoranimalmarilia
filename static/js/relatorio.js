@@ -57,10 +57,25 @@ async function loadBackups() {
     }
 }
 
+function setButtonLoading(btn, loading) {
+    if (!btn) return;
+    if (loading) {
+        btn._origHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Aguarde...';
+        btn.style.opacity = '0.7';
+    } else {
+        btn.disabled = false;
+        btn.innerHTML = btn._origHtml || btn.innerHTML;
+        btn.style.opacity = '1';
+    }
+}
+
 async function restoreTable() {
     const tableSelect = document.getElementById('tableSelect');
     const backupSelect = document.getElementById('backupSelect');
     const logOutput = document.getElementById('logOutput');
+    const btn = document.querySelector('.btn-restore');
     
     if (!tableSelect || !backupSelect || !logOutput) return;
     
@@ -81,6 +96,7 @@ async function restoreTable() {
         return;
     }
     
+    setButtonLoading(btn, true);
     appendLog(`Iniciando restauração da tabela '${tabela}'...`);
     
     try {
@@ -100,6 +116,8 @@ async function restoreTable() {
         }
     } catch (error) {
         appendLog(`Erro: ${error.message}`, true);
+    } finally {
+        setButtonLoading(btn, false);
     }
 }
 
@@ -108,7 +126,6 @@ function appendLog(message, isError = false) {
     if (!logOutput) return;
     
     const timestamp = new Date().toLocaleTimeString('pt-BR');
-    const color = isError ? '#ff6b6b' : '#00ff00';
     logOutput.value += `[${timestamp}] ${message}\n`;
     logOutput.scrollTop = logOutput.scrollHeight;
 }
@@ -122,9 +139,14 @@ function clearLog() {
 
 async function runBackup(action) {
     const logOutput = document.getElementById('logOutput');
+    const btn = action === 'run'
+        ? document.querySelector('.btn-db:not(.btn-secondary):not(.btn-warning)')
+        : document.querySelector('.btn-db.btn-secondary');
+    
     if (!logOutput) return;
     
     const actionText = action === 'run' ? 'Criar Backup' : 'Agendar Backup (Cron)';
+    setButtonLoading(btn, true);
     appendLog(`Iniciando: ${actionText}...`);
     
     try {
@@ -136,11 +158,14 @@ async function runBackup(action) {
         
         if (data.success) {
             appendLog(data.log || 'Operação concluída com sucesso!');
+            if (action === 'run') loadBackups();
         } else {
             appendLog(data.log || 'Erro na operação', true);
         }
     } catch (error) {
         appendLog(`Erro: ${error.message}`, true);
+    } finally {
+        setButtonLoading(btn, false);
     }
 }
 
@@ -153,21 +178,24 @@ function showMaintenanceMenu() {
 
 async function runMaintenance(option) {
     const logOutput = document.getElementById('logOutput');
+    const btn = document.querySelector(`.menu-option[onclick*="'${option}'"]`);
+    
     if (!logOutput) return;
     
     const optionNames = {
-        '1': 'Fluxo Completo',
+        '1': 'Fluxo Completo (Repo → NPM → PM2 → Nginx → Certificado → Logs)',
         '2': 'Gerenciar Repositório',
-        '3': 'Atualizar Código (Git)',
-        '4': 'Instalar Dependências',
+        '3': 'Atualizar Código (Git Pull)',
+        '4': 'Instalar Dependências (NPM)',
         '5': 'Reiniciar App (PM2)',
-        '6': 'Validar Nginx',
-        '7': 'Verificar Certificado',
-        '8': 'Renovar Certificado',
+        '6': 'Validar Webserver (Nginx)',
+        '7': 'Verificar Certificado (Certbot)',
+        '8': 'Renovar Certificado (Certbot)',
         '9': 'Ver Logs'
     };
     
-    appendLog(`Iniciando manutenção: ${optionNames[option]}...`);
+    setButtonLoading(btn, true);
+    appendLog(`Iniciando: ${optionNames[option]}...`);
     
     const url = option === '9' ? '/relatorio/logs' : '/relatorio/maintenance?option=' + option;
     
@@ -205,5 +233,7 @@ async function runMaintenance(option) {
         }
     } catch (error) {
         appendLog(`Erro: ${error.message}`, true);
+    } finally {
+        setButtonLoading(btn, false);
     }
 }

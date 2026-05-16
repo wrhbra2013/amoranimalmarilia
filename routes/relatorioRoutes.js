@@ -74,31 +74,26 @@ async function fetchReportData(tabela) {
    
     // Define timestamp columns for each table with their formats
     const timestampColumns = {
-        // Tables with origem TIMESTAMP
-        'home': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
-        'adocao': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
-        'adotante': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
-        'adotado': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
-        'procura_se': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
-        'parceria': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
-        'voluntario': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
-        'interesse_voluntario': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
-        'coleta': [{column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        'home': [{column: 'origem', format: 'DD/MM/YYYY', type: 'date'}],
+        'adocao': [{column: 'origem', format: 'DD/MM/YYYY', type: 'date'}],
+        'adotante': [{column: 'origem', format: 'DD/MM/YYYY', type: 'date'}],
+        'adotado': [{column: 'origem', format: 'DD/MM/YYYY', type: 'date'}],
+        'procura_se': [{column: 'origem', format: 'DD/MM/YYYY', type: 'date'}],
+        'parceria': [{column: 'origem', format: 'DD/MM/YYYY', type: 'date'}],
+        'voluntario': [{column: 'origem', format: 'DD/MM/YYYY', type: 'date'}],
+        'interesse_voluntario': [{column: 'origem', format: 'DD/MM/YYYY', type: 'date'}],
+        'coleta': [{column: 'origem', format: 'DD/MM/YYYY', type: 'date'}],
         
-        // Tables with created_at TIMESTAMP WITH TIME ZONE
-        'clinicas': [{column: 'created_at', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
-        'mutirao_inscricao': [{column: 'created_at', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
-        'mutirao_pet': [{column: 'created_at', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'}],
+        'clinicas': [{column: 'created_at', format: 'DD/MM/YYYY', type: 'date'}],
+        'mutirao_inscricao': [{column: 'created_at', format: 'DD/MM/YYYY', type: 'date'}],
+        'mutirao_pet': [{column: 'created_at', format: 'DD/MM/YYYY', type: 'date'}],
         
-        // Tables with data_evento DATE
         'castracao': [
-            {column: 'origem', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'},
-            {column: 'atendimento', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'},
-            {column: 'atendido_em', format: 'DD/MM/YYYY HH24:MI:SS', type: 'timestamp'},
+            {column: 'origem', format: 'DD/MM/YYYY', type: 'date'},
+            {column: 'atendimento', format: 'DD/MM/YYYY', type: 'date'},
+            {column: 'atendido_em', format: 'DD/MM/YYYY', type: 'date'},
             {column: 'data_evento', format: 'DD/MM/YYYY', type: 'date'}
         ],
-        
-        // Add other tables as needed
     };
    
     // Check if we have special formatting for this table
@@ -354,7 +349,7 @@ async function fetchReportData(tabela) {
     try {
      const data = await fetchReportData(tabela);
      // MES_NOME será usado para exibição, MES_NUM para lógica interna se necessário.
-     const columnsToHideForHtml = ['origem', 'arquivo', 'ano', 'mes_num', 'mes_nome', 'isAdmin', 'updated_at', 'termo_arquivo', 'criado_por', 'whatsapp', 'senha', 'password', 'token', 'complemento'];
+      const columnsToHideForHtml = ['id', 'origem', 'arquivo', 'ano', 'mes_num', 'mes_nome', 'isAdmin', 'updated_at', 'termo_arquivo', 'criado_por', 'whatsapp', 'senha', 'password', 'token', 'complemento', 'created_at'];
  
      const sanitizedData = data.map(row => {
       const sanitizedRow = {};
@@ -393,7 +388,7 @@ async function fetchReportData(tabela) {
      });
     }
  
-     const columnsToRemoveForPdf = ['arquivo', 'ano', 'mes_num', 'mes_nome', 'origem', 'isAdmin', 'whatsapp', 'updated_at', 'termo_arquivo', 'criado_por', 'senha', 'password', 'token', 'complemento'];
+      const columnsToRemoveForPdf = ['id', 'arquivo', 'ano', 'mes_num', 'mes_nome', 'origem', 'isAdmin', 'whatsapp', 'updated_at', 'termo_arquivo', 'criado_por', 'senha', 'password', 'token', 'complemento', 'created_at'];
     let tableHeaders = [];
     if (tableData.length > 0 && tableData[0]) {
      const originalHeaders = Object.keys(tableData[0]);
