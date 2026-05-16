@@ -349,7 +349,7 @@ async function fetchReportData(tabela) {
     try {
      const data = await fetchReportData(tabela);
      // MES_NOME será usado para exibição, MES_NUM para lógica interna se necessário.
-      const columnsToHideForHtml = ['id', 'origem', 'arquivo', 'ano', 'mes_num', 'mes_nome', 'isAdmin', 'updated_at', 'termo_arquivo', 'criado_por', 'whatsapp', 'senha', 'password', 'token', 'complemento', 'created_at'];
+      const columnsToHideForHtml = ['origem', 'arquivo', 'ano', 'mes_num', 'mes_nome', 'isAdmin', 'updated_at', 'termo_arquivo', 'criado_por', 'whatsapp', 'senha', 'password', 'token', 'complemento', 'created_at'];
  
      const sanitizedData = data.map(row => {
       const sanitizedRow = {};
