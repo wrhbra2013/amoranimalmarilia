@@ -31,22 +31,21 @@ function filterPets() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const especieFilter = document.getElementById('especieFilter').value.toLowerCase();
     const porteFilter = document.getElementById('porteFilter').value.toLowerCase();
-    const cards = document.querySelectorAll('.pet-card');
+    const items = document.querySelectorAll('.pet-carousel-item');
     
-    cards.forEach(card => {
-        const nome = card.dataset.nome;
-        const especie = card.dataset.especie;
-        const porte = card.dataset.porte;
+    items.forEach(item => {
+        const nome = item.dataset.nome;
+        const especie = item.dataset.especie;
+        const porte = item.dataset.porte;
         
         const matchesSearch = !searchTerm || nome.includes(searchTerm);
         const matchesEspecie = !especieFilter || especie.includes(especieFilter);
         const matchesPorte = !porteFilter || porte.includes(porteFilter);
         
         if (matchesSearch && matchesEspecie && matchesPorte) {
-            card.style.display = '';
-            card.style.animation = 'fadeIn 0.5s ease';
+            item.style.display = '';
         } else {
-            card.style.display = 'none';
+            item.style.display = 'none';
         }
     });
     
@@ -54,24 +53,25 @@ function filterPets() {
 }
 
 function updateEmptyState() {
-    const visibleCards = document.querySelectorAll('.pet-card:not([style*="display: none"])');
-    const grid = document.getElementById('petsGrid');
+    const visibleItems = document.querySelectorAll('.pet-carousel-item:not([style*="display: none"])');
+    const wrapper = document.querySelector('.pet-carousel-wrapper');
+    const carousel = document.getElementById('petsGrid');
     
-    if (visibleCards.length === 0 && grid) {
+    if (visibleItems.length === 0 && wrapper) {
         if (!document.getElementById('noResults')) {
             const noResults = document.createElement('div');
             noResults.id = 'noResults';
             noResults.className = 'empty-state';
             noResults.innerHTML = `
                 <div class="empty-icon">
-                    <i class="fas fa-search"></i>
+                    <i class="bi bi-search"></i>
                 </div>
                 <h2 class="empty-title">Nenhum Pet Encontrado</h2>
                 <p class="empty-description">
                     Tente ajustar os filtros para encontrar o pet perfeito para você.
                 </p>
             `;
-            grid.appendChild(noResults);
+            wrapper.after(noResults);
         }
     } else {
         const noResults = document.getElementById('noResults');
@@ -81,9 +81,4 @@ function updateEmptyState() {
     }
 }
 
-function confirmDelete(id, arquivo, nome) {
-    if (confirm(`Tem certeza que deseja excluir "${nome}" da lista de adoção?\n\nEsta ação não poderá ser desfeita.`)) {
-        window.location.href = `/delete/adocao/${id}/${arquivo}`;
-    }
-}
 

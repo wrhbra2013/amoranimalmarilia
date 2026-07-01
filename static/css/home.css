@@ -6,6 +6,23 @@
 .landing-section {
     padding: 4rem 0;
 }
+
+.landing-section h2 {
+    border-bottom: 3px solid var(--brand-teal);
+    padding-bottom: 0.5em;
+    padding-left: 0;
+    margin-top: 0;
+    margin-bottom: 1.5em;
+}
+
+.landing-section .section-header h2,
+.landing-section .text-center h2 {
+    display: inline-block;
+}
+
+.landing-section .landing-grid h2 {
+    margin-bottom: 1em;
+}
 .landing-section-alt {
     background: linear-gradient(180deg, var(--bg-color) 0%, var(--bg-alt) 100%);
 }
@@ -368,7 +385,7 @@
     transform: scale(1.1);
 }
 
-/* Carrossel de Adoção - Apenas Fotos */
+/* Carrossel de Adoção - Cards com Foto Proporcional + Nome e Idade */
 .adocao-carrossel {
     display: flex;
     gap: 1rem;
@@ -392,27 +409,61 @@
     border-radius: 4px;
 }
 
-.adocao-card-simple {
-    flex: 0 0 220px;
-    height: 220px;
+.adocao-card {
+    flex: 0 0 240px;
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
     display: block;
     text-decoration: none;
+    background: var(--container-bg);
 }
 
-.adocao-card-simple:hover {
-    transform: scale(1.05);
+.adocao-card:hover {
+    transform: translateY(-5px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
-.adocao-card-simple img {
+.adocao-card-img {
+    width: 100%;
+    height: 260px;
+    background: #000;
+    overflow: hidden;
+}
+
+.adocao-card-img img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center center;
+    transition: transform 0.4s ease;
+}
+
+.adocao-card:hover .adocao-card-img img {
+    transform: scale(1.05);
+}
+
+.adocao-card-info {
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--container-bg);
+}
+
+.adocao-card-nome {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--heading-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.adocao-card-idade {
+    font-size: 0.85rem;
+    color: var(--muted-color);
 }
 
 .landing-card-header {
@@ -828,7 +879,7 @@
 
 .voluntario-card-message {
     font-size: 0.8rem;
-    color: #666;
+    color: var(--muted-color);
     font-style: italic;
     margin-top: 0.75rem;
     line-height: 1.5;
@@ -849,8 +900,7 @@
 
 /* Hero Section Moderna */
 .hero-landing {
-    background: linear-gradient(135deg, rgba(13, 148, 136, 0.9), rgba(14, 165, 233, 0.85)), 
-                url('/static/css/imagem/ong_hero_background.jpg') center/cover;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.9), rgba(14, 165, 233, 0.85));
     padding: 6rem 0;
     color: white;
     text-align: center;
@@ -956,6 +1006,13 @@ body:has(#toggleAtendidos:checked) .status-atendido { display: table-row; }
     .castracao-grid { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .agendamentos-item { grid-template-columns: 1fr; gap: 0.5rem; }
+    .events-grid > .event-card-hover { flex: 0 0 85vw; }
+    .voluntario-card { flex: 0 0 85vw; width: 85vw; max-width: 320px; }
+}
+
+@media (max-width: 480px) {
+    .events-grid > .event-card-hover { flex: 0 0 calc(100vw - 3rem); }
+    .voluntario-card { flex: 0 0 calc(100vw - 3rem); width: calc(100vw - 3rem); }
 }
 
 /* Animations */

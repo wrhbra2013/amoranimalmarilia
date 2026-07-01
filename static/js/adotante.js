@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Resetar o botão correspondente
     const otherButton = document.querySelector(`[data-target-details-id='${row.id}']`);
     if (otherButton) {
-    otherButton.innerHTML = '<i class="fas fa-eye"></i> Detalhes';
+    otherButton.innerHTML = '<i class="bi bi-eye"></i> Detalhes';
     otherButton.classList.remove('btn-secondary');
     otherButton.classList.add('btn-info');
     }
@@ -24,12 +24,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // Alternar a linha clicada
     if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
     detailsRow.style.display = 'table-row';
-    this.innerHTML = '<i class="fas fa-eye-slash"></i> Fechar';
+    this.innerHTML = '<i class="bi bi-eye-slash"></i> Fechar';
     this.classList.remove('btn-info');
     this.classList.add('btn-secondary');
     } else {
     detailsRow.style.display = 'none';
-    this.innerHTML = '<i class="fas fa-eye"></i> Detalhes';
+    this.innerHTML = '<i class="bi bi-eye"></i> Detalhes';
     this.classList.remove('btn-secondary');
     this.classList.add('btn-info');
     }
@@ -52,7 +52,7 @@ closeButtons.forEach(closeButton => {
 
         if (mainToggleButton) {
             // Restaura o botão principal para o estado "Detalhes"
-            mainToggleButton.innerHTML = '<i class="fas fa-eye"></i> Detalhes';
+            mainToggleButton.innerHTML = '<i class="bi bi-eye"></i> Detalhes';
             mainToggleButton.classList.remove('btn-secondary');
             mainToggleButton.classList.add('btn-info');
         }

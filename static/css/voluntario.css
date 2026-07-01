@@ -5,7 +5,7 @@
 }
 
 .page-header {
-    background: linear-gradient(135deg, var(--brand-teal), var(--brand-teal-2));
+    background: var(--nav-gradient);
     color: white;
     padding: 40px 20px;
     border-radius: 16px;
@@ -61,40 +61,6 @@
     align-items: center;
 }
 
-.btn-modern {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1em;
-}
-
-.btn-primary-modern {
-    background: var(--button-bg);
-    color: var(--button-text);
-}
-
-.btn-primary-modern:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-}
-
-.btn-success-modern {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    color: white;
-}
-
-.btn-success-modern:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
-}
-
 .search-section {
     background: var(--container-bg);
     border: 1px solid var(--border-color);
@@ -124,7 +90,7 @@
 .search-input:focus {
     outline: none;
     border-color: var(--brand-teal);
-    box-shadow: 0 0 0 4px rgba(0, 128, 128, 0.1);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-teal) 10%, transparent);
 }
 
 .filter-select {
@@ -310,13 +276,13 @@
 }
 
 .btn-delete {
-    background: linear-gradient(135deg, var(--brand-coral), #dc3545);
+    background: linear-gradient(135deg, var(--brand-coral), var(--danger));
     color: white;
 }
 
 .btn-delete:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--danger) 30%, transparent);
 }
 
 .empty-state {
@@ -357,7 +323,7 @@
     color: white;
     border: none;
     cursor: pointer;
-    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+    box-shadow: 0 8px 25px color-mix(in srgb, var(--brand-coral) 40%, transparent);
     transition: all 0.3s ease;
     z-index: 1000;
     display: flex;
@@ -368,7 +334,7 @@
 
 .floating-button:hover {
     transform: scale(1.1) rotate(90deg);
-    box-shadow: 0 12px 35px rgba(220, 53, 69, 0.5);
+    box-shadow: 0 12px 35px color-mix(in srgb, var(--brand-coral) 50%, transparent);
 }
 
 @media (max-width: 768px) {
@@ -396,4 +362,41 @@
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+body.high-contrast .voluntario-card::before {
+    background: linear-gradient(90deg, var(--hc-link-color), var(--hc-heading-color));
+}
+
+body.high-contrast .card-header-modern {
+    background: var(--hc-nav-bg);
+}
+
+body.high-contrast .voluntario-avatar {
+    background: linear-gradient(135deg, var(--hc-button-bg), var(--hc-button-hover-bg));
+}
+
+body.high-contrast .search-input:focus {
+    border-color: var(--hc-link-color);
+    box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15);
+}
+
+body.high-contrast .filter-select:focus {
+    border-color: var(--hc-link-color);
+}
+
+body.high-contrast .btn-edit {
+    background: linear-gradient(135deg, var(--hc-button-bg), var(--hc-button-hover-bg));
+}
+
+body.high-contrast .btn-edit:hover {
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.3);
+}
+
+body.high-contrast .floating-button {
+    box-shadow: 0 8px 25px rgba(13, 148, 136, 0.4);
+}
+
+body.high-contrast .floating-button:hover {
+    box-shadow: 0 12px 35px rgba(13, 148, 136, 0.5);
 }

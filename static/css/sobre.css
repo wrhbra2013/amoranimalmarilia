@@ -441,8 +441,8 @@
 }
 
 .btn-secondary-cta:hover {
-    background: #c2410c;
-    border-color: #c2410c;
+    background: var(--brand-coral-2);
+    border-color: var(--brand-coral-2);
     transform: translateY(-3px);
 }
 

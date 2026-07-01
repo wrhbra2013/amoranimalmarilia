@@ -1,5 +1,5 @@
 body {
-    background-color: #256db9;
+    background-color: var(--brand-teal);
     color: whitesmoke;
     font-family: Arial, sans-serif;
     margin: 0;
@@ -12,7 +12,7 @@ body {
     text-align: center;
 }
 .error-container {
-    background-color: #256db9;
+    background-color: var(--brand-teal);
     padding: 30px;
     border-radius: 8px;
     max-width: 600px;
@@ -40,7 +40,7 @@ p, strong {
 }
 .home-link:hover {
     background-color: whitesmoke;
-    color: #256db9;
+    color: var(--brand-teal);
 }
 @media (max-width: 480px) {
     h1 {

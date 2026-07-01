@@ -1,12 +1,12 @@
 .event-description {
-    background: #f8f9fa;
+    background: var(--bg-alt);
     padding: 20px 24px;
     border-radius: 12px;
-    border-left: 4px solid var(--heading-color, #0d6efd);
+    border-left: 4px solid var(--heading-color);
     font-size: 1.05rem;
     line-height: 1.8;
-    color: #333;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    color: var(--text-color);
+    box-shadow: 0 2px 8px var(--container-shadow);
 }
 .event-description br + br {
     margin-bottom: 12px;
@@ -18,7 +18,7 @@
     max-width: 800px;
     height: 480px;
     margin: 0 auto;
-    background: #f8f9fa;
+    background: var(--bg-alt);
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);

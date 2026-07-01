@@ -1,9 +1,9 @@
 .db-panel-details {
     background: var(--container-bg);
-    border: 2px solid #dc3545;
+    border: 2px solid var(--danger);
     border-radius: 12px;
     margin-bottom: 30px;
-    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+    box-shadow: 0 4px 15px color-mix(in srgb, var(--danger) 20%, transparent);
     overflow: hidden;
 }
 
@@ -14,7 +14,7 @@
     cursor: pointer;
     font-size: 1.4em;
     font-weight: 700;
-    background: linear-gradient(135deg, #dc3545, #b02a37);
+    background: linear-gradient(135deg, var(--danger), #b02a37);
     color: white;
     user-select: none;
     transition: all 0.3s ease;
@@ -23,7 +23,7 @@
 }
 
 .db-panel-title:hover {
-    background: linear-gradient(135deg, #e4606d, #dc3545);
+    background: linear-gradient(135deg, #e4606d, var(--danger));
     box-shadow: inset 0 -3px 0 rgba(255,255,255,0.2);
 }
 
@@ -92,17 +92,17 @@
 }
 
 .btn-restore {
-    background: linear-gradient(135deg, #dc3545, #c82333);
+    background: linear-gradient(135deg, var(--danger), var(--danger-hover));
     white-space: nowrap;
 }
 
 .btn-restore:hover {
-    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    box-shadow: 0 4px 15px color-mix(in srgb, var(--danger) 30%, transparent);
 }
 
 .selector-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
     margin-top: 20px;
 }
@@ -161,11 +161,11 @@
 }
 
 .section-header {
-    background: linear-gradient(135deg, var(--brand-teal), var(--brand-teal-2));
+    background: var(--nav-gradient);
     color: white;
     padding: 20px 25px;
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
 }
 
@@ -233,7 +233,7 @@
 }
 
  .btn-delete {
-     background: #dc3545;
+     background: var(--danger);
      color: white;
      padding: 6px 10px;
      border-radius: 6px;
@@ -242,7 +242,7 @@
  }
  
  .btn-delete:hover {
-     background: #c82333;
+     background: var(--danger-hover);
      transform: translateY(-1px);
  }
 
@@ -277,7 +277,7 @@
 
 .btn-pdf:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    box-shadow: 0 4px 15px color-mix(in srgb, var(--brand-coral) 30%, transparent);
 }
 
 .empty-state {
@@ -314,30 +314,30 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(135deg, #28a745, #20c997);
+    background: linear-gradient(135deg, var(--success), #20c997);
     color: white;
 }
 
 .btn-db:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    box-shadow: 0 4px 15px color-mix(in srgb, var(--success) 30%, transparent);
 }
 
 .btn-db.btn-secondary {
-    background: linear-gradient(135deg, #6c757d, #868e96);
+    background: linear-gradient(135deg, var(--muted-color), #868e96);
 }
 
 .btn-db.btn-secondary:hover {
-    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    box-shadow: 0 4px 15px color-mix(in srgb, var(--muted-color) 30%, transparent);
 }
 
 .btn-db.btn-warning {
-    background: linear-gradient(135deg, #ffc107, #fd7e14);
-    color: #212529;
+    background: linear-gradient(135deg, var(--warning), #fd7e14);
+    color: var(--text-color);
 }
 
 .btn-db.btn-warning:hover {
-    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+    box-shadow: 0 4px 15px color-mix(in srgb, var(--warning) 30%, transparent);
 }
 
 .maintenance-menu {
@@ -400,6 +400,76 @@ body.high-contrast .log-textarea {
 
 body.high-contrast .log-textarea::placeholder {
     color: var(--hc-input-placeholder, #9a9a9a);
+}
+
+body.high-contrast .report-option:hover {
+    border-color: var(--hc-link-color);
+}
+
+body.high-contrast .report-option i {
+    color: var(--hc-link-color);
+}
+
+body.high-contrast .report-option.active {
+    border-color: var(--hc-heading-color);
+    background: var(--hc-alternate-bg);
+    color: var(--hc-heading-color);
+}
+
+body.high-contrast .report-option.active i {
+    color: var(--hc-heading-color);
+}
+
+body.high-contrast .table-modern th {
+    border-bottom-color: var(--hc-border-color);
+}
+
+body.high-contrast .menu-option:hover {
+    background: var(--hc-button-bg);
+    color: var(--hc-button-text);
+    border-color: var(--hc-button-bg);
+}
+
+body.high-contrast .db-panel-details {
+    border-color: var(--hc-danger);
+}
+
+body.high-contrast .btn-pdf {
+    background: var(--hc-button-bg);
+    color: var(--hc-button-text);
+}
+
+body.high-contrast .db-panel-title {
+    background: linear-gradient(135deg, var(--hc-danger), var(--hc-danger-hover));
+}
+
+body.high-contrast .db-panel-title:hover {
+    background: linear-gradient(135deg, var(--hc-danger-hover), var(--hc-danger));
+}
+
+body.high-contrast .btn-restore {
+    background: linear-gradient(135deg, var(--hc-danger), var(--hc-danger-hover));
+}
+
+body.high-contrast .btn-db {
+    background: linear-gradient(135deg, var(--hc-success), var(--hc-success-hover));
+}
+
+body.high-contrast .btn-db.btn-secondary {
+    background: linear-gradient(135deg, var(--hc-muted-color), var(--hc-alternate-bg));
+}
+
+body.high-contrast .btn-db.btn-warning {
+    background: linear-gradient(135deg, var(--hc-warning), var(--hc-warning-hover));
+    color: #000;
+}
+
+body.high-contrast .btn-delete {
+    background: var(--hc-danger);
+}
+
+body.high-contrast .btn-delete:hover {
+    background: var(--hc-danger-hover);
 }
 
 @media (max-width: 768px) {

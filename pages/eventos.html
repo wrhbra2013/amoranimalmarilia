@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventos - ONG Amor Animal Marília</title>
+  <link rel="stylesheet" href="../static/css/default.css">
+  <link rel="stylesheet" href="../static/css/icons/bootstrap-icons.min.css">
+  <link rel="icon" type="image/png" href="../static/css/favicon/ong.ico">
+</head>
+<body>
+
+<script>var ROOT='..';</script>
+<script src="../components/header.js"></script>
+
+<main class="main-content">
+  <div class="container py-5">
+    <h2>Eventos</h2>
+    <div class="row" id="eventos-container"></div>
+
+    <a href="../index.html" class="button btn-secondary mt-3">Voltar</a>
+  </div>
+</main>
+
+<script src="../components/footer.js"></script>
+<script src="../static/js/api.js"></script>
+<script>
+var API_BASE = window.API_BASE;
+
+function imgEventoUrl(f) {
+  if (!f) return '';
+  if (f.indexOf('://') !== -1 || f.indexOf('data:') === 0) return f;
+  return API_BASE + '/uploads/eventos/' + f;
+}
+
+function fmtData(d) {
+  if (!d) return '';
+  var partes = d.split('T')[0].split('-');
+  if (partes.length === 3 && partes[0].length === 4) return partes[2] + '/' + partes[1] + '/' + partes[0];
+  var dt = new Date(d);
+  if (!isNaN(dt.getTime())) {
+    return String(dt.getUTCDate()).padStart(2,'0') + '/' + String(dt.getUTCMonth()+1).padStart(2,'0') + '/' + dt.getUTCFullYear();
+  }
+  return d;
+}
+
+apiFetch('/eventos')
+  .then(function(r) { return r.json(); })
+  .then(function(eventos) {
+    var container = document.getElementById('eventos-container');
+    if (!eventos || !eventos.length) {
+      container.innerHTML = '<div class="col-12 text-center text-muted py-5">Nenhum evento cadastrado.</div>';
+      return;
+    }
+    eventos.forEach(function(ev) {
+      var col = document.createElement('div');
+      col.className = 'col-md-4 mb-4';
+      col.innerHTML =
+        '<div class="card h-100">' +
+          (ev.fotos || ev.arquivo ? '<img src="' + imgEventoUrl(ev.fotos || ev.arquivo) + '" class="card-img-top" alt="' + (ev.titulo || '') + '">' : '') +
+          '<div class="card-body">' +
+            '<h5 class="card-title">' + (ev.titulo || '') + '</h5>' +
+            '<p class="card-subtitle text-muted">' + fmtData(ev.data_evento) + '</p>' +
+            '<p class="card-text">' + (ev.descricao || '') + '</p>' +
+          '</div>' +
+          (ev.status ? '<div class="card-footer d-flex justify-content-between"><span class="badge" style="background: var(--brand-teal); color: white;">' + ev.status + '</span></div>' : '') +
+        '</div>';
+      container.appendChild(col);
+    });
+  })
+  .catch(function() {
+    document.getElementById('eventos-container').innerHTML = '<div class="col-12 text-center text-muted py-5">Erro ao carregar eventos.</div>';
+  });
+</script>
+
+</body>
+</html>

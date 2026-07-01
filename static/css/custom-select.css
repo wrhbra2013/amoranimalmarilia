@@ -23,11 +23,12 @@
     display: block;
     padding: 0.75rem 1rem;
     font-size: 1.25rem;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--input-border);
     border-radius: 0.375rem;
-    background-color: #fff;
+    background-color: var(--input-bg);
     cursor: pointer;
     position: relative;
+    color: var(--input-text);
 }
 
 .custom-select-trigger::after {
@@ -45,14 +46,14 @@
     top: 100%;
     left: 0;
     right: 0;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--input-border);
     border-top: none;
     border-radius: 0 0 0.375rem 0.375rem;
-    background-color: #fff;
+    background-color: var(--container-bg);
     z-index: 10;
     max-height: 200px;
     overflow-y: auto;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0.5rem 1rem var(--container-shadow);
 }
 
 .custom-select.open .custom-select-options {
@@ -70,10 +71,10 @@
 }
 
 .custom-select-option:hover {
-    background-color: #f8f9fa;
+    background-color: var(--hover-bg);
 }
 
 .custom-select-option.selected {
-    background-color: #e9ecef;
+    background-color: var(--bg-alt);
     font-weight: 600;
 }

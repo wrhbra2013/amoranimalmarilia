@@ -70,18 +70,18 @@ document.addEventListener('DOMContentLoaded', function() {
             btnSubmit.disabled = true;
             btnSubmit.classList.remove('btn-info');
             btnSubmit.classList.add('btn-secondary');
-            btnSubmit.innerHTML = '<i class="fas fa-paw"></i> Adicione um pet primeiro';
+            btnSubmit.innerHTML = '<i class="bi bi-paw"></i> Adicione um pet primeiro';
         } else {
             btnSubmit.disabled = false;
             btnSubmit.classList.remove('btn-secondary');
             btnSubmit.classList.add('btn-info');
-            btnSubmit.innerHTML = '<i class="fas fa-check"></i> Solicitar Agendamento';
+            btnSubmit.innerHTML = '<i class="bi bi-check"></i> Solicitar Agendamento';
         }
         
         if (petsCadastrados.length === 0) {
             petsTableContainer.innerHTML = `
                 <div class="p-3 text-muted text-center">
-                    <i class="fas fa-paw fa-2x mb-2"></i>
+                    <i class="bi bi-paw fa-2x mb-2"></i>
                     <p>Nenhum pet cadastrado ainda. Adicione os pets acima.</p>
                 </div>
             `;
@@ -123,8 +123,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         petsCadastrados.forEach((pet, index) => {
             const especieIcon = pet.especie === 'gato' 
-                ? '<i class="fas fa-cat"></i>' 
-                : '<i class="fas fa-dog"></i>';
+                ? '<i class="bi bi-paw"></i>' 
+                : '<i class="bi bi-paw"></i>';
             
             tableHTML += `
                 <tr>
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td>${pet.idade} ano(s)</td>
                     <td>
                         <button type="button" class="btn btn-sm btn-outline-danger btn-remove-pet" data-index="${index}" title="Remover pet">
-                            <i class="fas fa-trash"></i>
+                            <i class="bi bi-trash"></i>
                         </button>
                     </td>
                 </tr>

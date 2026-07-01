@@ -44,7 +44,7 @@ function updateEmptyState() {
             noResults.className = 'empty-state';
             noResults.innerHTML = `
                 <div class="empty-icon">
-                    <i class="fas fa-search"></i>
+                    <i class="bi bi-search"></i>
                 </div>
                 <h2 class="empty-title">Nenhum Voluntário Encontrado</h2>
                 <p class="empty-description">
@@ -62,12 +62,16 @@ function updateEmptyState() {
 }
 
 function confirmDelete(id, nome) {
-    if (confirm(`Tem certeza que deseja excluir o voluntário "${nome}"?\n\nEsta ação não poderá ser desfeita.`)) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/doacao/delete/voluntario/${id}`;
-        document.body.appendChild(form);
-        form.submit();
+    if (confirm(`Tem certeza que deseja excluir o volunt\u00e1rio "${nome}"?\n\nEsta a\u00e7\u00e3o n\u00e3o poder\u00e1 ser desfeita.`)) {
+        apiFetch('/voluntario/' + id, { method: 'DELETE' })
+            .then(function(r) {
+                if (!r.ok) throw new Error('Erro ao excluir');
+                if (typeof carregarVoluntarios === 'function') carregarVoluntarios();
+                else location.reload();
+            })
+            .catch(function(err) {
+                alert('Erro ao excluir: ' + err.message);
+            });
     }
 }
 
