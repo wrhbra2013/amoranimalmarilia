@@ -549,7 +549,9 @@ const corsOptions = {
     origin: [
         'https://www.projetosdinamicos.com.br',
         'https://projetosdinamicos.com.br',
-        'https://api.projetosdinamicos.com.br'
+        'https://api.projetosdinamicos.com.br',
+        'https://www.amoranimal.ong.br',
+        'https://amoranimal.ong.br'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
