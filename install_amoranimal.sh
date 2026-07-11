@@ -150,7 +150,16 @@ uninstall() {
 
   echo ""
   info "[6/6] Removendo diretorio de dados..."
-  rm -f "$SCRIPT_DIR/.env" "$DATA_DIR/.env" 2>/dev/null || true
+  if [ -f "$SCRIPT_DIR/.env" ] && grep -q "APP_NAME=${APP_NAME}" "$SCRIPT_DIR/.env" 2>/dev/null; then
+    rm -f "$SCRIPT_DIR/.env" && info "$SCRIPT_DIR/.env removido (pertence a $APP_NAME)."
+  else
+    info "$SCRIPT_DIR/.env nao removido (nao pertence a $APP_NAME ou nao existe)."
+  fi
+  if [ -f "$DATA_DIR/.env" ] && grep -q "APP_NAME=${APP_NAME}" "$DATA_DIR/.env" 2>/dev/null; then
+    rm -f "$DATA_DIR/.env" && info "$DATA_DIR/.env removido."
+  else
+    info "$DATA_DIR/.env nao removido (nao pertence a $APP_NAME ou nao existe)."
+  fi
   if [ -n "${DATA_DIR:-}" ] && [ -d "$DATA_DIR" ]; then
     rm -rf "$DATA_DIR" && info "${DATA_DIR} removido." || warn "Falha ao remover ${DATA_DIR}."
   fi
@@ -406,15 +415,18 @@ install_flow() {
   APP_NAME=$(printf '%s' "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9_' '_')
 
   DB_NAME="${APP_NAME}_db"
-  DB_PASS=postgres
+  DB_PASS=$(openssl rand -hex 16)
   DATA_DIR="/var/www/${APP_NAME}"
 
   printf "Email do administrador [amoranimalmariliadev@gmail.com]: "; read -r ADMIN_EMAIL
   ADMIN_EMAIL=${ADMIN_EMAIL:-amoranimalmariliadev@gmail.com}
   printf "Nome do administrador [admin]: "; read -r ADMIN_NOME
   ADMIN_NOME=${ADMIN_NOME:-admin}
-  printf "Senha do administrador [@admin]: "; stty -echo; read -r ADMIN_PASS; stty echo; echo ""
-  ADMIN_PASS=${ADMIN_PASS:-@admin}
+  printf "Senha do administrador [gerar aleatoriamente]: "; stty -echo; read -r ADMIN_PASS; stty echo; echo ""
+  if [ -z "$ADMIN_PASS" ]; then
+    ADMIN_PASS=$(openssl rand -base64 12)
+    info "Senha gerada automaticamente: $ADMIN_PASS"
+  fi
 
   # ==============================================================
   # Criar estrutura de diretórios
@@ -449,6 +461,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - {{APP_NAME}}-net
 
   api:
     build:
@@ -473,6 +487,12 @@ services:
       - ./api/src:/app/src
     ports:
       - "${PORT:-3000}:3000"
+    networks:
+      - {{APP_NAME}}-net
+
+networks:
+  {{APP_NAME}}-net:
+    driver: bridge
 HEREDOC
 
   info "Gerando api/Dockerfile..."
