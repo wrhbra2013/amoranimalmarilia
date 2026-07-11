@@ -3,10 +3,12 @@ document.addEventListener('DOMContentLoaded', function() {
   const adoteButton = document.querySelector('.adote-button');
   const adoteContainer = document.querySelector('.adote-container');
 
-  adoteButton.addEventListener('click', function() {
-    adoteContainer.style.display = 'inline-block';
-    adoteButton.style.display = 'none';
-  });
+  if (adoteButton && adoteContainer) {
+    adoteButton.addEventListener('click', function() {
+      adoteContainer.style.display = 'inline-block';
+      adoteButton.style.display = 'none';
+    });
+  }
   
   const searchInput = document.getElementById('searchInput');
   if (searchInput) {
