@@ -741,7 +741,7 @@ app.get('/search', async (req, res) => {
         if (await tabelaExiste('procura_se')) {
             queries.push(
                 pool.query(
-                    `SELECT id, COALESCE(nome,'') as titulo, COALESCE(especie,'') || ' - ' || LEFT(COALESCE(informacoes,''),100) as descricao, 'procura_se' as tabela FROM procura_se WHERE LOWER(COALESCE(nome,'')) LIKE $1 OR LOWER(COALESCE(especie,'')) LIKE $1 OR LOWER(COALESCE(informacoes,'')) LIKE $1 LIMIT 5`,
+                    `SELECT id, COALESCE(nomepet,'') as titulo, COALESCE(especie,'') || ' - ' || LEFT(COALESCE(caracteristicas,''),100) as descricao, 'procura_se' as tabela FROM procura_se WHERE LOWER(COALESCE(nomepet,'')) LIKE $1 OR LOWER(COALESCE(especie,'')) LIKE $1 OR LOWER(COALESCE(caracteristicas,'')) LIKE $1 LIMIT 5`,
                     [term]
                 ).then(r => results.push(...r.rows)).catch(e => console.error('Search procura_se:', e.message))
             );
